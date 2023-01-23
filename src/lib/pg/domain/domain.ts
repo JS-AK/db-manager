@@ -3,6 +3,7 @@ import * as Types from "./types.js";
 import { BaseModel } from "../model/index.js";
 
 export class BaseDomain<
+	Model extends BaseModel,
 	CreateFields extends SharedTypes.TRawParams,
 	SearchFields extends Types.TDomainFields,
 	TableFields extends SharedTypes.TRawParams,
@@ -10,7 +11,7 @@ export class BaseDomain<
 > {
 	model;
 
-	constructor(data: Types.TDomain<BaseModel>) {
+	constructor(data: Types.TDomain<Model>) {
 		if (!(data.model instanceof BaseModel)) {
 			throw new Error("You need pass extended of PG.");
 		}

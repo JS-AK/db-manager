@@ -19,6 +19,10 @@ export class Model extends PG.BaseModel {
 			creds,
 		);
 	}
+
+	async test() {
+		return (await this.pool.query(queries.test())).rows[0];
+	}
 }
 
 // ----- Table propertires ----------------------
@@ -34,5 +38,10 @@ const tableFields: TableKeys[] = [
 ];
 
 // ----- queries -----------------------
-// const queries = {
-// };
+const queries = {
+	test() {
+		return `
+			SELECT 1=1 AS test;
+		`;
+	},
+};

@@ -35,6 +35,7 @@ module.exports = {
 					"NoSubstitutionTemplateLiteral",
 					"TemplateLiteral",
 					/* "TSTypeAliasDeclaration *", */
+					"TSTypeParameterInstantiation",
 				],
 			},
 		],

@@ -109,6 +109,12 @@ test("top level test", async (t) => {
 		assert.equal(rowsCount, 0);
 	});
 
+	await t.test("custom function test()", async () => {
+		const isNotTestFailed = await testTable.test();
+
+		assert.equal(isNotTestFailed, true);
+	});
+
 	await t.test("dropTable", async () => {
 		const pool = MYSQL.BaseModel.getStandartPool(creds);
 

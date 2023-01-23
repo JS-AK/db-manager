@@ -19,6 +19,12 @@ export class Model extends MYSQL.BaseModel {
 			creds,
 		);
 	}
+
+	async test() {
+		return (await this.pool.promise().query(
+			queries.test())
+		)[0][0];
+	}
 }
 
 // ----- Table propertires ----------------------
@@ -34,5 +40,10 @@ const tableFields: TableKeys[] = [
 ];
 
 // ----- queries -----------------------
-// const queries = {
-// };
+const queries = {
+	test() {
+		return `
+			SELECT 1=1 AS test;
+		`;
+	},
+};

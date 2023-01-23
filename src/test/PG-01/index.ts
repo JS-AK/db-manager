@@ -119,6 +119,12 @@ test("top level test", async (t) => {
 		);
 	});
 
+	await t.test("custom function test()", async () => {
+		const isNotTestFailed = await testTable.test();
+
+		assert.equal(isNotTestFailed, true);
+	});
+
 	await t.test("dropTable", async () => {
 		const pool = PG.BaseModel.getStandartPool(creds);
 
