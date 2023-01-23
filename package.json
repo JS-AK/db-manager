@@ -1,6 +1,6 @@
 {
   "name": "@js-ak/db-manager",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "db-manager",
   "publishConfig": {
     "access": "public",
@@ -24,7 +24,14 @@
     "type": "git",
     "url": "git+https://github.com/JS-AK/db-manager.git"
   },
-  "keywords": ["pg","mysql","mysql2","db-manager","db","database"],
+  "keywords": [
+    "pg",
+    "mysql",
+    "mysql2",
+    "db-manager",
+    "db",
+    "database"
+  ],
   "author": "JS-AK",
   "license": "MIT",
   "bugs": {

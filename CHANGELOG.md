@@ -1,3 +1,12 @@
+## [1.0.1](https://github.com/JS-AK/db-manager/compare/v1.0.0...v1.0.1) (2023-01-23)
+
+
+### Bug Fixes
+
+* add initial lib state ([7482719](https://github.com/JS-AK/db-manager/commit/7482719a2eca61182b2b22fff602489b432b6509))
+* release gh workflow ([43b5f6b](https://github.com/JS-AK/db-manager/commit/43b5f6b43bf1ee346d768f316c09b786e4a2f18f))
+* release gh workflow ([8395ae7](https://github.com/JS-AK/db-manager/commit/8395ae736c6fe491522b034c65eabc03c596c3ff))
+
 # 1.0.0 (2023-01-23)
 
 
