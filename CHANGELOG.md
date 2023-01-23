@@ -1,3 +1,10 @@
+## [1.0.3](https://github.com/JS-AK/db-manager/compare/v1.0.2...v1.0.3) (2023-01-23)
+
+
+### Bug Fixes
+
+* support domain-model custom functions ([fd71f71](https://github.com/JS-AK/db-manager/commit/fd71f71c13284a3ddf54869bfe81079c3baf16df))
+
 ## [1.0.2](https://github.com/JS-AK/db-manager/compare/v1.0.1...v1.0.2) (2023-01-23)
 
 
