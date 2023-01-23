@@ -1,3 +1,10 @@
+# 1.0.0 (2023-01-23)
+
+
+### Bug Fixes
+
+* package.json ([7cff368](https://github.com/JS-AK/db-manager/commit/7cff36875e1118813a62440501ff285e0614e474))
+
 ## [1.0.3](https://github.com/JS-AK/example-automatic-deploy-ts-app-to-npm-with-scope/compare/v1.0.2...v1.0.3) (2023-01-23)
 
 
