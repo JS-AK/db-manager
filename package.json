@@ -1,7 +1,7 @@
 {
-  "name": "@js-ak/example-automatic-deploy-ts-app-to-npm-with-scope",
-  "version": "1.0.3",
-  "description": "example-automatic-deploy-ts-app-to-npm-with-scope",
+  "name": "@js-ak/db-manager",
+  "version": "1.0.0",
+  "description": "db-manager",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
@@ -20,17 +20,17 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/JS-AK/example-automatic-deploy-ts-app-to-npm-with-scope.git"
+    "url": "git+https://github.com/JS-AK/db-manager.git"
   },
   "keywords": [
-    "example-automatic-deploy-ts-app-to-npm-with-scope"
+    "db-manager"
   ],
   "author": "JS-AK",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/JS-AK/example-automatic-deploy-ts-app-to-npm-with-scope/issues"
+    "url": "https://github.com/JS-AK/db-manager/issues"
   },
-  "homepage": "https://github.com/JS-AK/example-automatic-deploy-ts-app-to-npm-with-scope#readme",
+  "homepage": "https://github.com/JS-AK/db-manager#readme",
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.2",
     "@semantic-release/commit-analyzer": "^9.0.2",
