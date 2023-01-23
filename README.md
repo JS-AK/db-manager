@@ -1,6 +1,8 @@
-# example-automatic-deploy-ts-app-to-npm-with-scope
+# db-manager
 
-Pass next secrets to github actions
+Package for managering db connections
 
-- GH_TOKEN
-- NPM_TOKEN
+supports
+
+- MYSQL
+- PostreSQL
