@@ -1,8 +1,26 @@
-# db-manager
+# @js-ak/db-manager
 
-Package for managering db connections
+It is a tool for managing databases.
 
-supports
+## Installation
 
-- MYSQL
-- PostreSQL
+You can install the package via npm:
+
+```
+npm install @js-ak/db-manager
+```
+
+## Features
+
+* **Typescript**
+* **Connect to multiple database types (MySQL, PostgreSQL)**
+* **Simple and intuitive interface**
+
+
+
+Contributing
+
+Contributions are welcome! If you have an idea for a new feature or have found a bug, please open an issue.
+License
+
+This project is licensed under the MIT license. See LICENSE for details.
