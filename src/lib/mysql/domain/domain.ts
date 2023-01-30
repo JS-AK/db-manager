@@ -39,12 +39,12 @@ export class BaseDomain<
 
 	async getArrByParams({ params, selected = ["*"], pagination, orderBy, ordering }: {
 		params: SearchFields;
-		selected?: string[];
+		selected?:(keyof TableFields)[];
 		pagination?: SharedTypes.TPagination;
 		orderBy?: string;
 		ordering?: SharedTypes.TOrdering;
 	}): Promise<any[]> {
-		return this.model.getArrByParams(params, selected, pagination, orderBy, ordering);
+		return this.model.getArrByParams(params, selected as string[], pagination, orderBy, ordering);
 	}
 
 	async getCountByParams({ params }: { params: SearchFields; }): Promise<number> {
@@ -53,16 +53,16 @@ export class BaseDomain<
 
 	async getGuaranteedOneByParams({ params, selected = ["*"] }: {
 		params: SearchFields;
-		selected?: string[];
+		selected?: (keyof TableFields)[];
 	}): Promise<TableFields> {
-		return this.model.getOneByParams(params, selected);
+		return this.model.getOneByParams(params, selected as string[]);
 	}
 
 	async getOneByParams({ params, selected = ["*"] }: {
 		params: SearchFields;
-		selected?: string[];
+		selected?:(keyof TableFields)[];
 	}): Promise<{ message?: string; one?: any; }> {
-		const one = await this.model.getOneByParams(params, selected);
+		const one = await this.model.getOneByParams(params, selected as string[]);
 
 		if (!one) return { message: "Not found" };
 
