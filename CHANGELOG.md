@@ -1,3 +1,10 @@
+## [1.0.6](https://github.com/JS-AK/db-manager/compare/v1.0.5...v1.0.6) (2023-01-31)
+
+
+### Bug Fixes
+
+* update readme.md ([99d4357](https://github.com/JS-AK/db-manager/commit/99d43577155c80bb0b14968e0709ab2edd59a471))
+
 ## [1.0.5](https://github.com/JS-AK/db-manager/compare/v1.0.4...v1.0.5) (2023-01-30)
 
 
