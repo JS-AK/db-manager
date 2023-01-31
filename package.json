@@ -18,7 +18,8 @@
   "scripts": {
     "build": "tsc",
     "lint": "eslint . --ext .ts",
-    "test": "npm run build && node ./build/test/index.js"
+    "test": "npm run build && node ./build/test/index.js",
+    "doc": "typedoc src/index.ts"
   },
   "repository": {
     "type": "git",
@@ -49,14 +50,15 @@
     "@semantic-release/github": "^8.0.7",
     "@semantic-release/npm": "^9.0.2",
     "@semantic-release/release-notes-generator": "^10.0.3",
-    "@types/pg": "^8.6.6",
     "@types/node": "^18.11.18",
+    "@types/pg": "^8.6.6",
     "@typescript-eslint/eslint-plugin": "^5.48.0",
     "@typescript-eslint/parser": "^5.48.0",
     "eslint": "^8.32.0",
     "eslint-plugin-sort-destructure-keys": "^1.4.0",
     "eslint-plugin-sort-exports": "^0.8.0",
     "semantic-release": "^20.0.2",
+    "typedoc": "^0.23.24",
     "typescript": "^4.9.4"
   }
 }
