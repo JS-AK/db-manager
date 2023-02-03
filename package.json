@@ -17,9 +17,9 @@
   ],
   "scripts": {
     "build": "tsc",
+    "doc": "typedoc src/index.ts",
     "lint": "eslint . --ext .ts",
-    "test": "npm run build && node ./build/test/index.js",
-    "doc": "typedoc src/index.ts"
+    "test": "npm run build && node ./build/test/index.js"
   },
   "repository": {
     "type": "git",
