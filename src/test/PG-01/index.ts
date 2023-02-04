@@ -71,6 +71,17 @@ test("top level test", async (t) => {
 		assert.equal(exampleFound.meta.lastname, lastname);
 	});
 
+	await t.test("getGuaranteedOneByParams with $like", async () => {
+		const titleOrigin = "test";
+		const title = "%tes%";
+
+		const exampleFound = await testTable.getGuaranteedOneByParams({
+			params: { title: { $like: title } },
+		});
+
+		assert.equal(exampleFound.title, titleOrigin);
+	});
+
 	await t.test("updateOneByPk", async () => {
 		const title = "test";
 		const firstname = "test";
