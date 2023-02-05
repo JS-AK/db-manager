@@ -30,21 +30,17 @@ export class BaseModel {
 
 	compareFields = Helpers.compareFields;
 
-	async delete(primaryKey: string) {
+	async delete<T = string | number>(primaryKey: T): Promise<T | null> {
 		const res = (await this.pool.query(
 			queries.delete(this.tableName, this.primaryKey),
 			[primaryKey],
-		)).rows;
+		)).rows[0];
 
-		return res.map((e) => e[this.primaryKey])[0];
+		return res?.[this.primaryKey] || null;
 	}
 
-	async deleteAll() {
-		const res = (await this.pool.query(
-			queries.deleteAll(this.tableName, this.primaryKey),
-		)).rows;
-
-		return res.map((e) => e[this.primaryKey]);
+	async deleteAll(): Promise<void> {
+		await this.pool.query(queries.deleteAll(this.tableName));
 	}
 
 	async getArrByParams(
@@ -65,7 +61,6 @@ export class BaseModel {
 			valuesOr,
 		} = this.compareFields($and, $or);
 		const checkOrder = orderBy && ordering;
-
 		const {
 			orderByFields,
 			paginationFields,
@@ -251,25 +246,29 @@ export class BaseModel {
 	static getInsertFields(
 		fields: { [key: string]: string | string[] | number | boolean | null | undefined; },
 		tableName: string,
+		returning?: string[],
 	) {
 		const params = SharedHelpers.clearUndefinedFields(fields);
 		const k = Object.keys(params);
 		const v = Object.values(params);
 
+		const returningSQL = returning?.length
+			? `RETURNING ${returning.join(",")}`
+			: "";
+
 		const query = `
 			INSERT INTO ${tableName}(
-				${k.join(",")},
-				created_at
+				${k.join(",")}
 			)
-			VALUES(${k.map((e, idx) => "$" + ++idx).join(",")}, NOW())
-			RETURNING id
+			VALUES(${k.map((e, idx) => "$" + ++idx).join(",")})
+			${returningSQL}
 		`;
 
 		return { query, values: v };
 	}
 
 	static getUpdateFields(
-		id: string,
+		primaryKey: { field: string; value: string | number; },
 		fields: { [key: string]: string | string[] | number | null | boolean | undefined; },
 		tableName: string,
 		updateField?: string,
@@ -285,9 +284,9 @@ export class BaseModel {
 		const query = `
 			UPDATE ${tableName}
 			SET ${updateFields}
-			WHERE id = $1
+			WHERE ${primaryKey.field} = $1
 		`;
 
-		return { query, values: [id, ...v] };
+		return { query, values: [primaryKey.value, ...v] };
 	}
 }

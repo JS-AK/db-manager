@@ -1,18 +1,20 @@
 export default {
-	delete(tableName: string, primaryKey: string) {
+	delete(
+		tableName: string,
+		primaryKeyField: string,
+	) {
 		return `
 			DELETE
 			FROM ${tableName}
-			WHERE ${primaryKey} = $1
-			RETURNING ${primaryKey}
+			WHERE ${primaryKeyField} = $1
+			RETURNING ${primaryKeyField}
 		`;
 	},
 
-	deleteAll(tableName: string, primaryKey: string) {
+	deleteAll(tableName: string) {
 		return `
 			DELETE
 			FROM ${tableName}
-			RETURNING ${primaryKey}
 		`;
 	},
 
@@ -34,39 +36,39 @@ export default {
 
 	getCountByParams(tableName: string, searchFields: string) {
 		return `
-			SELECT COUNT(*)
+			SELECT COUNT(*) AS count
 			FROM ${tableName}
 			${searchFields}
 		`;
 	},
 
-	getCountByPks(primaryKey: string, tableName: string) {
+	getCountByPks(primaryKeyField: string, tableName: string) {
 		return `
-			SELECT COUNT(*)
+			SELECT COUNT(*) AS count
 			FROM ${tableName}
-			WHERE ${primaryKey} = ANY ($1)
+			WHERE ${primaryKeyField} = ANY ($1)
 		`;
 	},
 
 	getCountByPksAndParams(
-		primaryKey: string,
+		primaryKeyField: string,
 		tableName: string,
 		searchFields: string,
 		orderNumber: number,
 	) {
 		return `
-			SELECT COUNT(*)
+			SELECT COUNT(*) AS count
 			FROM ${tableName}
 			${searchFields}
-			  AND ${primaryKey} = ANY ($${orderNumber + 1})
+			  AND ${primaryKeyField} = ANY ($${orderNumber + 1})
 		`;
 	},
 
-	getOneByPk(tableName: string, primaryKey: string) {
+	getOneByPk(tableName: string, primaryKeyField: string) {
 		return `
 			SELECT *
 			FROM ${tableName}
-			WHERE ${primaryKey} = $1
+			WHERE ${primaryKeyField} = $1
 		`;
 	},
 
@@ -98,7 +100,7 @@ export default {
 	update(
 		tableName: string,
 		fields: string[],
-		primaryKey: string,
+		primaryKeyField: string,
 		updateField: string,
 	) {
 		let idx = 1;
@@ -109,7 +111,7 @@ export default {
 		return `
 			UPDATE ${tableName}
 			SET ${updateFields}
-			WHERE ${primaryKey} = $${idx}
+			WHERE ${primaryKeyField} = $${idx}
 			RETURNING *
 		`;
 	},

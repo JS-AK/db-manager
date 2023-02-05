@@ -27,28 +27,28 @@ export class BaseDomain<
 		return res;
 	}
 
-	async deleteOneByPk(pk: string): Promise<string> {
-		return this.model.delete(pk);
+	async deleteOneByPk<T = string | number>(pk: T): Promise<T | null> {
+		return this.model.delete<T>(pk);
 	}
 
-	async deleteAll(): Promise<string[]> {
+	async deleteAll(): Promise<void> {
 		return this.model.deleteAll();
 	}
 
-	async getArrByParams({ params, paramsOr, selected = ["*"], pagination, orderBy, ordering }: {
+	async getArrByParams(options: {
 		params: Types.TSearchParams<SearchFields>;
 		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<SearchFields>>;
 		selected?: (keyof TableFields)[];
 		pagination?: SharedTypes.TPagination;
-		orderBy?: string;
+		orderBy?: keyof TableFields;
 		ordering?: SharedTypes.TOrdering;
 	}): Promise<TableFields[]> {
 		return this.model.getArrByParams(
-			{ $and: params, $or: paramsOr },
-			selected as string[],
-			pagination,
-			orderBy,
-			ordering,
+			{ $and: options.params, $or: options.paramsOr },
+			options.selected as string[],
+			options.pagination,
+			options.orderBy as string,
+			options.ordering,
 		);
 	}
 
@@ -58,38 +58,47 @@ export class BaseDomain<
 
 	async getCountByPksAndParams(
 		pks: string[],
-		{ params, paramsOr }: {
+		options: {
 			params: Types.TSearchParams<SearchFields>;
 			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<SearchFields>>;
 		},
 	): Promise<number> {
-		return this.model.getCountByPksAndParams(pks, { $and: params, $or: paramsOr });
+		return this.model.getCountByPksAndParams(
+			pks,
+			{ $and: options.params, $or: options.paramsOr },
+		);
 	}
 
-	async getCountByParams({ params, paramsOr }: {
+	async getCountByParams(options: {
 		params: Types.TSearchParams<SearchFields>;
 		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<SearchFields>>;
 	}): Promise<number> {
-		return this.model.getCountByParams({ $and: params, $or: paramsOr });
+		return this.model.getCountByParams({
+			$and: options.params,
+			$or: options.paramsOr,
+		});
 	}
 
-	async getGuaranteedOneByParams({ params, paramsOr, selected = ["*"] }: {
+	async getGuaranteedOneByParams(options: {
 		params: Types.TSearchParams<SearchFields>;
 		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<SearchFields>>;
 		selected?: (keyof TableFields)[];
 	}): Promise<TableFields> {
 		return this.model.getOneByParams(
-			{ $and: params, $or: paramsOr },
-			selected as string[],
+			{ $and: options.params, $or: options.paramsOr },
+			options.selected as string[],
 		);
 	}
 
-	async getOneByParams({ params, paramsOr, selected = ["*"] }: {
+	async getOneByParams(options: {
 		params: Types.TSearchParams<SearchFields>;
 		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<SearchFields>>;
 		selected?: (keyof TableFields)[];
 	}): Promise<{ message?: string; one?: TableFields; }> {
-		const one = await this.model.getOneByParams({ $and: params, $or: paramsOr }, selected as string[]);
+		const one = await this.model.getOneByParams(
+			{ $and: options.params, $or: options.paramsOr },
+			options.selected as string[],
+		);
 
 		if (!one) return { message: `Not found from ${this.model.tableName}` };
 
