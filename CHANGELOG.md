@@ -1,3 +1,11 @@
+## [1.0.8](https://github.com/JS-AK/db-manager/compare/v1.0.7...v1.0.8) (2023-02-05)
+
+
+### Bug Fixes
+
+* update mysql part of lib ([3de2ca9](https://github.com/JS-AK/db-manager/commit/3de2ca90f42a2832b787c72528c9961b909074e9))
+* update pg part of lib ([9b62ade](https://github.com/JS-AK/db-manager/commit/9b62adefe531b115359b9a685db2006354d2f5c6))
+
 ## [1.0.7](https://github.com/JS-AK/db-manager/compare/v1.0.6...v1.0.7) (2023-02-03)
 
 
