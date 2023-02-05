@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import * as SharedTypes from "../../../shared-types/index.js";
 import * as Types from "./types.js";
 import { BaseModel } from "../model/index.js";
@@ -29,7 +27,7 @@ export class BaseDomain<
 		return res;
 	}
 
-	async deleteOneByPk(pk: string): Promise<void> {
+	async deleteOneByPk(pk: SharedTypes.TPrimaryKeyValue): Promise<void> {
 		await this.model.delete(pk);
 	}
 
@@ -37,39 +35,53 @@ export class BaseDomain<
 		return this.model.deleteAll();
 	}
 
-	async getArrByParams({ params, selected = ["*"], pagination, orderBy, ordering }: {
+	async getArrByParams(options: {
 		params: SearchFields;
-		selected?:(keyof TableFields)[];
+		selected?: (keyof TableFields)[];
 		pagination?: SharedTypes.TPagination;
-		orderBy?: string;
+		orderBy?: keyof TableFields;
 		ordering?: SharedTypes.TOrdering;
-	}): Promise<any[]> {
-		return this.model.getArrByParams(params, selected as string[], pagination, orderBy, ordering);
+	}): Promise<TableFields[]> {
+		return this.model.getArrByParams(
+			options.params,
+			options.selected as string[],
+			options.pagination,
+			options.orderBy as string,
+			options.ordering,
+		);
 	}
 
-	async getCountByParams({ params }: { params: SearchFields; }): Promise<number> {
-		return this.model.getCountByParams(params);
+	async getCountByParams(options: { params: SearchFields; }): Promise<number> {
+		return this.model.getCountByParams(options.params);
 	}
 
-	async getGuaranteedOneByParams({ params, selected = ["*"] }: {
+	async getGuaranteedOneByParams(options: {
 		params: SearchFields;
 		selected?: (keyof TableFields)[];
 	}): Promise<TableFields> {
-		return this.model.getOneByParams(params, selected as string[]);
+		return this.model.getOneByParams(
+			options.params,
+			options.selected as string[],
+		);
 	}
 
-	async getOneByParams({ params, selected = ["*"] }: {
+	async getOneByParams(options: {
 		params: SearchFields;
-		selected?:(keyof TableFields)[];
-	}): Promise<{ message?: string; one?: any; }> {
-		const one = await this.model.getOneByParams(params, selected as string[]);
+		selected?: (keyof TableFields)[];
+	}): Promise<{ message?: string; one?: TableFields; }> {
+		const one = await this.model.getOneByParams(
+			options.params,
+			options.selected as string[],
+		);
 
 		if (!one) return { message: "Not found" };
 
 		return { one };
 	}
 
-	async getOneByPk(pk: string | string[]): Promise<{ message?: string; one?: any; }> {
+	async getOneByPk(
+		pk: SharedTypes.TPrimaryKeyValue,
+	): Promise<{ message?: string; one?: TableFields; }> {
 		const one = await this.model.getOneByPk(pk);
 
 		if (!one) return { message: "Not found" };
@@ -77,7 +89,10 @@ export class BaseDomain<
 		return { one };
 	}
 
-	async updateOneByPk(pk: string, params: UpdateFields): Promise<void> {
+	async updateOneByPk(
+		pk: SharedTypes.TPrimaryKeyValue,
+		params: UpdateFields,
+	): Promise<void> {
 		return await this.model.update(pk, params);
 	}
 }

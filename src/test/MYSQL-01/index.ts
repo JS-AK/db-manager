@@ -24,6 +24,7 @@ test("top level test", async (t) => {
 			CREATE TABLE test_table(
 			  id                              INT NOT NULL AUTO_INCREMENT,
 
+			  description                     varchar(255),
 			  title                           varchar(255) NOT NULL,
 
 			  created_at                      DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -34,19 +35,75 @@ test("top level test", async (t) => {
 	});
 
 	await t.test("createOne", async () => {
-		const title1 = "test 1";
-		const title2 = "test 2";
-
-		const example1Id = await testTable.createOne({ title: title1 });
+		const example1Id = await testTable.createOne({ title: "test 1" });
+		const example2Id = await testTable.createOne({ title: "test 2" });
+		const example3Id = await testTable.createOne({ title: "test 3" });
+		const example4Id = await testTable.createOne({ title: "test 4" });
+		const example5Id = await testTable.createOne({ title: "test 5" });
 
 		assert.equal(example1Id, 1);
-
-		const example2Id = await testTable.createOne({ title: title2 });
-
 		assert.equal(example2Id, 2);
+		assert.equal(example3Id, 3);
+		assert.equal(example4Id, 4);
+		assert.equal(example5Id, 5);
 	});
 
-	await t.test("getGuaranteedOneByParams", async () => {
+	await t.test("getOneByPk found", async () => {
+		const id = 1;
+
+		const { one: exampleFound } = await testTable.getOneByPk(id);
+
+		if (exampleFound) {
+			assert.equal(exampleFound.id, id);
+		}
+	});
+
+	await t.test("getArrByParams", async () => {
+		const res = await testTable.getArrByParams({
+			params: {},
+		});
+
+		assert.equal(res.length, 5);
+	});
+
+	await t.test("getArrByParams with ordering", async () => {
+		{
+			const res = await testTable.getArrByParams({
+				orderBy: "title",
+				ordering: "DESC",
+				params: {},
+			});
+
+			assert.equal(res[0]?.title, "test 5");
+		}
+		{
+			const res = await testTable.getArrByParams({
+				orderBy: "title",
+				ordering: "ASC",
+				params: {},
+			});
+
+			assert.equal(res[0]?.title, "test 1");
+		}
+	});
+
+	await t.test("getArrByParams with params: {title: 'test 1'}", async () => {
+		const res = await testTable.getArrByParams({
+			params: { title: "test 1" },
+		});
+
+		assert.equal(res.length, 1);
+	});
+
+	await t.test("getArrByParams title: null", async () => {
+		const res = await testTable.getArrByParams({
+			params: { description: null },
+		});
+
+		assert.equal(res.length, 5);
+	});
+
+	await t.test("getGuaranteedOneByParams found", async () => {
 		const title = "test 1";
 
 		const exampleFound = await testTable.getGuaranteedOneByParams({
@@ -57,6 +114,31 @@ test("top level test", async (t) => {
 		assert.equal(!!exampleFound.created_at, true);
 		assert.equal(!!exampleFound.updated_at, false);
 		assert.equal(exampleFound.title, title);
+	});
+
+	await t.test("getOneByParams found", async () => {
+		const title = "test 1";
+
+		const { one: exampleFound } = await testTable.getOneByParams({
+			params: { title },
+		});
+
+		if (exampleFound) {
+			assert.equal(!!exampleFound.id, true);
+			assert.equal(!!exampleFound.created_at, true);
+			assert.equal(!!exampleFound.updated_at, false);
+			assert.equal(exampleFound.title, title);
+		}
+	});
+
+	await t.test("getOneByParams not found", async () => {
+		const title = "test 0";
+
+		const { one: exampleNotFound } = await testTable.getOneByParams({
+			params: { title },
+		});
+
+		assert.equal(exampleNotFound, undefined);
 	});
 
 	await t.test("updateOneByPk", async () => {

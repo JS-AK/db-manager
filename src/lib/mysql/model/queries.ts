@@ -1,9 +1,12 @@
 import * as SharedTypes from "../../../shared-types/index.js";
 
 export default {
-	delete(tableName: string, primaryKey: string | string[]) {
-		if (Array.isArray(primaryKey)) {
-			const query = primaryKey.map((e) => `${e} = ?`);
+	delete(
+		tableName: string,
+		primaryKeyField: SharedTypes.TPrimaryKeyField,
+	) {
+		if (Array.isArray(primaryKeyField)) {
+			const query = primaryKeyField.map((e) => `${e} = ?`);
 
 			return `
 				DELETE
@@ -15,7 +18,7 @@ export default {
 		return `
 			DELETE
 			FROM ${tableName}
-			WHERE ${primaryKey} = ?
+			WHERE ${primaryKeyField} = ?
 		`;
 	},
 
@@ -70,7 +73,11 @@ export default {
 		return res;
 	},
 
-	getCountByParams(primaryKey: string | string[], tableName: string, fields: string[], nullFields: string[]) {
+	getCountByParams(
+		tableName: string,
+		fields: string[],
+		nullFields: string[],
+	) {
 		let searchFields;
 
 		if (fields.length) searchFields = fields.map((e: string) => `${e} = ?`).join(" AND ");
@@ -80,20 +87,19 @@ export default {
 			else searchFields = nullFields.join(",");
 		}
 
-		const query = Array.isArray(primaryKey)
-			? primaryKey[0]
-			: primaryKey;
-
 		return `
-			SELECT COUNT(${query}) AS count
+			SELECT COUNT(*) AS count
 			FROM ${tableName}
 			WHERE ${searchFields}
 		`;
 	},
 
-	getOneByPk(tableName: string, primaryKey: string | string[]) {
-		if (Array.isArray(primaryKey)) {
-			const query = primaryKey.map((e) => `${e} = ?`);
+	getOneByPk(
+		tableName: string,
+		primaryKeyField: SharedTypes.TPrimaryKeyField,
+	) {
+		if (Array.isArray(primaryKeyField)) {
+			const query = primaryKeyField.map((e) => `${e} = ?`);
 
 			return `
 				SELECT *
@@ -105,7 +111,7 @@ export default {
 		return `
 			SELECT *
 			FROM ${tableName}
-			WHERE ${primaryKey} = ?
+			WHERE ${primaryKeyField} = ?
 		`;
 	},
 
@@ -128,13 +134,18 @@ export default {
 		`;
 	},
 
-	update(tableName: string, fields: string[], primaryKey: string | string[], updateField?: string) {
+	update(
+		tableName: string,
+		fields: string[],
+		primaryKeyField: SharedTypes.TPrimaryKeyField,
+		updateField?: string,
+	) {
 		let updateFields = fields.map((e: string) => `${e} = ?`).join(",");
 
 		if (updateField) updateFields += `, ${updateField} = NOW()`;
 
-		if (Array.isArray(primaryKey)) {
-			const query = primaryKey.map((e) => `${e} = ?`);
+		if (Array.isArray(primaryKeyField)) {
+			const query = primaryKeyField.map((e) => `${e} = ?`);
 
 			return `
 				UPDATE ${tableName}
@@ -146,7 +157,7 @@ export default {
 		return `
 			UPDATE ${tableName}
 			SET ${updateFields}
-			WHERE ${primaryKey} = ?
+			WHERE ${primaryKeyField} = ?
 		`;
 	},
 };

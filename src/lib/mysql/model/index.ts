@@ -25,7 +25,7 @@ export class BaseModel {
 		this.updateField = tableData.updateField;
 	}
 
-	async delete(primaryKey: string | string[]) {
+	async delete(primaryKey: SharedTypes.TPrimaryKeyValue) {
 		await this.pool.promise().query(
 			queries.delete(this.tableName, this.primaryKey),
 			Array.isArray(primaryKey) ? primaryKey : [primaryKey],
@@ -72,9 +72,7 @@ export class BaseModel {
 		return rows;
 	}
 
-	async getCountByParams(
-		params = {},
-	) {
+	async getCountByParams(params = {}) {
 		const fields = [];
 		const values = [];
 		const nullFields = [];
@@ -88,7 +86,7 @@ export class BaseModel {
 			}
 		}
 		const [rows]: any[] = (await this.pool.promise().query(
-			queries.getCountByParams(this.primaryKey, this.tableName, fields, nullFields),
+			queries.getCountByParams(this.tableName, fields, nullFields),
 			values,
 		));
 
@@ -116,7 +114,7 @@ export class BaseModel {
 		return rows[0];
 	}
 
-	async getOneByPk(primaryKey: string | string[]) {
+	async getOneByPk(primaryKey: SharedTypes.TPrimaryKeyValue) {
 		const [rows]: any[] = (await this.pool.promise().query(
 			queries.getOneByPk(this.tableName, this.primaryKey),
 			Array.isArray(primaryKey) ? primaryKey : [primaryKey],
@@ -137,7 +135,10 @@ export class BaseModel {
 		return rows.insertId;
 	}
 
-	async update(primaryKey: string | string[], params = {}) {
+	async update(
+		primaryKey: SharedTypes.TPrimaryKeyValue,
+		params = {},
+	) {
 		const prms = SharedHelpers.clearUndefinedFields(params);
 		const fields = Object.keys(prms);
 		const primaryKeyValue = Array.isArray(primaryKey) ? [...primaryKey] : [primaryKey];
