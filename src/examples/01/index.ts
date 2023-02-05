@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 import { UserDM } from "./User/domain-model";
 
 const creds = {
