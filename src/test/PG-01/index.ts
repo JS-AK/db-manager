@@ -2,7 +2,8 @@ import assert from "node:assert";
 import test from "node:test";
 
 import { PG } from "../../index.js";
-import { TestTable } from "./testTable/domain.js";
+import { TestTable1 } from "./testTable1/domain.js";
+import { TestTable2 } from "./testTable2/domain.js";
 
 const creds = {
 	database: "postgres",
@@ -12,16 +13,32 @@ const creds = {
 	user: "postgres",
 };
 
-const testTable = new TestTable(creds);
+const testTable1 = new TestTable1(creds);
+const testTable2 = new TestTable2(creds);
 
 test("top level test", async (t) => {
-	await t.test("createTable", async () => {
+	await t.test("createTables", async () => {
 		const pool = PG.BaseModel.getStandartPool(creds);
 
 		await pool.query(`
 			DROP TABLE IF EXISTS test_table;
 
-			CREATE TABLE test_table(
+			CREATE TABLE test_table_1(
+			  id                              BIGSERIAL PRIMARY KEY,
+
+			  description                     TEXT,
+			  meta                            JSONB NOT NULL,
+			  title                           TEXT NOT NULL,
+
+			  created_at                      TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+			  updated_at                      TIMESTAMP WITH TIME ZONE
+			);
+		`);
+
+		await pool.query(`
+			DROP TABLE IF EXISTS test_table;
+
+			CREATE TABLE test_table_2(
 			  id                              BIGSERIAL PRIMARY KEY,
 
 			  description                     TEXT,
@@ -35,25 +52,144 @@ test("top level test", async (t) => {
 	});
 
 	await t.test("createOne", async () => {
-		const description = "test";
 		const meta = { firstname: "test", lastname: "test" };
-		const title = "test";
+		const title = "test 1";
 
-		const example = await testTable.createOne({ description, meta, title });
+		const example1 = await testTable1.createOne({ meta, title });
 
-		assert.equal(!!example.id, true);
-		assert.equal(!!example.created_at, true);
-		assert.equal(!!example.updated_at, false);
-		assert.equal(example.title, title);
-		assert.equal(example.meta.firstname, meta.firstname);
-		assert.equal(example.meta.lastname, meta.lastname);
+		assert.equal(!!example1.id, true);
+		assert.equal(!!example1.created_at, true);
+		assert.equal(!!example1.updated_at, false);
+		assert.equal(example1.title, title);
+		assert.equal(example1.meta.firstname, meta.firstname);
+		assert.equal(example1.meta.lastname, meta.lastname);
+
+		await testTable1.createOne({ description: "test", meta, title: "test 2" });
+		await testTable1.createOne({ meta, title: "test 3" });
+		await testTable1.createOne({ meta, title: "test 4" });
+		await testTable1.createOne({ meta, title: "test 5" });
+	});
+
+	await t.test("transaction 1st", async () => {
+		const transactionPool = PG.BaseModel.getTransactionPool(creds);
+		const client = await transactionPool.connect();
+
+		try {
+			await client.query("BEGIN");
+			const title = "title transaction 1";
+
+			const { query, values } = PG.BaseModel.getInsertFields(
+				{
+					meta: { firstname: "test", lastname: "test" },
+					title,
+				},
+				"test_table_2",
+				["id", "title"],
+			);
+
+			const data = (await client.query(query, values)).rows[0];
+
+			assert.equal(data.title, title);
+
+			await client.query(`
+				DELETE
+				FROM test_table_2
+				WHERE id = $1
+			`, [data.id]);
+
+			const { one } = await testTable2.getOneByPk(data.id);
+
+			assert.equal(one, undefined);
+
+			await client.query("COMMIT");
+		} catch (e) {
+			await client.query("ROLLBACK");
+			throw e;
+		} finally {
+			client.release();
+		}
+	});
+
+	await t.test("transaction 2nd", async () => {
+		const transactionPool = PG.BaseModel.getTransactionPool(creds);
+		const client = await transactionPool.connect();
+
+		try {
+			await client.query("BEGIN");
+			const title = "title transaction 2";
+
+			const { query, values } = PG.BaseModel.getInsertFields(
+				{
+					meta: { firstname: "test", lastname: "test" },
+					title,
+				},
+				"test_table_2",
+				["id", "title"],
+			);
+
+			const data = (await client.query(query, values)).rows[0];
+
+			assert.equal(data.title, title);
+
+			await client.query("COMMIT");
+		} catch (e) {
+			await client.query("ROLLBACK");
+			throw e;
+		} finally {
+			client.release();
+		}
+	});
+
+	await t.test("getArrByParams", async () => {
+		const res = await testTable1.getArrByParams({
+			params: {},
+		});
+
+		assert.equal(res.length, 5);
+	});
+
+	await t.test("getArrByParams with ordering", async () => {
+		{
+			const res = await testTable1.getArrByParams({
+				orderBy: "title",
+				ordering: "DESC",
+				params: {},
+			});
+
+			assert.equal(res[0]?.title, "test 5");
+		}
+		{
+			const res = await testTable1.getArrByParams({
+				orderBy: "title",
+				ordering: "ASC",
+				params: {},
+			});
+
+			assert.equal(res[0]?.title, "test 1");
+		}
+	});
+
+	await t.test("getArrByParams with params: {title: 'test 1'}", async () => {
+		const res = await testTable1.getArrByParams({
+			params: { title: "test 1" },
+		});
+
+		assert.equal(res.length, 1);
+	});
+
+	await t.test("getArrByParams description: null", async () => {
+		const res = await testTable1.getArrByParams({
+			params: { description: null },
+		});
+
+		assert.equal(res.length, 4);
 	});
 
 	await t.test("getGuaranteedOneByParams", async () => {
-		const title = "test";
+		const title = "title transaction 2";
 		const meta = { firstname: "test", lastname: "test" };
 
-		const exampleFound = await testTable.getGuaranteedOneByParams({
+		const exampleFound = await testTable2.getGuaranteedOneByParams({
 			params: { meta, title },
 		});
 
@@ -66,10 +202,10 @@ test("top level test", async (t) => {
 	});
 
 	await t.test("getGuaranteedOneByParams with $like", async () => {
-		const titleOrigin = "test";
-		const title = "%tes%";
+		const titleOrigin = "test 1";
+		const title = "%est 1%";
 
-		const exampleFound = await testTable.getGuaranteedOneByParams({
+		const exampleFound = await testTable1.getGuaranteedOneByParams({
 			params: { title: { $like: title } },
 		});
 
@@ -77,9 +213,9 @@ test("top level test", async (t) => {
 	});
 
 	await t.test("getGuaranteedOneByParams with $ne", async () => {
-		const titleOrigin = "test";
+		const titleOrigin = "test 2";
 
-		const exampleFound = await testTable.getGuaranteedOneByParams({
+		const exampleFound = await testTable1.getGuaranteedOneByParams({
 			params: { description: { $ne: null } },
 		});
 
@@ -88,9 +224,9 @@ test("top level test", async (t) => {
 
 	await t.test("updateOneByPk", async () => {
 		const meta = { firstname: "test", lastname: "test" };
-		const title = "test";
+		const title = "test 1";
 
-		const exampleFound = await testTable.getGuaranteedOneByParams({
+		const exampleFound = await testTable1.getGuaranteedOneByParams({
 			params: { meta, title },
 		});
 
@@ -100,7 +236,7 @@ test("top level test", async (t) => {
 			lastname: "test updated",
 		};
 
-		const exampleUpdated = await testTable.updateOneByPk(
+		const exampleUpdated = await testTable1.updateOneByPk(
 			exampleFound.id,
 			{
 				meta: metaUpdated,
@@ -119,19 +255,19 @@ test("top level test", async (t) => {
 	await t.test("deleteOneByPk", async () => {
 		const title = "test updated";
 
-		const exampleFound = await testTable.getGuaranteedOneByParams({
+		const exampleFound = await testTable1.getGuaranteedOneByParams({
 			params: { title },
 		});
 
-		const exampleDeletedId = await testTable.deleteOneByPk(exampleFound.id);
+		const exampleDeletedId = await testTable1.deleteOneByPk(exampleFound.id);
 
 		assert.equal(exampleFound.id, exampleDeletedId);
 	});
 
 	await t.test("deleteAll", async () => {
-		await testTable.deleteAll();
+		await testTable1.deleteAll();
 
-		const allDataAfterDeleted = await testTable.getArrByParams({
+		const allDataAfterDeleted = await testTable1.getArrByParams({
 			params: {},
 		});
 
@@ -139,16 +275,19 @@ test("top level test", async (t) => {
 	});
 
 	await t.test("custom function test()", async () => {
-		const isNotTestFailed = await testTable.test();
+		const isNotTestFailed = await testTable1.test();
 
 		assert.equal(isNotTestFailed, true);
 	});
 
-	await t.test("dropTable", async () => {
+	await t.test("dropTables", async () => {
 		const pool = PG.BaseModel.getStandartPool(creds);
+		const transactionPool = PG.BaseModel.getTransactionPool(creds);
 
-		await pool.query("DROP TABLE IF EXISTS test_table;");
+		await pool.query("DROP TABLE IF EXISTS test_table_1;");
+		await pool.query("DROP TABLE IF EXISTS test_table_2;");
 
 		pool.end();
+		transactionPool.end();
 	});
 });

@@ -2,6 +2,7 @@ export type TDBCreds = {
 	database: string;
 	host: string;
 	password: string;
+	poolName?: string;
 	port: number;
 	user: string;
 };

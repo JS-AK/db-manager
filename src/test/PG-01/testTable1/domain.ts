@@ -2,7 +2,7 @@ import { PG } from "../../../index.js";
 
 import { Model, Types } from "./model/index.js";
 
-export class TestTable extends PG.BaseDomain<
+export class TestTable1 extends PG.BaseDomain<
 	Model,
 	Types.CreateFields,
 	Types.SearchFields,

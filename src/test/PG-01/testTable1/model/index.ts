@@ -26,7 +26,7 @@ export class Model extends PG.BaseModel {
 }
 
 // ----- Table propertires ----------------------
-const tableName = "test_table"; // table from DB
+const tableName = "test_table_1"; // table from DB
 const primaryKey = "id"; // primaryId from table
 const createField = "created_at"; // created field
 const updateField = "updated_at"; // updated field

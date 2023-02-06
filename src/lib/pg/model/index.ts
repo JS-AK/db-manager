@@ -244,7 +244,7 @@ export class BaseModel {
 	}
 
 	static getInsertFields(
-		fields: { [key: string]: string | string[] | number | boolean | null | undefined; },
+		fields: { [key: string]: string | string[] | number | boolean | object | null | undefined; },
 		tableName: string,
 		returning?: string[],
 	) {
