@@ -1,3 +1,11 @@
+# [1.1.0](https://github.com/JS-AK/db-manager/compare/v1.0.8...v1.1.0) (2023-02-06)
+
+
+### Features
+
+* add naming for pg pools ([c87a381](https://github.com/JS-AK/db-manager/commit/c87a381fab06884741c62f56c08d0866cb004d22))
+* add transaction pool for mysql ([7059631](https://github.com/JS-AK/db-manager/commit/7059631bd5bf160b5ff1b71cd5dc8b6ae84f3974))
+
 ## [1.0.8](https://github.com/JS-AK/db-manager/compare/v1.0.7...v1.0.8) (2023-02-05)
 
 
