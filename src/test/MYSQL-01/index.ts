@@ -48,6 +48,50 @@ test("top level test", async (t) => {
 		assert.equal(example5Id, 5);
 	});
 
+	await t.test("transaction", async () => {
+		const transactionPool = MYSQL.BaseModel.getTransactionPool(creds);
+		const connection = await transactionPool.promise().getConnection();
+
+		try {
+			await connection.beginTransaction();
+
+			await connection.query(`
+				DELETE
+				FROM test_table
+				WHERE title = ?
+			`, ["test 5"]);
+
+			await connection.commit();
+		} catch (error) {
+			await connection.rollback();
+			throw error;
+		} finally {
+			connection.release();
+		}
+	});
+
+	await t.test("transaction", async () => {
+		const transactionPool = MYSQL.BaseModel.getTransactionPool(creds);
+		const connection = await transactionPool.promise().getConnection();
+
+		try {
+			await connection.beginTransaction();
+
+			await connection.query(`
+				DELETE
+				FROM test_table
+				WHERE title = ?
+			`, ["test 4"]);
+
+			await connection.commit();
+		} catch (error) {
+			await connection.rollback();
+			throw error;
+		} finally {
+			connection.release();
+		}
+	});
+
 	await t.test("getOneByPk found", async () => {
 		const id = 1;
 
@@ -63,7 +107,7 @@ test("top level test", async (t) => {
 			params: {},
 		});
 
-		assert.equal(res.length, 5);
+		assert.equal(res.length, 3);
 	});
 
 	await t.test("getArrByParams with ordering", async () => {
@@ -74,7 +118,7 @@ test("top level test", async (t) => {
 				params: {},
 			});
 
-			assert.equal(res[0]?.title, "test 5");
+			assert.equal(res[0]?.title, "test 3");
 		}
 		{
 			const res = await testTable.getArrByParams({
@@ -95,12 +139,12 @@ test("top level test", async (t) => {
 		assert.equal(res.length, 1);
 	});
 
-	await t.test("getArrByParams title: null", async () => {
+	await t.test("getArrByParams description: null", async () => {
 		const res = await testTable.getArrByParams({
 			params: { description: null },
 		});
 
-		assert.equal(res.length, 5);
+		assert.equal(res.length, 3);
 	});
 
 	await t.test("getGuaranteedOneByParams found", async () => {
@@ -199,9 +243,11 @@ test("top level test", async (t) => {
 
 	await t.test("dropTable", async () => {
 		const pool = MYSQL.BaseModel.getStandartPool(creds);
+		const transactionPool = MYSQL.BaseModel.getTransactionPool(creds);
 
 		await pool.promise().query("DROP TABLE IF EXISTS test_table;");
 
 		pool.end();
+		transactionPool.end();
 	});
 });

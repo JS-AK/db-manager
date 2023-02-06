@@ -3,7 +3,7 @@ import mysql from "mysql2";
 import * as SharedHelpers from "../../../shared-helpers/index.js";
 import * as SharedTypes from "../../../shared-types/index.js";
 import * as Types from "./types.js";
-import { getStandartPool } from "../connection.js";
+import { getStandartPool, getTransactionPool } from "../connection.js";
 import queries from "./queries.js";
 
 export class BaseModel {
@@ -152,5 +152,9 @@ export class BaseModel {
 	// STATIC METHODS
 	static getStandartPool(creds: Types.TDBCreds): mysql.Pool {
 		return getStandartPool(creds);
+	}
+
+	static getTransactionPool(creds: Types.TDBCreds): mysql.Pool {
+		return getTransactionPool(creds);
 	}
 }
