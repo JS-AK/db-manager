@@ -1,3 +1,11 @@
+# [1.2.0](https://github.com/JS-AK/db-manager/compare/v1.1.0...v1.2.0) (2023-02-12)
+
+
+### Features
+
+* add features for mysql lib ([145f6f7](https://github.com/JS-AK/db-manager/commit/145f6f75d38a8b343e5ee08d1aa7e9dbeb8aeab7))
+* add features for pg lib ([468495e](https://github.com/JS-AK/db-manager/commit/468495ead5a0344df59b359afe91570c45ae7729))
+
 # [1.1.0](https://github.com/JS-AK/db-manager/compare/v1.0.8...v1.1.0) (2023-02-06)
 
 
