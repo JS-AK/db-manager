@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/JS-AK/db-manager/compare/v1.2.0...v1.3.0) (2023-02-12)
+
+
+### Features
+
+* add $custom search param for pg and mysql ([f7e8d09](https://github.com/JS-AK/db-manager/commit/f7e8d09808a81a77326f70ffc98fba5dfe2ddb69))
+
 # [1.2.0](https://github.com/JS-AK/db-manager/compare/v1.1.0...v1.2.0) (2023-02-12)
 
 
