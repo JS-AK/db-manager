@@ -37,7 +37,7 @@ test("top level test", async (t) => {
 	await t.test("createOne", async () => {
 		const example1Id = await testTable.createOne({ title: "test 1" });
 		const example2Id = await testTable.createOne({ title: "test 2" });
-		const example3Id = await testTable.createOne({ title: "test 3" });
+		const example3Id = await testTable.createOne({ description: "test 3", title: "test 3" });
 		const example4Id = await testTable.createOne({ title: "test 4" });
 		const example5Id = await testTable.createOne({ title: "test 5" });
 
@@ -144,7 +144,7 @@ test("top level test", async (t) => {
 			params: { description: null },
 		});
 
-		assert.equal(res.length, 3);
+		assert.equal(res.length, 2);
 	});
 
 	await t.test("getGuaranteedOneByParams found", async () => {
@@ -173,6 +173,37 @@ test("top level test", async (t) => {
 			assert.equal(!!exampleFound.updated_at, false);
 			assert.equal(exampleFound.title, title);
 		}
+	});
+
+	await t.test("getArrByParams found", async () => {
+		const res = await testTable.getArrByParams({
+			params: {
+				description: {
+					$like: "%test%",
+					$nlike: "%12345%",
+				},
+				id: {
+					$gte: "3",
+					$in: ["2", "3"],
+					$lte: "3",
+					$ne: null,
+					$nin: ["1", "4"],
+				},
+			},
+			paramsOr: [
+				{ description: null, title: "test 1" },
+				{
+					description: {
+						$like: "%tes%",
+						$ne: null,
+						$nlike: "%12345%",
+					},
+					title: "test 3",
+				},
+			],
+		});
+
+		assert.equal(res[0]?.title, "test 3");
 	});
 
 	await t.test("getOneByParams not found", async () => {

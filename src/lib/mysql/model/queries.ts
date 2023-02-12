@@ -31,46 +31,18 @@ export default {
 
 	getByParams(
 		tableName: string,
-		fields: string[],
-		nullFields: string[],
-		selected = ["*"],
-		pagination?: SharedTypes.TPagination,
-		orderBy?: string,
-		ordering = "ASC",
+		selectedFields: string,
+		searchFields: string,
+		orderByFields: string,
+		paginationFields: string,
 	) {
-		let searchFields;
-
-		if (fields.length) searchFields = fields.map((e: string) => `${e} = ?`).join(" AND ");
-		else searchFields = "1=1";
-		if (nullFields.length) {
-			if (searchFields) searchFields += ` AND ${nullFields.join(" AND ")}`;
-			else searchFields = nullFields.join(",");
-		}
-
-		let orderByFields = "";
-
-		if (orderBy) orderByFields += `ORDER BY ${orderBy} ${ordering}`;
-
-		const res = `
-			SELECT ${selected.join(",")}
+		return `
+			SELECT ${selectedFields}
 			FROM ${tableName}
-			WHERE ${searchFields}
+			${searchFields}
 			${orderByFields}
+			${paginationFields}
 		`;
-
-		if (pagination) {
-			let { limit, offset }: SharedTypes.TPagination = pagination;
-
-			if (typeof limit !== "number") limit = 20;
-			if (typeof offset !== "number") offset = 0;
-
-			return `
-				${res}
-				LIMIT ${limit} OFFSET ${offset}
-			`;
-		}
-
-		return res;
 	},
 
 	getCountByParams(

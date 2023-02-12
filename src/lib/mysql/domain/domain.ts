@@ -36,14 +36,15 @@ export class BaseDomain<
 	}
 
 	async getArrByParams(options: {
-		params: SearchFields;
+		params: Types.TSearchParams<SearchFields>;
+		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<SearchFields>>;
 		selected?: (keyof TableFields)[];
 		pagination?: SharedTypes.TPagination;
 		orderBy?: keyof TableFields;
 		ordering?: SharedTypes.TOrdering;
 	}): Promise<TableFields[]> {
 		return this.model.getArrByParams(
-			options.params,
+			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 			options.pagination,
 			options.orderBy as string,
@@ -56,21 +57,23 @@ export class BaseDomain<
 	}
 
 	async getGuaranteedOneByParams(options: {
-		params: SearchFields;
+		params: Types.TSearchParams<SearchFields>;
+		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<SearchFields>>;
 		selected?: (keyof TableFields)[];
 	}): Promise<TableFields> {
 		return this.model.getOneByParams(
-			options.params,
+			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 		);
 	}
 
 	async getOneByParams(options: {
-		params: SearchFields;
+		params: Types.TSearchParams<SearchFields>;
+		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<SearchFields>>;
 		selected?: (keyof TableFields)[];
 	}): Promise<{ message?: string; one?: TableFields; }> {
 		const one = await this.model.getOneByParams(
-			options.params,
+			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 		);
 

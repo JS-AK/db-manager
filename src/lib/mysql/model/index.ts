@@ -1,5 +1,6 @@
 import mysql from "mysql2";
 
+import * as Helpers from "./helpers.js";
 import * as SharedHelpers from "../../../shared-helpers/index.js";
 import * as SharedTypes from "../../../shared-types/index.js";
 import * as Types from "./types.js";
@@ -25,6 +26,8 @@ export class BaseModel {
 		this.updateField = tableData.updateField;
 	}
 
+	compareFields = Helpers.compareFields;
+
 	async delete(primaryKey: SharedTypes.TPrimaryKeyValue) {
 		await this.pool.promise().query(
 			queries.delete(this.tableName, this.primaryKey),
@@ -37,34 +40,41 @@ export class BaseModel {
 	}
 
 	async getArrByParams(
-		params = {},
+		{ $and = {}, $or }: {
+			$and: Types.TSearchParams;
+			$or?: Types.TSearchParams[];
+		},
 		selected = ["*"],
 		pagination?: SharedTypes.TPagination,
 		orderBy?: string,
 		ordering?: SharedTypes.TOrdering,
 	) {
-		const fields = [];
-		const values = [];
-		const nullFields = [];
-
-		for (const [key, value] of Object.entries(params)) {
-			if (value === null) {
-				nullFields.push(`${key} IS NULL`);
-			} else {
-				fields.push(key);
-				values.push(value);
-			}
-		}
+		const {
+			fields,
+			fieldsOr,
+			nullFields,
+			values,
+		} = this.compareFields($and, $or);
+		const checkOrder = orderBy && ordering;
+		const {
+			orderByFields,
+			paginationFields,
+			searchFields,
+			selectedFields,
+		} = this.getFieldsToSearch(
+			{ fields, fieldsOr, nullFields },
+			selected,
+			pagination,
+			checkOrder ? { orderBy, ordering } : undefined,
+		);
 
 		const [rows]: any[] = (await this.pool.promise().query(
 			queries.getByParams(
 				this.tableName,
-				fields,
-				nullFields,
-				selected,
-				pagination,
-				orderBy,
-				ordering,
+				selectedFields,
+				searchFields,
+				orderByFields,
+				paginationFields,
 			),
 			values,
 		));
@@ -93,21 +103,39 @@ export class BaseModel {
 		return parseInt(rows[0].count, 10);
 	}
 
-	async getOneByParams(params = {}, selected = ["*"]) {
-		const fields = [];
-		const nullFields = [];
-		const values = [];
+	getFieldsToSearch = Helpers.getFieldsToSearch;
 
-		for (const [key, value] of Object.entries(params)) {
-			if (value === null) {
-				nullFields.push(`${key} IS NULL`);
-			} else {
-				fields.push(key);
-				values.push(value);
-			}
-		}
+	async getOneByParams(
+		{ $and = {}, $or }: {
+			$and: Types.TSearchParams;
+			$or?: Types.TSearchParams[];
+		},
+		selected = ["*"],
+	) {
+		const {
+			fields,
+			fieldsOr,
+			nullFields,
+			values,
+		} = this.compareFields($and, $or);
+		const {
+			orderByFields,
+			paginationFields,
+			searchFields,
+			selectedFields,
+		} = this.getFieldsToSearch(
+			{ fields, fieldsOr, nullFields },
+			selected,
+		);
+
 		const [rows]: any[] = (await this.pool.promise().query(
-			queries.getByParams(this.tableName, fields, nullFields, selected),
+			queries.getByParams(
+				this.tableName,
+				selectedFields,
+				searchFields,
+				orderByFields,
+				paginationFields,
+			),
 			values,
 		));
 
