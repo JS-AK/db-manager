@@ -8,7 +8,8 @@ export type TDBCreds = {
 };
 export type TField = {
 	key: string;
-	operator: "=" | "<>" | ">" | ">=" | "<" | "<=" | "$in" | "$nin" | "$like" | "$nlike";
+	sign?: string;
+	operator: "=" | "<>" | ">" | ">=" | "<" | "<=" | "$in" | "$nin" | "$like" | "$nlike" | "$custom";
 };
 export type TSearchParams = {
 	[key: string]: {
@@ -19,6 +20,7 @@ export type TSearchParams = {
 		$lte?: number | string | boolean;
 		$like?: string;
 		$nlike?: string;
+		$custom?: { sign: string; value: string | number; };
 		$in?: string[] | number[] | boolean[];
 		$nin?: string[] | number[] | boolean[];
 	}

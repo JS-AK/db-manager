@@ -53,6 +53,10 @@ export const compareFields = (
 				fields.push({ key, operator: "$nlike" });
 				values.push(value.$nlike);
 			}
+			if (value.$custom) {
+				fields.push({ key, operator: "$custom", sign: value.$custom.sign });
+				values.push(value.$custom.value);
+			}
 		} else if (value !== undefined) {
 			fields.push({ key, operator: "=" });
 			values.push(value);
@@ -109,6 +113,10 @@ export const compareFields = (
 						fieldsOrLocal.push({ key, operator: "$nlike" });
 						values.push(value.$nlike);
 					}
+					if (value.$custom) {
+						fieldsOrLocal.push({ key, operator: "$custom", sign: value.$custom.sign });
+						values.push(value.$custom.value);
+					}
 				} else if (value !== undefined) {
 					fieldsOrLocal.push({ key, operator: "=" });
 					values.push(value);
@@ -160,6 +168,9 @@ export const getFieldsToSearch = (
 				case "$nlike":
 					return `${e.key} NOT LIKE $${res.orderNumber}`;
 
+				case "$custom":
+					return `${e.key} ${e.sign} $${res.orderNumber}`;
+
 				default:
 					return `${e.key} ${e.operator} $${res.orderNumber}`;
 			}
@@ -194,6 +205,9 @@ export const getFieldsToSearch = (
 
 					case "$nlike":
 						return `${e.key} NOT LIKE $${res.orderNumber}`;
+
+					case "$custom":
+						return `${e.key} ${e.sign} $${res.orderNumber}`;
 
 					default:
 						return `${e.key} ${e.operator} $${res.orderNumber}`;

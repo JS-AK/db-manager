@@ -32,7 +32,10 @@ const createField = "created_at"; // created field
 const updateField = "updated_at"; // updated field
 const tableFields: TableKeys[] = [
 	"created_at", // -> create date
+	"description", // -> description
 	"id", // -> id
+	"meta", // -> meta
+	"number_range", // -> number_range
 	"title", // -> title
 	"updated_at", // -> update date
 ];

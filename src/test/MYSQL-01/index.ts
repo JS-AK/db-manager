@@ -206,6 +206,16 @@ test("top level test", async (t) => {
 		assert.equal(res[0]?.title, "test 3");
 	});
 
+	await t.test("getArrByParams found { $custom: { sign: \"LIKE\", value: \"%test 3%\" }", async () => {
+		const res = await testTable.getArrByParams({
+			params: {
+				description: { $custom: { sign: "LIKE", value: "%test 3%" } },
+			},
+		});
+
+		assert.equal(res[0]?.title, "test 3");
+	});
+
 	await t.test("getOneByParams not found", async () => {
 		const title = "test 0";
 

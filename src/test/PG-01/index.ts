@@ -27,6 +27,7 @@ test("top level test", async (t) => {
 			  id                              BIGSERIAL PRIMARY KEY,
 
 			  description                     TEXT,
+			  number_range                    INT8RANGE,
 			  meta                            JSONB NOT NULL,
 			  title                           TEXT NOT NULL,
 
@@ -64,7 +65,7 @@ test("top level test", async (t) => {
 		assert.equal(example1.meta.firstname, meta.firstname);
 		assert.equal(example1.meta.lastname, meta.lastname);
 
-		await testTable1.createOne({ description: "test", meta, title: "test 2" });
+		await testTable1.createOne({ description: "test", meta, number_range: "[100,200]", title: "test 2" });
 		await testTable1.createOne({ meta, title: "test 3" });
 		await testTable1.createOne({ meta, title: "test 4" });
 		await testTable1.createOne({ meta, title: "test 5" });
@@ -200,12 +201,20 @@ test("top level test", async (t) => {
 		}
 	});
 
-	await t.test("getArrByParams with params: {title: 'test 1'}", async () => {
+	await t.test("getArrByParams with params: { title: \"test 1\" }", async () => {
 		const res = await testTable1.getArrByParams({
 			params: { title: "test 1" },
 		});
 
 		assert.equal(res.length, 1);
+	});
+
+	await t.test("getArrByParams with params: { number_range: { $custom: { sign: \"@>\", value: \"[150,150]\" } }", async () => {
+		const res = await testTable1.getArrByParams({
+			params: { number_range: { $custom: { sign: "@>", value: "[150,150]" } } },
+		});
+
+		assert.equal(res[0]?.title, "test 2");
 	});
 
 	await t.test("getArrByParams description: null", async () => {
