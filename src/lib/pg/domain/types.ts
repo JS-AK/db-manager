@@ -12,6 +12,7 @@ export type TSearchParams<T> = {
 	| { $lt: NonNullable<T[key]>; }
 	| { $lte: NonNullable<T[key]>; }
 	| { $like: string; }
+	| { $nlike: string; }
 	| { $in: NonNullable<T[key]>[]; }
 	| { $nin: NonNullable<T[key]>[]; }
 };

@@ -58,7 +58,6 @@ export class BaseModel {
 			fieldsOr,
 			nullFields,
 			values,
-			valuesOr,
 		} = this.compareFields($and, $or);
 		const checkOrder = orderBy && ordering;
 		const {
@@ -81,7 +80,7 @@ export class BaseModel {
 				orderByFields,
 				paginationFields,
 			),
-			[...values, ...valuesOr],
+			values,
 		)).rows;
 
 		return res;
@@ -108,7 +107,6 @@ export class BaseModel {
 			fieldsOr,
 			nullFields,
 			values,
-			valuesOr,
 		} = this.compareFields($and, $or);
 		const {
 			orderNumber,
@@ -122,7 +120,7 @@ export class BaseModel {
 				searchFields,
 				orderNumber,
 			),
-			[...values, ...valuesOr, pks],
+			[values, pks],
 		)).rows[0];
 
 		return parseInt(res.count, 10);
@@ -137,7 +135,6 @@ export class BaseModel {
 			fieldsOr,
 			nullFields,
 			values,
-			valuesOr,
 		} = this.compareFields($and, $or);
 		const {
 			searchFields,
@@ -148,7 +145,7 @@ export class BaseModel {
 				this.tableName,
 				searchFields,
 			),
-			[...values, ...valuesOr],
+			values,
 		)).rows[0];
 
 		return parseInt(res.count, 10);
@@ -168,7 +165,6 @@ export class BaseModel {
 			fieldsOr,
 			nullFields,
 			values,
-			valuesOr,
 		} = this.compareFields($and, $or);
 		const {
 			orderByFields,
@@ -188,7 +184,7 @@ export class BaseModel {
 				orderByFields,
 				paginationFields,
 			),
-			[...values, ...valuesOr],
+			values,
 		)).rows;
 
 		return res[0];

@@ -16,48 +16,42 @@ export const compareFields = (
 		} else if (typeof value === "object") {
 			if (value.$ne === null) {
 				nullFields.push(`${key} IS NOT NULL`);
-			} else if (value.$ne) {
+			}
+			if (value.$ne) {
 				fields.push({ key, operator: "<>" });
 				values.push(value.$ne);
-			} else if (value.$in || value.$nin) {
-				if (value.$in) {
-					fields.push({ key, operator: "$in" });
-					values.push(value.$in);
-				}
-				if (value.$nin) {
-					fields.push({ key, operator: "$nin" });
-					values.push(value.$nin);
-				}
-			} else if ((value.$gt || value.$gte) && (value.$lt || value.$lte)) {
-				if (value.$gt) {
-					fields.push({ key, operator: ">" });
-					values.push(value.$gt);
-				} else if (value.$gte) {
-					fields.push({ key, operator: ">=" });
-					values.push(value.$gte);
-				}
-				if (value.$lt) {
-					fields.push({ key, operator: "<" });
-					values.push(value.$lt);
-				} else if (value.$lte) {
-					fields.push({ key, operator: "<=" });
-					values.push(value.$lte);
-				}
-			} else if (value.$gt) {
+			}
+			if (value.$in) {
+				fields.push({ key, operator: "$in" });
+				values.push(value.$in);
+			}
+			if (value.$nin) {
+				fields.push({ key, operator: "$nin" });
+				values.push(value.$nin);
+			}
+			if (value.$gt) {
 				fields.push({ key, operator: ">" });
 				values.push(value.$gt);
-			} else if (value.$gte) {
+			}
+			if (value.$gte) {
 				fields.push({ key, operator: ">=" });
 				values.push(value.$gte);
-			} else if (value.$lt) {
+			}
+			if (value.$lt) {
 				fields.push({ key, operator: "<" });
 				values.push(value.$lt);
-			} else if (value.$lte) {
+			}
+			if (value.$lte) {
 				fields.push({ key, operator: "<=" });
 				values.push(value.$lte);
-			} else if (value.$like) {
+			}
+			if (value.$like) {
 				fields.push({ key, operator: "$like" });
 				values.push(value.$like);
+			}
+			if (value.$nlike) {
+				fields.push({ key, operator: "$nlike" });
+				values.push(value.$nlike);
 			}
 		} else if (value !== undefined) {
 			fields.push({ key, operator: "=" });
@@ -65,79 +59,73 @@ export const compareFields = (
 		}
 	}
 
-	const fieldsOr: Types.TField[][] = [];
-	const valuesOr: any[] = [];
+	const fieldsOr: { fields: Types.TField[]; nullFields: string[]; }[] = [];
 
 	if (paramsOr) {
 		for (const params of paramsOr) {
 			const fieldsOrLocal: Types.TField[] = [];
+			const nullFieldsOrLocal: string[] = [];
 
 			for (const [key, value] of Object.entries(params)) {
 				if (value === null) {
-					nullFields.push(`${key} IS NULL`);
+					nullFieldsOrLocal.push(`${key} IS NULL`);
 				} else if (typeof value === "object") {
 					if (value.$ne === null) {
-						nullFields.push(`${key} IS NOT NULL`);
-					} else if (value.$ne) {
+						nullFieldsOrLocal.push(`${key} IS NOT NULL`);
+					}
+					if (value.$ne) {
 						fieldsOrLocal.push({ key, operator: "<>" });
-						valuesOr.push(value.$ne);
-					} else if (value.$in || value.$nin) {
-						if (value.$in) {
-							fieldsOrLocal.push({ key, operator: "$in" });
-							valuesOr.push(value.$in);
-						}
-						if (value.$nin) {
-							fieldsOrLocal.push({ key, operator: "$nin" });
-							valuesOr.push(value.$nin);
-						}
-					} else if ((value.$gt || value.$gte) && (value.$lt || value.$lte)) {
-						if (value.$gt) {
-							fieldsOrLocal.push({ key, operator: ">" });
-							valuesOr.push(value.$gt);
-						} else if (value.$gte) {
-							fieldsOrLocal.push({ key, operator: ">=" });
-							valuesOr.push(value.$gte);
-						}
-						if (value.$lt) {
-							fieldsOrLocal.push({ key, operator: "<" });
-							valuesOr.push(value.$lt);
-						} else if (value.$lte) {
-							fieldsOrLocal.push({ key, operator: "<=" });
-							valuesOr.push(value.$lte);
-						}
-					} else if (value.$gt) {
+						values.push(value.$ne);
+					}
+					if (value.$in) {
+						fieldsOrLocal.push({ key, operator: "$in" });
+						values.push(value.$in);
+					}
+					if (value.$nin) {
+						fieldsOrLocal.push({ key, operator: "$nin" });
+						values.push(value.$nin);
+					}
+					if (value.$gt) {
 						fieldsOrLocal.push({ key, operator: ">" });
-						valuesOr.push(value.$gt);
-					} else if (value.$gte) {
+						values.push(value.$gt);
+					}
+					if (value.$gte) {
 						fieldsOrLocal.push({ key, operator: ">=" });
-						valuesOr.push(value.$gte);
-					} else if (value.$lt) {
+						values.push(value.$gte);
+					}
+					if (value.$lt) {
 						fieldsOrLocal.push({ key, operator: "<" });
-						valuesOr.push(value.$lt);
-					} else if (value.$lte) {
+						values.push(value.$lt);
+					}
+					if (value.$lte) {
 						fieldsOrLocal.push({ key, operator: "<=" });
-						valuesOr.push(value.$lte);
-					} else if (value.$like) {
+						values.push(value.$lte);
+					}
+					if (value.$like) {
 						fieldsOrLocal.push({ key, operator: "$like" });
-						valuesOr.push(value.$like);
+						values.push(value.$like);
+					}
+					if (value.$nlike) {
+						fieldsOrLocal.push({ key, operator: "$nlike" });
+						values.push(value.$nlike);
 					}
 				} else if (value !== undefined) {
 					fieldsOrLocal.push({ key, operator: "=" });
-					valuesOr.push(value);
+					values.push(value);
 				}
 			}
 
-			fieldsOr.push(fieldsOrLocal);
+			fieldsOr.push({ fields: fieldsOrLocal, nullFields: nullFieldsOrLocal });
 		}
 	}
 
-	return { fields, fieldsOr, nullFields, values, valuesOr };
+	return { fields, fieldsOr, nullFields, values };
 };
 
 export const getFieldsToSearch = (
 	data: {
 		fields: Types.TField[];
-		fieldsOr?: Types.TField[][];
+		fieldsOr?: { fields: Types.TField[]; nullFields: string[]; }[];
 		nullFields: string[];
 	},
 	selected = ["*"],
@@ -169,6 +157,9 @@ export const getFieldsToSearch = (
 				case "$like":
 					return `${e.key} LIKE $${res.orderNumber}`;
 
+				case "$nlike":
+					return `${e.key} NOT LIKE $${res.orderNumber}`;
+
 				default:
 					return `${e.key} ${e.operator} $${res.orderNumber}`;
 			}
@@ -187,8 +178,9 @@ export const getFieldsToSearch = (
 	if (fieldsOr?.length) {
 		const comparedFieldsOr = [];
 
-		for (const fields of fieldsOr) {
-			const comparedFields = fields.map((e: Types.TField) => {
+		for (const row of fieldsOr) {
+			const { fields, nullFields } = row;
+			let comparedFields = fields.map((e: Types.TField) => {
 				res.orderNumber += 1;
 				switch (e.operator) {
 					case "$in":
@@ -200,10 +192,18 @@ export const getFieldsToSearch = (
 					case "$like":
 						return `${e.key} LIKE $${res.orderNumber}`;
 
+					case "$nlike":
+						return `${e.key} NOT LIKE $${res.orderNumber}`;
+
 					default:
 						return `${e.key} ${e.operator} $${res.orderNumber}`;
 				}
 			}).join(" AND ");
+
+			if (nullFields.length) {
+				if (comparedFields) comparedFields += ` AND ${nullFields.join(" AND ")}`;
+				else comparedFields = nullFields.join(",");
+			}
 
 			comparedFieldsOr.push(`(${comparedFields})`);
 		}

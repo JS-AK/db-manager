@@ -148,6 +148,37 @@ test("top level test", async (t) => {
 		assert.equal(res.length, 5);
 	});
 
+	await t.test("getArrByParams", async () => {
+		const res = await testTable1.getArrByParams({
+			params: {
+				description: {
+					$like: "test",
+					$nlike: "%TTT%",
+				},
+				id: {
+					$gte: "2",
+					$in: ["1", "2"],
+					$lte: "2",
+					$ne: null,
+					$nin: ["3", "4"],
+				},
+			},
+			paramsOr: [
+				{ description: null, title: "test 1" },
+				{
+					description: {
+						$like: "%tes%",
+						$ne: null,
+						$nlike: "%12345%",
+					},
+					title: "test 2",
+				},
+			],
+		});
+
+		assert.equal(res[0]?.title, "test 2");
+	});
+
 	await t.test("getArrByParams with ordering", async () => {
 		{
 			const res = await testTable1.getArrByParams({
