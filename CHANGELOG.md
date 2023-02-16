@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/JS-AK/db-manager/compare/v1.3.0...v1.3.1) (2023-02-16)
+
+
+### Bug Fixes
+
+* update version deps ([08d5df1](https://github.com/JS-AK/db-manager/commit/08d5df1a56b66c53eeab785b0bbd8619fee66646))
+
 # [1.3.0](https://github.com/JS-AK/db-manager/compare/v1.2.0...v1.3.0) (2023-02-12)
 
 
