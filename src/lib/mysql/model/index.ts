@@ -10,6 +10,7 @@ import queries from "./queries.js";
 export class BaseModel {
 	createField;
 	creds;
+	isPKAutoIcremented;
 	pool: mysql.Pool;
 	primaryKey;
 	tableFields;
@@ -21,6 +22,9 @@ export class BaseModel {
 		this.creds = creds;
 		this.pool = getStandartPool(creds);
 		this.primaryKey = tableData.primaryKey;
+		this.isPKAutoIcremented = typeof tableData.isPKAutoIcremented === "boolean"
+			? tableData.isPKAutoIcremented
+			: true;
 		this.tableName = tableData.tableName;
 		this.tableFields = tableData.tableFields;
 		this.updateField = tableData.updateField;
@@ -159,6 +163,10 @@ export class BaseModel {
 			queries.save(this.tableName, fields, this.createField),
 			Object.values(prms),
 		);
+
+		if (!this.isPKAutoIcremented) {
+			return -1;
+		}
 
 		return rows.insertId;
 	}

@@ -32,6 +32,7 @@ export type TSearchParams = {
 };
 export type TTable = {
 	createField?: string;
+	isPKAutoIcremented?: boolean;
 	primaryKey: string | string[];
 	tableFields: string[];
 	tableName: string;
