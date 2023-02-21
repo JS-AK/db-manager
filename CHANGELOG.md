@@ -1,3 +1,10 @@
+## [1.3.4](https://github.com/JS-AK/db-manager/compare/v1.3.3...v1.3.4) (2023-02-21)
+
+
+### Bug Fixes
+
+* error message in mysql save ([5f7a9cb](https://github.com/JS-AK/db-manager/commit/5f7a9cb4a1116ac9aff2c747e088de8cba3dc637))
+
 ## [1.3.3](https://github.com/JS-AK/db-manager/compare/v1.3.2...v1.3.3) (2023-02-21)
 
 
