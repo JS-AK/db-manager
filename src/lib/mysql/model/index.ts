@@ -10,7 +10,7 @@ import queries from "./queries.js";
 export class BaseModel {
 	createField;
 	creds;
-	isPKAutoIcremented;
+	isPKAutoIncremented;
 	pool: mysql.Pool;
 	primaryKey;
 	tableFields;
@@ -22,8 +22,8 @@ export class BaseModel {
 		this.creds = creds;
 		this.pool = getStandartPool(creds);
 		this.primaryKey = tableData.primaryKey;
-		this.isPKAutoIcremented = typeof tableData.isPKAutoIcremented === "boolean"
-			? tableData.isPKAutoIcremented
+		this.isPKAutoIncremented = typeof tableData.isPKAutoIncremented === "boolean"
+			? tableData.isPKAutoIncremented
 			: true;
 		this.tableName = tableData.tableName;
 		this.tableFields = tableData.tableFields;
@@ -164,7 +164,7 @@ export class BaseModel {
 			Object.values(prms),
 		);
 
-		if (!this.isPKAutoIcremented) {
+		if (!this.isPKAutoIncremented) {
 			return -1;
 		}
 
