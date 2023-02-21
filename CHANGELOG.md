@@ -1,3 +1,10 @@
+## [1.3.3](https://github.com/JS-AK/db-manager/compare/v1.3.2...v1.3.3) (2023-02-21)
+
+
+### Bug Fixes
+
+* clear typo mistake ([28bf1cd](https://github.com/JS-AK/db-manager/commit/28bf1cd48dcdda6825bb8bb86f175b98558a0f37))
+
 ## [1.3.2](https://github.com/JS-AK/db-manager/compare/v1.3.1...v1.3.2) (2023-02-21)
 
 
