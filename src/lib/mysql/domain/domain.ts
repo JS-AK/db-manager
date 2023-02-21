@@ -22,7 +22,7 @@ export class BaseDomain<
 	async createOne(createFields: CreateFields): Promise<number> {
 		const res = await this.model.save(createFields);
 
-		if (!res) throw new Error(`Save to ${this.model.tableName} table error`);
+		if (!res) throw new Error(`Save to ${this.model.tableName} table error. If u have not auto increment primary key please pass isPKAutoIncremented option to BaseModel`);
 
 		return res;
 	}
