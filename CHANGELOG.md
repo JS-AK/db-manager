@@ -1,3 +1,10 @@
+## [1.3.2](https://github.com/JS-AK/db-manager/compare/v1.3.1...v1.3.2) (2023-02-21)
+
+
+### Bug Fixes
+
+* add isPKAutoIcremented to mysql BaseModel ([dfaeb57](https://github.com/JS-AK/db-manager/commit/dfaeb57fec09aea88f855e36c6a5b2d8ee813f8f))
+
 ## [1.3.1](https://github.com/JS-AK/db-manager/compare/v1.3.0...v1.3.1) (2023-02-16)
 
 
