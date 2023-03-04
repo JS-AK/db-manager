@@ -1,8 +1,9 @@
-export type TDBCreds = {
+import mysql from "mysql2";
+
+export type TDBCreds = mysql.PoolOptions & {
 	database: string;
 	host: string;
 	password: string;
-	poolName?: string;
 	port: number;
 	user: string;
 };

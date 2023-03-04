@@ -17,12 +17,18 @@ export class BaseModel {
 	transactionPool: pg.Pool;
 	updateField;
 
-	constructor(tableData: Types.TTable, creds: Types.TDBCreds) {
+	constructor(tableData: Types.TTable, options: Types.TDBCreds) {
 		this.createField = tableData.createField;
-		this.creds = creds;
-		this.pool = getStandartPool(creds);
+		this.creds = {
+			database: options.database,
+			host: options.host,
+			password: options.host,
+			port: options.port,
+			user: options.user,
+		};
+		this.pool = getStandartPool(options);
 		this.primaryKey = tableData.primaryKey;
-		this.transactionPool = getTransactionPool(creds);
+		this.transactionPool = getTransactionPool(options);
 		this.tableName = tableData.tableName;
 		this.tableFields = tableData.tableFields;
 		this.updateField = tableData.updateField;
@@ -231,12 +237,12 @@ export class BaseModel {
 	}
 
 	// STATIC METHODS
-	static getStandartPool(creds: Types.TDBCreds): pg.Pool {
-		return getStandartPool(creds);
+	static getStandartPool(creds: Types.TDBCreds, poolName?: string): pg.Pool {
+		return getStandartPool(creds, poolName);
 	}
 
-	static getTransactionPool(creds: Types.TDBCreds): pg.Pool {
-		return getTransactionPool(creds);
+	static getTransactionPool(creds: Types.TDBCreds, poolName?: string): pg.Pool {
+		return getTransactionPool(creds, poolName);
 	}
 
 	static getInsertFields(

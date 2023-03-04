@@ -4,23 +4,17 @@ import { MYSQL } from "../..";
 
 const pools = new Map<string, mysql.Pool>();
 
-export const getStandartPool = (creds: MYSQL.ModelTypes.TDBCreds) => {
-	const { database, host, password, port, user } = creds;
-	const poolName = "st" + creds.poolName || "00";
-	const credsString = `${poolName}#${user}:${password}@${host}:${port}/${database}`;
+export const getStandartPool = (config: MYSQL.ModelTypes.TDBCreds, poolName = "00") => {
+	const { database, host, password, port, user } = config;
+	const poolNameResult = "st" + poolName;
+	const credsString = `${poolNameResult}#${user}:${password}@${host}:${port}/${database}`;
 
 	const poolCandidate = pools.get(credsString);
 
 	if (poolCandidate) {
 		return poolCandidate;
 	} else {
-		const pool = mysql.createPool({
-			database,
-			host,
-			password,
-			port,
-			user,
-		});
+		const pool = mysql.createPool(config);
 
 		pools.set(credsString, pool);
 
@@ -28,23 +22,17 @@ export const getStandartPool = (creds: MYSQL.ModelTypes.TDBCreds) => {
 	}
 };
 
-export const getTransactionPool = (creds: MYSQL.ModelTypes.TDBCreds) => {
-	const { database, host, password, port, user } = creds;
-	const poolName = "tr" + creds.poolName || "00";
-	const credsString = `${poolName}#${user}:${password}@${host}:${port}/${database}`;
+export const getTransactionPool = (config: MYSQL.ModelTypes.TDBCreds, poolName = "00") => {
+	const { database, host, password, port, user } = config;
+	const poolNameResult = "tr" + poolName;
+	const credsString = `${poolNameResult}#${user}:${password}@${host}:${port}/${database}`;
 
 	const poolCandidate = pools.get(credsString);
 
 	if (poolCandidate) {
 		return poolCandidate;
 	} else {
-		const pool = mysql.createPool({
-			database,
-			host,
-			password,
-			port,
-			user,
-		});
+		const pool = mysql.createPool(config);
 
 		pools.set(credsString, pool);
 

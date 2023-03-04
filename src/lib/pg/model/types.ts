@@ -1,8 +1,9 @@
-export type TDBCreds = {
+import pg from "pg";
+
+export type TDBCreds = pg.PoolConfig & {
 	database: string;
 	host: string;
 	password: string;
-	poolName?: string;
 	port: number;
 	user: string;
 };

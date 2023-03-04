@@ -17,10 +17,16 @@ export class BaseModel {
 	tableName;
 	updateField;
 
-	constructor(tableData: Types.TTable, creds: Types.TDBCreds) {
+	constructor(tableData: Types.TTable, options: Types.TDBCreds) {
 		this.createField = tableData.createField;
-		this.creds = creds;
-		this.pool = getStandartPool(creds);
+		this.creds = {
+			database: options.database,
+			host: options.host,
+			password: options.host,
+			port: options.port,
+			user: options.user,
+		};
+		this.pool = getStandartPool(options);
 		this.primaryKey = tableData.primaryKey;
 		this.isPKAutoIncremented = typeof tableData.isPKAutoIncremented === "boolean"
 			? tableData.isPKAutoIncremented
@@ -186,11 +192,11 @@ export class BaseModel {
 	}
 
 	// STATIC METHODS
-	static getStandartPool(creds: Types.TDBCreds): mysql.Pool {
-		return getStandartPool(creds);
+	static getStandartPool(creds: Types.TDBCreds, poolName?: string): mysql.Pool {
+		return getStandartPool(creds, poolName);
 	}
 
-	static getTransactionPool(creds: Types.TDBCreds): mysql.Pool {
-		return getTransactionPool(creds);
+	static getTransactionPool(creds: Types.TDBCreds, poolName?: string): mysql.Pool {
+		return getTransactionPool(creds, poolName);
 	}
 }

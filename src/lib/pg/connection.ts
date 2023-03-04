@@ -4,23 +4,17 @@ import { PG } from "../..";
 
 const pools = new Map<string, pg.Pool>();
 
-export const getStandartPool = (creds: PG.ModelTypes.TDBCreds) => {
-	const { database, host, password, port, user } = creds;
-	const poolName = "st" + creds.poolName || "00";
-	const credsString = `${poolName}#${user}:${password}@${host}:${port}/${database}`;
+export const getStandartPool = (config: PG.ModelTypes.TDBCreds, poolName = "00") => {
+	const { database, host, password, port, user } = config;
+	const poolNameResult = "st" + poolName;
+	const credsString = `${poolNameResult}#${user}:${password}@${host}:${port}/${database}`;
 
 	const poolCandidate = pools.get(credsString);
 
 	if (poolCandidate) {
 		return poolCandidate;
 	} else {
-		const pool = new pg.Pool({
-			database,
-			host,
-			password,
-			port,
-			user,
-		});
+		const pool = new pg.Pool(config);
 
 		pools.set(credsString, pool);
 
@@ -28,23 +22,17 @@ export const getStandartPool = (creds: PG.ModelTypes.TDBCreds) => {
 	}
 };
 
-export const getTransactionPool = (creds: PG.ModelTypes.TDBCreds) => {
-	const { database, host, password, port, user } = creds;
-	const poolName = "tr" + creds.poolName || "00";
-	const credsString = `${poolName}#${user}:${password}@${host}:${port}/${database}`;
+export const getTransactionPool = (config: PG.ModelTypes.TDBCreds, poolName = "00") => {
+	const { database, host, password, port, user } = config;
+	const poolNameResult = "tr" + poolName;
+	const credsString = `${poolNameResult}#${user}:${password}@${host}:${port}/${database}`;
 
 	const poolCandidate = pools.get(credsString);
 
 	if (poolCandidate) {
 		return poolCandidate;
 	} else {
-		const pool = new pg.Pool({
-			database,
-			host,
-			password,
-			port,
-			user,
-		});
+		const pool = new pg.Pool(config);
 
 		pools.set(credsString, pool);
 
