@@ -240,7 +240,7 @@ export class BaseModel {
 	}
 
 	static getInsertFields(
-		fields: { [key: string]: string | string[] | number | boolean | object | null | undefined; },
+		fields: { [key: string]: string | string[] | number | number[] | boolean | object | null | undefined; },
 		tableName: string,
 		returning?: string[],
 	) {
@@ -265,7 +265,7 @@ export class BaseModel {
 
 	static getUpdateFields(
 		primaryKey: { field: string; value: string | number; },
-		fields: { [key: string]: string | string[] | number | null | boolean | undefined; },
+		fields: { [key: string]: string | string[] | number | number[] | boolean | object | null | undefined; },
 		tableName: string,
 		updateField?: string,
 	) {
