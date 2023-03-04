@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/JS-AK/db-manager/compare/v1.3.5...v1.4.0) (2023-03-04)
+
+
+### Features
+
+* pass all pool options to pg and mysql ([81c9a49](https://github.com/JS-AK/db-manager/commit/81c9a4982d2df1c157e0c2bae776c12a913f03f3))
+
 ## [1.3.5](https://github.com/JS-AK/db-manager/compare/v1.3.4...v1.3.5) (2023-03-04)
 
 
