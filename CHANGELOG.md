@@ -1,3 +1,10 @@
+## [1.3.5](https://github.com/JS-AK/db-manager/compare/v1.3.4...v1.3.5) (2023-03-04)
+
+
+### Bug Fixes
+
+* PG types on static methods  ([cf3c1ea](https://github.com/JS-AK/db-manager/commit/cf3c1ea5f622403df18f43cc8e03833867b8f57a))
+
 ## [1.3.4](https://github.com/JS-AK/db-manager/compare/v1.3.3...v1.3.4) (2023-02-21)
 
 
