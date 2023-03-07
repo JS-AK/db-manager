@@ -126,7 +126,7 @@ export class BaseModel {
 				searchFields,
 				orderNumber,
 			),
-			[values, pks],
+			[...values, pks],
 		)).rows[0];
 
 		return parseInt(res.count, 10);
