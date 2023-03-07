@@ -1,3 +1,11 @@
+# [1.5.0](https://github.com/JS-AK/db-manager/compare/v1.4.1...v1.5.0) (2023-03-07)
+
+
+### Features
+
+* add createClient for pg ([a906365](https://github.com/JS-AK/db-manager/commit/a906365e3261762cc44075f9be0bce14891fdfbd))
+* add createConnection for mysql ([18593f3](https://github.com/JS-AK/db-manager/commit/18593f3203b62526b1f5925bd0936c2fe3819cf6))
+
 ## [1.4.1](https://github.com/JS-AK/db-manager/compare/v1.4.0...v1.4.1) (2023-03-07)
 
 
