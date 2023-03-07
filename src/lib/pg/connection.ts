@@ -4,6 +4,10 @@ import { PG } from "../..";
 
 const pools = new Map<string, pg.Pool>();
 
+export const createClient = (config: PG.ModelTypes.TDBCreds) => {
+	return new pg.Client(config);
+};
+
 export const getStandartPool = (config: PG.ModelTypes.TDBCreds, poolName = "00") => {
 	const { database, host, password, port, user } = config;
 	const poolNameResult = "st" + poolName;
