@@ -1,3 +1,10 @@
+## [1.5.1](https://github.com/JS-AK/db-manager/compare/v1.5.0...v1.5.1) (2023-03-07)
+
+
+### Bug Fixes
+
+* rename exports ([ca6b73d](https://github.com/JS-AK/db-manager/commit/ca6b73d2abeca27d749c2b26270cca14a8e4fdc4))
+
 # [1.5.0](https://github.com/JS-AK/db-manager/compare/v1.4.1...v1.5.0) (2023-03-07)
 
 
