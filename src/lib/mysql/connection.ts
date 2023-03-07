@@ -4,6 +4,10 @@ import { MYSQL } from "../..";
 
 const pools = new Map<string, mysql.Pool>();
 
+export const createConnection = (config: MYSQL.ModelTypes.TDBCreds) => {
+	return mysql.createConnection(config);
+};
+
 export const getStandartPool = (config: MYSQL.ModelTypes.TDBCreds, poolName = "00") => {
 	const { database, host, password, port, user } = config;
 	const poolNameResult = "st" + poolName;
