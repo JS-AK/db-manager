@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/JS-AK/db-manager/compare/v1.4.0...v1.4.1) (2023-03-07)
+
+
+### Bug Fixes
+
+* bug in pg getCountByPksAndParams ([9ba5047](https://github.com/JS-AK/db-manager/commit/9ba50479e817b0fb17975e20bab15d906276c666))
+
 # [1.4.0](https://github.com/JS-AK/db-manager/compare/v1.3.5...v1.4.0) (2023-03-04)
 
 
