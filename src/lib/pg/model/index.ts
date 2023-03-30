@@ -274,6 +274,7 @@ export class BaseModel {
 		fields: { [key: string]: string | string[] | number | number[] | boolean | object | null | undefined; },
 		tableName: string,
 		updateField?: string,
+		returning?: string[],
 	) {
 		const params = SharedHelpers.clearUndefinedFields(fields);
 		const k = Object.keys(params);
@@ -283,10 +284,15 @@ export class BaseModel {
 
 		if (updateField) updateFields += `, ${updateField} = NOW()`;
 
+		const returningSQL = returning?.length
+			? `RETURNING ${returning.join(",")}`
+			: "";
+
 		const query = `
 			UPDATE ${tableName}
 			SET ${updateFields}
 			WHERE ${primaryKey.field} = $1
+			${returningSQL}
 		`;
 
 		return { query, values: [primaryKey.value, ...v] };
