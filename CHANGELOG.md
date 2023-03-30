@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/JS-AK/db-manager/compare/v1.5.1...v1.6.0) (2023-03-30)
+
+
+### Features
+
+* add optional returning to postgres model getUpdateFields ([2c629fc](https://github.com/JS-AK/db-manager/commit/2c629fc138776f01d08f89a5fc22516ad1061236))
+
 ## [1.5.1](https://github.com/JS-AK/db-manager/compare/v1.5.0...v1.5.1) (2023-03-07)
 
 
