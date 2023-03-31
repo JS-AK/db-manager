@@ -1,3 +1,10 @@
+## [1.7.1](https://github.com/JS-AK/db-manager/compare/v1.7.0...v1.7.1) (2023-03-31)
+
+
+### Bug Fixes
+
+* add type for updateField at getUpdateFields ([93d61ea](https://github.com/JS-AK/db-manager/commit/93d61ea8ec3b1b1070d2b8a3867fa2062f955874))
+
 # [1.7.0](https://github.com/JS-AK/db-manager/compare/v1.6.0...v1.7.0) (2023-03-31)
 
 
