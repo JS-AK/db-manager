@@ -199,4 +199,62 @@ export class BaseModel {
 	static getTransactionPool(creds: Types.TDBCreds, poolName?: string): mysql.Pool {
 		return getTransactionPool(creds, poolName);
 	}
+
+	static getInsertFields<
+		F extends SharedTypes.TRawParams = SharedTypes.TRawParams,
+	>(data: {
+		params: F;
+		tableName: string;
+	}) {
+		const {
+			params: paramsRaw,
+			tableName,
+		} = data;
+
+		const params = SharedHelpers.clearUndefinedFields(paramsRaw);
+		const k = Object.keys(params);
+		const v = Object.values(params);
+
+		const query = `
+		INSERT INTO ${tableName}(
+			${k.join(",")}
+		)
+		VALUES(${k.map(() => "?").join(",")})
+	`;
+
+		return { query, values: v };
+	}
+
+	static getUpdateFields<
+		P extends SharedTypes.TRawParams = SharedTypes.TRawParams,
+		F extends string = string
+	>(data: {
+		params: P;
+		primaryKey: { field: F; value: string | number; };
+		tableName: string;
+		updateField?: string;
+	}) {
+		const {
+			params: paramsRaw,
+			primaryKey,
+			tableName,
+			updateField,
+		} = data;
+
+		const params = SharedHelpers.clearUndefinedFields(paramsRaw);
+		const k = Object.keys(params);
+		const v = Object.values(params);
+
+		let updateFields = k.map((e: string) => `${e} = ?`).join(",");
+
+		if (updateField) updateFields += `, ${updateField} = NOW()`;
+
+		const query = `
+		UPDATE ${tableName}
+		SET ${updateFields}
+		WHERE ${primaryKey.field} = ?
+	`;
+
+		return { query, values: [...v, primaryKey.value] };
+	}
 }

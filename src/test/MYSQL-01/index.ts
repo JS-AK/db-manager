@@ -2,7 +2,8 @@ import assert from "node:assert";
 import test from "node:test";
 
 import { MYSQL } from "../../index.js";
-import { TestTable } from "./testTable/domain.js";
+
+import * as TestTable from "./testTable/domain.js";
 
 const creds = {
 	database: "test-base",
@@ -12,9 +13,9 @@ const creds = {
 	user: "test-user",
 };
 
-const testTable = new TestTable(creds);
+const testTable = new TestTable.default(creds);
 
-test("top level test", async (t) => {
+test("top level test MYSQL", async (t) => {
 	await t.test("createTable", async () => {
 		const pool = MYSQL.BaseModel.getStandartPool(creds);
 
@@ -48,7 +49,7 @@ test("top level test", async (t) => {
 		assert.equal(example5Id, 5);
 	});
 
-	await t.test("transaction", async () => {
+	await t.test("transaction 1", async () => {
 		const transactionPool = MYSQL.BaseModel.getTransactionPool(creds);
 		const connection = await transactionPool.promise().getConnection();
 
@@ -70,7 +71,7 @@ test("top level test", async (t) => {
 		}
 	});
 
-	await t.test("transaction", async () => {
+	await t.test("transaction 2", async () => {
 		const transactionPool = MYSQL.BaseModel.getTransactionPool(creds);
 		const connection = await transactionPool.promise().getConnection();
 
@@ -82,6 +83,88 @@ test("top level test", async (t) => {
 				FROM test_table
 				WHERE title = ?
 			`, ["test 4"]);
+
+			await connection.commit();
+		} catch (error) {
+			await connection.rollback();
+			throw error;
+		} finally {
+			connection.release();
+		}
+	});
+
+	await t.test("transaction 3", async () => {
+		const transactionPool = MYSQL.BaseModel.getTransactionPool(creds);
+		const connection = await transactionPool.promise().getConnection();
+
+		try {
+			await connection.beginTransaction();
+
+			let id = "";
+
+			{
+				const description = "description transaction 1";
+				const title = "title transaction 1";
+
+				const { query, values } = MYSQL
+					.BaseModel
+					.getInsertFields<TestTable.Types.CreateFields>({
+						params: { description, title },
+						tableName: testTable.tableName,
+					});
+
+				const data = (await connection.query(query, values))[0];
+
+				const entity = (await connection.query(`
+					SELECT *
+					FROM test_table
+					WHERE id = ?
+				`, [data.insertId]))[0][0];
+
+				assert.equal(entity?.title, title);
+				assert.equal(entity?.description, description);
+
+				id = entity?.id as string;
+			}
+
+			{
+				const description = "description transaction 1 updated";
+				const title = "title transaction 1 updated";
+
+				const { query, values } = MYSQL
+					.BaseModel
+					.getUpdateFields<TestTable.Types.UpdateFields, TestTable.Types.TableKeys>({
+						params: { description, title },
+						primaryKey: { field: "id", value: id },
+						tableName: testTable.tableName,
+						updateField: testTable.updateField,
+					});
+
+				await connection.query(query, values);
+
+				const entity = (await connection.query(`
+					SELECT *
+					FROM test_table
+					WHERE id = ?
+				`, [id]))[0][0];
+
+				assert.equal(entity?.description, description);
+				assert.equal(entity?.title, title);
+			}
+
+			await connection.query(`
+				DELETE
+				FROM test_table
+				WHERE id = ?
+			`, [id]);
+
+			const entity = (await connection.query(`
+			SELECT *
+			FROM test_table
+			WHERE id = ?
+		`, [id]))[0][0];
+
+			assert.equal(entity, undefined);
 
 			await connection.commit();
 		} catch (error) {

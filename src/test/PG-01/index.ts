@@ -2,8 +2,9 @@ import assert from "node:assert";
 import test from "node:test";
 
 import { PG } from "../../index.js";
-import { TestTable1 } from "./testTable1/domain.js";
-import { TestTable2 } from "./testTable2/domain.js";
+
+import * as TestTable1 from "./testTable1/domain.js";
+import * as TestTable2 from "./testTable2/domain.js";
 
 const creds = {
 	database: "postgres",
@@ -13,10 +14,10 @@ const creds = {
 	user: "postgres",
 };
 
-const testTable1 = new TestTable1(creds);
-const testTable2 = new TestTable2(creds);
+const testTable1 = new TestTable1.default(creds);
+const testTable2 = new TestTable2.default(creds);
 
-test("top level test", async (t) => {
+test("top level test PG", async (t) => {
 	await t.test("createTables", async () => {
 		const pool = PG.BaseModel.getStandartPool(creds);
 
@@ -71,34 +72,75 @@ test("top level test", async (t) => {
 		await testTable1.createOne({ meta, title: "test 5" });
 	});
 
-	await t.test("transaction 1st", async () => {
+	await t.test("transaction 1", async () => {
 		const transactionPool = PG.BaseModel.getTransactionPool(creds);
 		const client = await transactionPool.connect();
 
 		try {
 			await client.query("BEGIN");
-			const title = "title transaction 1";
 
-			const { query, values } = PG.BaseModel.getInsertFields(
-				{
-					meta: { firstname: "test", lastname: "test" },
-					title,
-				},
-				"test_table_2",
-				["id", "title"],
-			);
+			let id = "";
 
-			const data = (await client.query(query, values)).rows[0];
+			{
+				const title = "title transaction 1";
 
-			assert.equal(data.title, title);
+				const { query, values } = PG
+					.BaseModel
+					.getInsertFields<
+						TestTable2.Types.CreateFields,
+						TestTable2.Types.TableKeys
+					>({
+						params: {
+							meta: { firstname: "test", lastname: "test" },
+							title,
+						},
+						returning: ["id", "title"],
+						tableName: testTable2.tableName,
+					});
+
+				const data = (await client.query(query, values)).rows[0];
+
+				assert.equal(data.title, title);
+
+				id = data.id;
+			}
+
+			{
+				const meta = {
+					firstname: "test updated",
+					lastname: "test updated",
+				};
+				const title = "title transaction 1 updated";
+
+				const { query, values } = PG
+					.BaseModel
+					.getUpdateFields<
+						TestTable2.Types.UpdateFields,
+						TestTable2.Types.TableKeys
+					>({
+						params: { meta, title },
+						primaryKey: { field: "id", value: id },
+						returning: ["id", "meta", "title"],
+						tableName: testTable2.tableName,
+						updateField: testTable2.updateField,
+					});
+
+				const data = (await client.query(query, values)).rows[0];
+
+				assert.equal(data.meta.firstname, meta.firstname);
+				assert.equal(data.meta.lastname, meta.lastname);
+				assert.equal(data.title, title);
+
+				id = data.id;
+			}
 
 			await client.query(`
 				DELETE
 				FROM test_table_2
 				WHERE id = $1
-			`, [data.id]);
+			`, [id]);
 
-			const { one } = await testTable2.getOneByPk(data.id);
+			const { one } = await testTable2.getOneByPk(id);
 
 			assert.equal(one, undefined);
 
@@ -111,7 +153,7 @@ test("top level test", async (t) => {
 		}
 	});
 
-	await t.test("transaction 2nd", async () => {
+	await t.test("transaction 2", async () => {
 		const transactionPool = PG.BaseModel.getTransactionPool(creds);
 		const client = await transactionPool.connect();
 
@@ -119,14 +161,14 @@ test("top level test", async (t) => {
 			await client.query("BEGIN");
 			const title = "title transaction 2";
 
-			const { query, values } = PG.BaseModel.getInsertFields(
-				{
+			const { query, values } = PG.BaseModel.getInsertFields({
+				params: {
 					meta: { firstname: "test", lastname: "test" },
 					title,
 				},
-				"test_table_2",
-				["id", "title"],
-			);
+				returning: ["id", "title"],
+				tableName: testTable2.tableName,
+			});
 
 			const data = (await client.query(query, values)).rows[0];
 

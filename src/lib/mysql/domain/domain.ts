@@ -9,6 +9,12 @@ export class BaseDomain<
 	TableFields extends SharedTypes.TRawParams,
 	UpdateFields extends SharedTypes.TRawParams,
 > {
+	#createField;
+	#primaryKey;
+	#tableName;
+	#tableFields;
+	#updateField;
+
 	model;
 
 	constructor(data: Types.TDomain<Model>) {
@@ -17,6 +23,32 @@ export class BaseDomain<
 		}
 
 		this.model = data.model;
+
+		this.#createField = this.model.createField;
+		this.#primaryKey = this.model.primaryKey;
+		this.#tableName = this.model.tableName;
+		this.#tableFields = this.model.tableFields;
+		this.#updateField = this.model.updateField;
+	}
+
+	get createField() {
+		return this.#createField;
+	}
+
+	get primaryKey() {
+		return this.#primaryKey;
+	}
+
+	get tableName() {
+		return this.#tableName;
+	}
+
+	get tableFields() {
+		return this.#tableFields;
+	}
+
+	get updateField() {
+		return this.#updateField;
 	}
 
 	async createOne(createFields: CreateFields): Promise<number> {

@@ -245,12 +245,21 @@ export class BaseModel {
 		return getTransactionPool(creds, poolName);
 	}
 
-	static getInsertFields(
-		fields: { [key: string]: string | string[] | number | number[] | boolean | object | null | undefined; },
-		tableName: string,
-		returning?: string[],
-	) {
-		const params = SharedHelpers.clearUndefinedFields(fields);
+	static getInsertFields<
+		P extends SharedTypes.TRawParams = SharedTypes.TRawParams,
+		F extends string = string
+	>(data: {
+		params: P;
+		returning?: F[];
+		tableName: string;
+	}) {
+		const {
+			params: paramsRaw,
+			returning,
+			tableName,
+		} = data;
+
+		const params = SharedHelpers.clearUndefinedFields(paramsRaw);
 		const k = Object.keys(params);
 		const v = Object.values(params);
 
@@ -269,14 +278,25 @@ export class BaseModel {
 		return { query, values: v };
 	}
 
-	static getUpdateFields(
-		primaryKey: { field: string; value: string | number; },
-		fields: { [key: string]: string | string[] | number | number[] | boolean | object | null | undefined; },
-		tableName: string,
-		updateField?: string,
-		returning?: string[],
-	) {
-		const params = SharedHelpers.clearUndefinedFields(fields);
+	static getUpdateFields<
+		P extends SharedTypes.TRawParams = SharedTypes.TRawParams,
+		F extends string = string
+	>(data: {
+		params: P;
+		primaryKey: { field: F; value: string | number; };
+		returning?: F[];
+		tableName: string;
+		updateField?: string;
+	}) {
+		const {
+			params: paramsRaw,
+			primaryKey,
+			returning,
+			tableName,
+			updateField,
+		} = data;
+
+		const params = SharedHelpers.clearUndefinedFields(paramsRaw);
 		const k = Object.keys(params);
 		const v = Object.values(params);
 
