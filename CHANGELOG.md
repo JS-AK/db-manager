@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/JS-AK/db-manager/compare/v1.6.0...v1.7.0) (2023-03-31)
+
+
+### Features
+
+* add getInsertFields getUpdateFields for MYSQL add generics ([19e3de5](https://github.com/JS-AK/db-manager/commit/19e3de598416a72d564b3a86df243dc5006d18c3))
+
 # [1.6.0](https://github.com/JS-AK/db-manager/compare/v1.5.1...v1.6.0) (2023-03-30)
 
 
