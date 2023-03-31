@@ -286,7 +286,7 @@ export class BaseModel {
 		primaryKey: { field: F; value: string | number; };
 		returning?: F[];
 		tableName: string;
-		updateField?: string;
+		updateField?: F;
 	}) {
 		const {
 			params: paramsRaw,

@@ -232,7 +232,7 @@ export class BaseModel {
 		params: P;
 		primaryKey: { field: F; value: string | number; };
 		tableName: string;
-		updateField?: string;
+		updateField?: F;
 	}) {
 		const {
 			params: paramsRaw,

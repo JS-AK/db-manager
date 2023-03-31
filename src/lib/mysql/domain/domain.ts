@@ -48,7 +48,7 @@ export class BaseDomain<
 	}
 
 	get updateField() {
-		return this.#updateField;
+		return this.#updateField as keyof TableFields;
 	}
 
 	async createOne(createFields: CreateFields): Promise<number> {
