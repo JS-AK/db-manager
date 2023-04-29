@@ -4,7 +4,7 @@
 ![lint-and-test](https://github.com/JS-AK/db-manager/actions/workflows/lint-and-test.yml/badge.svg)
 ![jekyll-gh-pages](https://github.com/JS-AK/db-manager/actions/workflows/jekyll-gh-pages.yml/badge.svg)
 
-It is a tool for managing databases.
+It is a tool for work with databases (PG or MySQL) via pool connections
 
 ## Installation
 
