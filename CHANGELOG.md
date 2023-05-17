@@ -1,3 +1,10 @@
+## [1.7.3](https://github.com/JS-AK/db-manager/compare/v1.7.2...v1.7.3) (2023-05-17)
+
+
+### Bug Fixes
+
+* remove this.transactionPool from PG.BaseModel ([dcc213e](https://github.com/JS-AK/db-manager/commit/dcc213e1e19b658c231d17add44234a8fc2c4189))
+
 ## [1.7.2](https://github.com/JS-AK/db-manager/compare/v1.7.1...v1.7.2) (2023-04-29)
 
 
