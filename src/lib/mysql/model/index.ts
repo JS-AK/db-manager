@@ -9,7 +9,6 @@ import queries from "./queries.js";
 
 export class BaseModel {
 	createField;
-	creds;
 	isPKAutoIncremented;
 	pool: mysql.Pool;
 	primaryKey;
@@ -19,13 +18,6 @@ export class BaseModel {
 
 	constructor(tableData: Types.TTable, options: Types.TDBCreds) {
 		this.createField = tableData.createField;
-		this.creds = {
-			database: options.database,
-			host: options.host,
-			password: options.host,
-			port: options.port,
-			user: options.user,
-		};
 		this.pool = getStandartPool(options);
 		this.primaryKey = tableData.primaryKey;
 		this.isPKAutoIncremented = typeof tableData.isPKAutoIncremented === "boolean"

@@ -9,26 +9,16 @@ import queries from "./queries.js";
 
 export class BaseModel {
 	createField;
-	creds;
 	pool: pg.Pool;
 	primaryKey;
 	tableName;
 	tableFields;
-	transactionPool: pg.Pool;
 	updateField;
 
 	constructor(tableData: Types.TTable, options: Types.TDBCreds) {
 		this.createField = tableData.createField;
-		this.creds = {
-			database: options.database,
-			host: options.host,
-			password: options.host,
-			port: options.port,
-			user: options.user,
-		};
 		this.pool = getStandartPool(options);
 		this.primaryKey = tableData.primaryKey;
-		this.transactionPool = getTransactionPool(options);
 		this.tableName = tableData.tableName;
 		this.tableFields = tableData.tableFields;
 		this.updateField = tableData.updateField;
