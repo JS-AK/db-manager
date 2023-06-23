@@ -8,6 +8,10 @@ import { getStandartPool, getTransactionPool } from "../connection.js";
 import queries from "./queries.js";
 
 export class BaseModel {
+	#insertOptions;
+	#possibleOrderings = new Set(["ASC", "DESC"]);
+	#tableFieldsSet;
+
 	createField;
 	pool: pg.Pool;
 	primaryKey;
@@ -15,13 +19,20 @@ export class BaseModel {
 	tableFields;
 	updateField;
 
-	constructor(tableData: Types.TTable, options: Types.TDBCreds) {
+	constructor(
+		tableData: Types.TTable,
+		dbCreds: Types.TDBCreds,
+		options?: Types.TDBOptions,
+	) {
 		this.createField = tableData.createField;
-		this.pool = getStandartPool(options);
+		this.pool = getStandartPool(dbCreds);
 		this.primaryKey = tableData.primaryKey;
 		this.tableName = tableData.tableName;
 		this.tableFields = tableData.tableFields;
 		this.updateField = tableData.updateField;
+
+		this.#insertOptions = options?.insertOptions;
+		this.#tableFieldsSet = new Set(this.tableFields);
 	}
 
 	compareFields = Helpers.compareFields;
@@ -46,16 +57,27 @@ export class BaseModel {
 		},
 		selected = ["*"],
 		pagination?: SharedTypes.TPagination,
-		orderBy?: string,
-		ordering?: SharedTypes.TOrdering,
+		order?: { orderBy: string; ordering: SharedTypes.TOrdering; }[],
 	) {
+		if (order?.length) {
+			for (const o of order) {
+				if (!this.#tableFieldsSet.has(o.orderBy)) {
+					throw new Error("Invalid orderBy");
+				}
+
+				if (!this.#possibleOrderings.has(o.ordering)) {
+					throw new Error("Invalid ordering");
+				}
+			}
+		}
+
 		const {
 			fields,
 			fieldsOr,
 			nullFields,
 			values,
 		} = this.compareFields($and, $or);
-		const checkOrder = orderBy && ordering;
+
 		const {
 			orderByFields,
 			paginationFields,
@@ -65,7 +87,7 @@ export class BaseModel {
 			{ fields, fieldsOr, nullFields },
 			selected,
 			pagination,
-			checkOrder ? { orderBy, ordering } : undefined,
+			order,
 		);
 
 		const res = (await this.pool.query(
@@ -198,11 +220,14 @@ export class BaseModel {
 	async save(params = {}) {
 		const prms = SharedHelpers.clearUndefinedFields(params);
 		const fields = Object.keys(prms);
+		const onConflict = this.#insertOptions?.isOnConflictDoNothing
+			? "ON CONFLICT DO NOTHING"
+			: "";
 
 		if (!fields.length) throw new Error("No one params incoming to save");
 
 		const res = (await this.pool.query(
-			queries.save(this.tableName, fields, this.createField),
+			queries.save(this.tableName, fields, this.createField, onConflict),
 			Object.values(prms),
 		)).rows;
 

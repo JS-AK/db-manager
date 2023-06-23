@@ -3,6 +3,7 @@ export type CreateFields = Pick<TableFields,
 	| "title"
 > & Partial<Pick<TableFields,
 	| "description"
+	| "number_key"
 	| "number_range"
 >>;
 
@@ -34,6 +35,7 @@ export type TableFields = {
 		firstname: string;
 		lastname: string;
 	};
+	number_key: number;
 	number_range: string;
 	title: string;
 	updated_at: Date | null;

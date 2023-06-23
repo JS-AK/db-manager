@@ -1,4 +1,4 @@
-// ----- Dependiences ----------------------------
+// ----- Dependiences --------------------------
 import { PG } from "../../../../index.js";
 import { TableKeys } from "./types.js";
 
@@ -7,7 +7,7 @@ export * as Types from "./types.js";
 
 // ----- Class ------------------------------
 export class Model extends PG.BaseModel {
-	constructor(creds: PG.ModelTypes.TDBCreds) {
+	constructor(creds: PG.ModelTypes.TDBCreds, options?: PG.ModelTypes.TDBOptions) {
 		super(
 			{
 				createField,
@@ -17,6 +17,7 @@ export class Model extends PG.BaseModel {
 				updateField,
 			},
 			creds,
+			options,
 		);
 	}
 

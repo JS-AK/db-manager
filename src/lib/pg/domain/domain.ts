@@ -72,15 +72,13 @@ export class BaseDomain<
 		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<SearchFields>>;
 		selected?: (keyof TableFields)[];
 		pagination?: SharedTypes.TPagination;
-		orderBy?: keyof TableFields;
-		ordering?: SharedTypes.TOrdering;
+		order?: { orderBy: Extract<keyof TableFields, string> ; ordering: SharedTypes.TOrdering; }[];
 	}): Promise<TableFields[]> {
 		return this.model.getArrByParams(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 			options.pagination,
-			options.orderBy as string,
-			options.ordering,
+			options.order,
 		);
 	}
 

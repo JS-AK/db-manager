@@ -72,16 +72,14 @@ export class BaseDomain<
 		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<SearchFields>>;
 		selected?: (keyof TableFields)[];
 		pagination?: SharedTypes.TPagination;
-		orderBy?: keyof TableFields;
-		ordering?: SharedTypes.TOrdering;
+		order?: { orderBy: Extract<keyof TableFields, string> ; ordering: SharedTypes.TOrdering; }[];
 	}): Promise<TableFields[]> {
 		return this.model.getArrByParams(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 			options.pagination,
-			options.orderBy as string,
-			options.ordering,
-		);
+			options.order,
+		) as Promise<TableFields[]>;
 	}
 
 	async getCountByParams(options: { params: SearchFields; }): Promise<number> {
@@ -96,7 +94,7 @@ export class BaseDomain<
 		return this.model.getOneByParams(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
-		);
+		) as unknown as TableFields;
 	}
 
 	async getOneByParams(options: {
@@ -111,7 +109,7 @@ export class BaseDomain<
 
 		if (!one) return { message: "Not found" };
 
-		return { one };
+		return { one } as { one: TableFields; };
 	}
 
 	async getOneByPk(
@@ -121,7 +119,7 @@ export class BaseDomain<
 
 		if (!one) return { message: "Not found" };
 
-		return { one };
+		return { one } as { one: TableFields; };
 	}
 
 	async updateOneByPk(

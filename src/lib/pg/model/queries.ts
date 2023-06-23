@@ -76,6 +76,7 @@ export default {
 		tableName: string,
 		fields: string[],
 		createField: string,
+		onConflict: "ON CONFLICT DO NOTHING" | "",
 	) {
 		const intoFields = [];
 		const valuesFields = [];
@@ -84,6 +85,7 @@ export default {
 			intoFields.push(field);
 			valuesFields.push(`$${idx + 1}`);
 		}
+
 		if (createField) {
 			intoFields.push(createField);
 			valuesFields.push("NOW()");
@@ -92,7 +94,7 @@ export default {
 		return `
 			INSERT INTO ${tableName} (${intoFields.join(",")})
 			VALUES (${valuesFields.join(",")})
-			ON CONFLICT DO NOTHING
+			${onConflict}
 			RETURNING *
 		`;
 	},

@@ -1,4 +1,4 @@
-import mysql from "mysql2";
+import mysql from "mysql2/promise";
 
 import * as Helpers from "./helpers.js";
 import * as SharedHelpers from "../../../shared-helpers/index.js";
@@ -8,6 +8,9 @@ import { getStandartPool, getTransactionPool } from "../connection.js";
 import queries from "./queries.js";
 
 export class BaseModel {
+	#possibleOrderings = new Set(["ASC", "DESC"]);
+	#tableFieldsSet;
+
 	createField;
 	isPKAutoIncremented;
 	pool: mysql.Pool;
@@ -26,19 +29,21 @@ export class BaseModel {
 		this.tableName = tableData.tableName;
 		this.tableFields = tableData.tableFields;
 		this.updateField = tableData.updateField;
+
+		this.#tableFieldsSet = new Set(this.tableFields);
 	}
 
 	compareFields = Helpers.compareFields;
 
 	async delete(primaryKey: SharedTypes.TPrimaryKeyValue) {
-		await this.pool.promise().query(
+		await this.pool.query(
 			queries.delete(this.tableName, this.primaryKey),
 			Array.isArray(primaryKey) ? primaryKey : [primaryKey],
 		);
 	}
 
 	async deleteAll() {
-		await this.pool.promise().query(queries.deleteAll(this.tableName));
+		await this.pool.query(queries.deleteAll(this.tableName));
 	}
 
 	async getArrByParams(
@@ -48,16 +53,27 @@ export class BaseModel {
 		},
 		selected = ["*"],
 		pagination?: SharedTypes.TPagination,
-		orderBy?: string,
-		ordering?: SharedTypes.TOrdering,
+		order?: { orderBy: string; ordering: SharedTypes.TOrdering; }[],
 	) {
+		if (order?.length) {
+			for (const o of order) {
+				if (!this.#tableFieldsSet.has(o.orderBy)) {
+					throw new Error("Invalid orderBy");
+				}
+
+				if (!this.#possibleOrderings.has(o.ordering)) {
+					throw new Error("Invalid ordering");
+				}
+			}
+		}
+
 		const {
 			fields,
 			fieldsOr,
 			nullFields,
 			values,
 		} = this.compareFields($and, $or);
-		const checkOrder = orderBy && ordering;
+
 		const {
 			orderByFields,
 			paginationFields,
@@ -67,10 +83,10 @@ export class BaseModel {
 			{ fields, fieldsOr, nullFields },
 			selected,
 			pagination,
-			checkOrder ? { orderBy, ordering } : undefined,
+			order,
 		);
 
-		const [rows]: any[] = (await this.pool.promise().query(
+		const [rows] = (await this.pool.query<mysql.RowDataPacket[]>(
 			queries.getByParams(
 				this.tableName,
 				selectedFields,
@@ -97,10 +113,12 @@ export class BaseModel {
 				values.push(value);
 			}
 		}
-		const [rows]: any[] = (await this.pool.promise().query(
+		const [rows] = (await this.pool.query<mysql.RowDataPacket[]>(
 			queries.getCountByParams(this.tableName, fields, nullFields),
 			values,
 		));
+
+		if (!rows[0]) return 0;
 
 		return parseInt(rows[0].count, 10);
 	}
@@ -130,7 +148,7 @@ export class BaseModel {
 			selected,
 		);
 
-		const [rows]: any[] = (await this.pool.promise().query(
+		const [rows] = (await this.pool.query<mysql.RowDataPacket[]>(
 			queries.getByParams(
 				this.tableName,
 				selectedFields,
@@ -145,7 +163,7 @@ export class BaseModel {
 	}
 
 	async getOneByPk(primaryKey: SharedTypes.TPrimaryKeyValue) {
-		const [rows]: any[] = (await this.pool.promise().query(
+		const [rows] = (await this.pool.query<mysql.RowDataPacket[]>(
 			queries.getOneByPk(this.tableName, this.primaryKey),
 			Array.isArray(primaryKey) ? primaryKey : [primaryKey],
 		));
@@ -157,7 +175,7 @@ export class BaseModel {
 		const prms = SharedHelpers.clearUndefinedFields(params);
 		const fields = Object.keys(prms);
 
-		const [rows]: [mysql.OkPacket, mysql.FieldPacket[]] = await this.pool.promise().query(
+		const [rows]: [mysql.OkPacket, mysql.FieldPacket[]] = await this.pool.query(
 			queries.save(this.tableName, fields, this.createField),
 			Object.values(prms),
 		);
@@ -177,7 +195,7 @@ export class BaseModel {
 		const fields = Object.keys(prms);
 		const primaryKeyValue = Array.isArray(primaryKey) ? [...primaryKey] : [primaryKey];
 
-		await this.pool.promise().query(
+		await this.pool.query(
 			queries.update(this.tableName, fields, this.primaryKey, this.updateField),
 			[...Object.values(prms), ...primaryKeyValue],
 		);

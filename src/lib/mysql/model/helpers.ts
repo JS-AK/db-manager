@@ -1,6 +1,111 @@
 import * as SharedTypes from "../../../shared-types/index.js";
 import * as Types from "./types.js";
 
+const processMappings = new Map<keyof Types.TSearchParams, (key: string, value: Types.TSearchParams[keyof Types.TSearchParams], fields: Types.TField[], nullFields: string[], values: unknown[],) => void>(
+	[
+		[
+			"$custom",
+			(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], fields: Types.TField[], nullFields: string[], values: unknown[]) => {
+				const v = value as { $custom: { sign: string; value: string | number; }; };
+
+				fields.push({ key, operator: "$custom", sign: v.$custom.sign });
+				values.push(v.$custom.value);
+			},
+		],
+		[
+			"$gt",
+			(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], fields: Types.TField[], nullFields: string[], values: unknown[]) => {
+				const v = value as { $gt: number | string | boolean; };
+
+				fields.push({ key, operator: ">" });
+				values.push(v.$gt);
+			},
+		],
+		[
+			"$gte",
+			(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], fields: Types.TField[], nullFields: string[], values: unknown[]) => {
+				const v = value as { $gte: number | string | boolean; };
+
+				fields.push({ key, operator: ">=" });
+				values.push(v.$gte);
+			},
+		],
+		[
+			"$in",
+			(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], fields: Types.TField[], nullFields: string[], values: unknown[]) => {
+				const v = value as { $in: string[] | number[] | boolean[]; };
+
+				fields.push({ key, operator: "$in" });
+				values.push(v.$in);
+			},
+		],
+		[
+			"$like",
+			(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], fields: Types.TField[], nullFields: string[], values: unknown[]) => {
+				const v = value as { $like: string; };
+
+				fields.push({ key, operator: "$like" });
+				values.push(v.$like);
+			},
+		],
+		[
+			"$lt",
+			(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], fields: Types.TField[], nullFields: string[], values: unknown[]) => {
+				const v = value as { $lt: number | string | boolean; };
+
+				fields.push({ key, operator: "<" });
+				values.push(v.$lt);
+			},
+		],
+		[
+			"$lte",
+			(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], fields: Types.TField[], nullFields: string[], values: unknown[]) => {
+				const v = value as { $lte: number | string | boolean; };
+
+				fields.push({ key, operator: "<=" });
+				values.push(v.$lte);
+			},
+		],
+		[
+			"$ne",
+			(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], fields: Types.TField[], nullFields: string[], values: unknown[]) => {
+				const v = value as { $ne: number | string | boolean | null; };
+
+				if (v.$ne === null) {
+					nullFields.push(`${key} IS NOT NULL`);
+				} else {
+					fields.push({ key, operator: "<>" });
+					values.push(v.$ne);
+				}
+			},
+		],
+		[
+			"$nin",
+			(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], fields: Types.TField[], nullFields: string[], values: unknown[]) => {
+				const v = value as { $nin: string[] | number[] | boolean[]; };
+
+				fields.push({ key, operator: "$nin" });
+				values.push(v.$nin);
+			},
+		],
+		[
+			"$nlike",
+			(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], fields: Types.TField[], nullFields: string[], values: unknown[]) => {
+				const v = value as { $nlike: string; };
+
+				fields.push({ key, operator: "$nlike" });
+				values.push(v.$nlike);
+			}],
+	]);
+
+const operatorMappings: Map<string, (element: Types.TField,) => string> = new Map([
+	["$custom", (element: Types.TField) => ` ${element.key} ${element.sign} ?`],
+	["$in", (element: Types.TField) => ` ${element.key} IN (?)`],
+	["$like", (element: Types.TField) => ` ${element.key} LIKE ?`],
+	["$nin", (element: Types.TField) => ` ${element.key} NOT IN (?)`],
+	["$nlike", (element: Types.TField) => ` ${element.key} NOT LIKE ?`],
+]);
+
 export const compareFields = (
 	params: Types.TSearchParams = {},
 	paramsOr?: Types.TSearchParams[],
@@ -8,54 +113,20 @@ export const compareFields = (
 	const nullFields: string[] = [];
 
 	const fields: Types.TField[] = [];
-	const values: any[] = [];
+	const values: unknown[] = [];
 
 	for (const [key, value] of Object.entries(params)) {
 		if (value === null) {
 			nullFields.push(`${key} IS NULL`);
 		} else if (typeof value === "object") {
-			if (value.$ne === null) {
-				nullFields.push(`${key} IS NOT NULL`);
-			}
-			if (value.$ne) {
-				fields.push({ key, operator: "<>" });
-				values.push(value.$ne);
-			}
-			if (value.$in) {
-				fields.push({ key, operator: "$in" });
-				values.push(value.$in);
-			}
-			if (value.$nin) {
-				fields.push({ key, operator: "$nin" });
-				values.push(value.$nin);
-			}
-			if (value.$gt) {
-				fields.push({ key, operator: ">" });
-				values.push(value.$gt);
-			}
-			if (value.$gte) {
-				fields.push({ key, operator: ">=" });
-				values.push(value.$gte);
-			}
-			if (value.$lt) {
-				fields.push({ key, operator: "<" });
-				values.push(value.$lt);
-			}
-			if (value.$lte) {
-				fields.push({ key, operator: "<=" });
-				values.push(value.$lte);
-			}
-			if (value.$like) {
-				fields.push({ key, operator: "$like" });
-				values.push(value.$like);
-			}
-			if (value.$nlike) {
-				fields.push({ key, operator: "$nlike" });
-				values.push(value.$nlike);
-			}
-			if (value.$custom) {
-				fields.push({ key, operator: "$custom", sign: value.$custom.sign });
-				values.push(value.$custom.value);
+			for (const k of Object.keys(value)) {
+				const processFunction = processMappings.get(k);
+
+				if (!processFunction) {
+					throw new Error(`Invalid value.key ${k}, Available values: ${Array.from(processMappings.keys())}`);
+				}
+
+				processFunction(key, value, fields, nullFields, values);
 			}
 		} else if (value !== undefined) {
 			fields.push({ key, operator: "=" });
@@ -74,48 +145,14 @@ export const compareFields = (
 				if (value === null) {
 					nullFieldsOrLocal.push(`${key} IS NULL`);
 				} else if (typeof value === "object") {
-					if (value.$ne === null) {
-						nullFieldsOrLocal.push(`${key} IS NOT NULL`);
-					}
-					if (value.$ne) {
-						fieldsOrLocal.push({ key, operator: "<>" });
-						values.push(value.$ne);
-					}
-					if (value.$in) {
-						fieldsOrLocal.push({ key, operator: "$in" });
-						values.push(value.$in);
-					}
-					if (value.$nin) {
-						fieldsOrLocal.push({ key, operator: "$nin" });
-						values.push(value.$nin);
-					}
-					if (value.$gt) {
-						fieldsOrLocal.push({ key, operator: ">" });
-						values.push(value.$gt);
-					}
-					if (value.$gte) {
-						fieldsOrLocal.push({ key, operator: ">=" });
-						values.push(value.$gte);
-					}
-					if (value.$lt) {
-						fieldsOrLocal.push({ key, operator: "<" });
-						values.push(value.$lt);
-					}
-					if (value.$lte) {
-						fieldsOrLocal.push({ key, operator: "<=" });
-						values.push(value.$lte);
-					}
-					if (value.$like) {
-						fieldsOrLocal.push({ key, operator: "$like" });
-						values.push(value.$like);
-					}
-					if (value.$nlike) {
-						fieldsOrLocal.push({ key, operator: "$nlike" });
-						values.push(value.$nlike);
-					}
-					if (value.$custom) {
-						fieldsOrLocal.push({ key, operator: "$custom", sign: value.$custom.sign });
-						values.push(value.$custom.value);
+					for (const k of Object.keys(value)) {
+						const processFunction = processMappings.get(k);
+
+						if (!processFunction) {
+							throw new Error(`Invalid value.key ${k}, Available values: ${Array.from(processMappings.keys())}`);
+						}
+
+						processFunction(key, value, fieldsOrLocal, nullFieldsOrLocal, values);
 					}
 				} else if (value !== undefined) {
 					fieldsOrLocal.push({ key, operator: "=" });
@@ -138,7 +175,7 @@ export const getFieldsToSearch = (
 	},
 	selected = ["*"],
 	pagination?: SharedTypes.TPagination,
-	order?: { orderBy: string; ordering: string; },
+	order?: { orderBy: string; ordering: SharedTypes.TOrdering; } | { orderBy: string; ordering: SharedTypes.TOrdering; }[],
 ) => {
 	const { fields, fieldsOr, nullFields } = data;
 
@@ -153,25 +190,11 @@ export const getFieldsToSearch = (
 
 	if (fields.length) {
 		searchFields = fields.map((e: Types.TField) => {
-			switch (e.operator) {
-				case "$in":
-					return `${e.key} IN (?)`;
+			const operatorFunction = operatorMappings.get(e.operator);
 
-				case "$nin":
-					return `${e.key} NOT IN (?)`;
+			if (operatorFunction) return operatorFunction(e);
 
-				case "$like":
-					return `${e.key} LIKE ?`;
-
-				case "$nlike":
-					return `${e.key} NOT LIKE ?`;
-
-				case "$custom":
-					return `${e.key} ${e.sign} ?`;
-
-				default:
-					return `${e.key} ${e.operator} ?`;
-			}
+			else return ` ${e.key} ${e.operator} ?`;
 		}).join(" AND ");
 	} else {
 		searchFields = "1=1";
@@ -190,25 +213,11 @@ export const getFieldsToSearch = (
 		for (const row of fieldsOr) {
 			const { fields, nullFields } = row;
 			let comparedFields = fields.map((e: Types.TField) => {
-				switch (e.operator) {
-					case "$in":
-						return `${e.key} = ANY (?)`;
+				const operatorFunction = operatorMappings.get(e.operator);
 
-					case "$nin":
-						return `NOT (${e.key} = ANY (?))`;
+				if (operatorFunction) return operatorFunction(e);
 
-					case "$like":
-						return `${e.key} LIKE ?`;
-
-					case "$nlike":
-						return `${e.key} NOT LIKE ?`;
-
-					case "$custom":
-						return `${e.key} ${e.sign} ?`;
-
-					default:
-						return `${e.key} ${e.operator} ?`;
-				}
+				else return ` ${e.key} ${e.operator} ?`;
 			}).join(" AND ");
 
 			if (nullFields.length) {
@@ -223,7 +232,13 @@ export const getFieldsToSearch = (
 	}
 
 	if (order) {
-		res.orderByFields += `ORDER BY ${order.orderBy} ${order.ordering}`;
+		if (Array.isArray(order)) {
+			if (order.length) {
+				res.orderByFields += `ORDER BY ${order.map((o) => `${o.orderBy} ${o.ordering}`).join(", ")}`;
+			}
+		} else {
+			res.orderByFields += `ORDER BY ${order.orderBy} ${order.ordering}`;
+		}
 	}
 
 	if (pagination) {

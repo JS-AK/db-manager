@@ -19,9 +19,9 @@ test("top level test MYSQL", async (t) => {
 	await t.test("createTable", async () => {
 		const pool = MYSQL.BaseModel.getStandartPool(creds);
 
-		await pool.promise().query("DROP TABLE IF EXISTS test_table;");
+		await pool.query("DROP TABLE IF EXISTS test_table;");
 
-		await pool.promise().query(`
+		await pool.query(`
 			CREATE TABLE test_table(
 			  id                              INT NOT NULL AUTO_INCREMENT,
 
@@ -51,7 +51,7 @@ test("top level test MYSQL", async (t) => {
 
 	await t.test("transaction 1", async () => {
 		const transactionPool = MYSQL.BaseModel.getTransactionPool(creds);
-		const connection = await transactionPool.promise().getConnection();
+		const connection = await transactionPool.getConnection();
 
 		try {
 			await connection.beginTransaction();
@@ -73,7 +73,7 @@ test("top level test MYSQL", async (t) => {
 
 	await t.test("transaction 2", async () => {
 		const transactionPool = MYSQL.BaseModel.getTransactionPool(creds);
-		const connection = await transactionPool.promise().getConnection();
+		const connection = await transactionPool.getConnection();
 
 		try {
 			await connection.beginTransaction();
@@ -95,7 +95,7 @@ test("top level test MYSQL", async (t) => {
 
 	await t.test("transaction 3", async () => {
 		const transactionPool = MYSQL.BaseModel.getTransactionPool(creds);
-		const connection = await transactionPool.promise().getConnection();
+		const connection = await transactionPool.getConnection();
 
 		try {
 			await connection.beginTransaction();
@@ -113,18 +113,18 @@ test("top level test MYSQL", async (t) => {
 						tableName: testTable.tableName,
 					});
 
-				const data = (await connection.query(query, values))[0];
+				const [inserted] = (await connection.query<MYSQL.ModelTypes.ResultSetHeader>(query, values));
 
-				const entity = (await connection.query(`
+				const [entites] = (await connection.query<MYSQL.ModelTypes.RowDataPacket[]>(`
 					SELECT *
 					FROM test_table
 					WHERE id = ?
-				`, [data.insertId]))[0][0];
+				`, [inserted?.insertId]));
 
-				assert.equal(entity?.title, title);
-				assert.equal(entity?.description, description);
+				assert.equal(entites[0]?.title, title);
+				assert.equal(entites[0]?.description, description);
 
-				id = entity?.id as string;
+				id = entites[0]?.id as string;
 			}
 
 			{
@@ -142,14 +142,14 @@ test("top level test MYSQL", async (t) => {
 
 				await connection.query(query, values);
 
-				const entity = (await connection.query(`
+				const [entites] = (await connection.query<MYSQL.ModelTypes.RowDataPacket[]>(`
 					SELECT *
 					FROM test_table
 					WHERE id = ?
-				`, [id]))[0][0];
+				`, [id]));
 
-				assert.equal(entity?.description, description);
-				assert.equal(entity?.title, title);
+				assert.equal(entites[0]?.title, title);
+				assert.equal(entites[0]?.description, description);
 			}
 
 			await connection.query(`
@@ -158,13 +158,13 @@ test("top level test MYSQL", async (t) => {
 				WHERE id = ?
 			`, [id]);
 
-			const entity = (await connection.query(`
+			const [entites] = (await connection.query<MYSQL.ModelTypes.RowDataPacket[]>(`
 			SELECT *
 			FROM test_table
 			WHERE id = ?
-		`, [id]))[0][0];
+		`, [id]));
 
-			assert.equal(entity, undefined);
+			assert.equal(entites[0], undefined);
 
 			await connection.commit();
 		} catch (error) {
@@ -196,8 +196,7 @@ test("top level test MYSQL", async (t) => {
 	await t.test("getArrByParams with ordering", async () => {
 		{
 			const res = await testTable.getArrByParams({
-				orderBy: "title",
-				ordering: "DESC",
+				order: [{ orderBy: "title", ordering: "DESC" }],
 				params: {},
 			});
 
@@ -205,8 +204,7 @@ test("top level test MYSQL", async (t) => {
 		}
 		{
 			const res = await testTable.getArrByParams({
-				orderBy: "title",
-				ordering: "ASC",
+				order: [{ orderBy: "title", ordering: "ASC" }],
 				params: {},
 			});
 
@@ -369,7 +367,7 @@ test("top level test MYSQL", async (t) => {
 		const pool = MYSQL.BaseModel.getStandartPool(creds);
 		const transactionPool = MYSQL.BaseModel.getTransactionPool(creds);
 
-		await pool.promise().query("DROP TABLE IF EXISTS test_table;");
+		await pool.query("DROP TABLE IF EXISTS test_table;");
 
 		pool.end();
 		transactionPool.end();

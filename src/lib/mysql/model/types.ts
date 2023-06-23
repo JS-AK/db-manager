@@ -1,4 +1,7 @@
-import mysql from "mysql2";
+import mysql from "mysql2/promise";
+
+export type ResultSetHeader = mysql.ResultSetHeader;
+export type RowDataPacket = mysql.RowDataPacket;
 
 export type TDBCreds = mysql.PoolOptions & {
 	database: string;

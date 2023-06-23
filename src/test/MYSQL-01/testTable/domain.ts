@@ -19,6 +19,6 @@ export default class Domain
 	async test(): Promise<boolean> {
 		const res = await this.model.test();
 
-		return !!res.test;
+		return !!res?.test;
 	}
 }

@@ -1,11 +1,11 @@
-// ----- Dependiences ----------------------------
+// ----- Dependiences --------------------------
 import { MYSQL } from "../../../../index.js";
 import { TableKeys } from "./types.js";
 
 // ----- Reexport types ------------------------
 export * as Types from "./types.js";
 
-// ----- Сам класс ------------------------------
+// ----- Class ---------------------------------
 export class Model extends MYSQL.BaseModel {
 	constructor(creds: MYSQL.ModelTypes.TDBCreds) {
 		super(
@@ -21,9 +21,7 @@ export class Model extends MYSQL.BaseModel {
 	}
 
 	async test() {
-		return (await this.pool.promise().query(
-			queries.test())
-		)[0][0];
+		return (await this.pool.query<MYSQL.ModelTypes.RowDataPacket[]>(queries.test()))[0][0];
 	}
 }
 

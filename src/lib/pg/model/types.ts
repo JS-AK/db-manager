@@ -7,6 +7,9 @@ export type TDBCreds = pg.PoolConfig & {
 	port: number;
 	user: string;
 };
+export type TDBOptions = {
+	insertOptions?: { isOnConflictDoNothing: boolean; };
+};
 export type TField = {
 	key: string;
 	sign?: string;
@@ -17,6 +20,8 @@ export type TSearchParams = {
 		$ne?: number | string | boolean | null;
 		$gt?: number | string | boolean;
 		$gte?: number | string | boolean;
+		$json?: object;
+		$jsonb?: object;
 		$lt?: number | string | boolean;
 		$lte?: number | string | boolean;
 		$like?: string;
