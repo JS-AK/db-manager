@@ -1,3 +1,15 @@
+# [2.0.0](https://github.com/JS-AK/db-manager/compare/v1.7.3...v2.0.0) (2023-06-23)
+
+
+* fix!: update PG and MYSQL core ([57afe59](https://github.com/JS-AK/db-manager/commit/57afe59ce2d8758e3e5adb698c09c1eb6b564a66))
+
+
+### BREAKING CHANGES
+
+* - changed mysql2 to mysql2/promise
+- changed ordering to array
+- add $json and $jsonb to search params
+
 ## [1.7.3](https://github.com/JS-AK/db-manager/compare/v1.7.2...v1.7.3) (2023-05-17)
 
 
