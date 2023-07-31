@@ -37,17 +37,48 @@ export class BaseModel {
 
 	compareFields = Helpers.compareFields;
 
-	async delete<T = string | number>(primaryKey: T): Promise<T | null> {
+	async deleteAll(): Promise<void> {
+		await this.pool.query(queries.deleteAll(this.tableName));
+	}
+
+	async deleteOneByPk<T = string | number>(primaryKey: T): Promise<T | null> {
+		if (!this.primaryKey) {
+			throw new Error("Primary key not specified");
+		}
+
 		const res = (await this.pool.query(
-			queries.delete(this.tableName, this.primaryKey),
+			queries.deleteByPk(this.tableName, this.primaryKey),
 			[primaryKey],
 		)).rows[0];
 
 		return res?.[this.primaryKey] || null;
 	}
 
-	async deleteAll(): Promise<void> {
-		await this.pool.query(queries.deleteAll(this.tableName));
+	async deleteByParams(
+		{ $and = {}, $or }: {
+			$and: Types.TSearchParams;
+			$or?: Types.TSearchParams[];
+		},
+	): Promise<null> {
+		const {
+			fields,
+			fieldsOr,
+			nullFields,
+			values,
+		} = this.compareFields($and, $or);
+
+		const {
+			searchFields,
+		} = this.getFieldsToSearch(
+			{ fields, fieldsOr, nullFields },
+		);
+
+		await this.pool.query(
+			queries.deleteByParams(this.tableName, searchFields),
+			values,
+		);
+
+		return null;
 	}
 
 	async getArrByParams(
@@ -105,6 +136,10 @@ export class BaseModel {
 	}
 
 	async getCountByPks(pks: string[]) {
+		if (!this.primaryKey) {
+			throw new Error("Primary key not specified");
+		}
+
 		const res = (await this.pool.query(
 			queries.getCountByPks(this.primaryKey, this.tableName),
 			[pks],
@@ -120,6 +155,10 @@ export class BaseModel {
 			$or?: Types.TSearchParams[];
 		},
 	) {
+		if (!this.primaryKey) {
+			throw new Error("Primary key not specified");
+		}
+
 		const {
 			fields,
 			fieldsOr,
@@ -209,6 +248,10 @@ export class BaseModel {
 	}
 
 	async getOneByPk(pk: string) {
+		if (!this.primaryKey) {
+			throw new Error("Primary key not specified");
+		}
+
 		const res = (await this.pool.query(
 			queries.getOneByPk(this.tableName, this.primaryKey),
 			[pk],
@@ -234,17 +277,61 @@ export class BaseModel {
 		return res[0];
 	}
 
-	async update(
+	async updateByParams(
+		{ $and = {}, $or }: {
+			$and: Types.TSearchParams;
+			$or?: Types.TSearchParams[];
+		},
+		params: SharedTypes.TRawParams = {},
+	) {
+		const {
+			fields,
+			fieldsOr,
+			nullFields,
+			values,
+		} = this.compareFields($and, $or);
+
+		const {
+			orderNumber,
+			searchFields,
+		} = this.getFieldsToSearch(
+			{ fields, fieldsOr, nullFields },
+		);
+
+		const prms = SharedHelpers.clearUndefinedFields(params);
+		const fieldsToUpdate = Object.keys(prms);
+
+		if (!fields.length) throw new Error("No one params incoming to update");
+
+		const res = (await this.pool.query(
+			queries.updateByParams(
+				this.tableName,
+				fieldsToUpdate,
+				searchFields,
+				this.updateField,
+				orderNumber + 1,
+			),
+			[...values, ...Object.values(prms)],
+		)).rows;
+
+		return res;
+	}
+
+	async updateOneByPk(
 		pk: string,
 		params: SharedTypes.TRawParams = {},
 	) {
+		if (!this.primaryKey) {
+			throw new Error("Primary key not specified");
+		}
+
 		const prms = SharedHelpers.clearUndefinedFields(params);
 		const fields = Object.keys(prms);
 
 		if (!fields.length) throw new Error("No one params incoming to update");
 
 		const res = (await this.pool.query(
-			queries.update(this.tableName, fields, this.primaryKey, this.updateField),
+			queries.updateByPk(this.tableName, fields, this.primaryKey, this.updateField),
 			[...Object.values(prms), pk],
 		)).rows;
 

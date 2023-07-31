@@ -37,9 +37,9 @@ export type TSearchParams = {
 	| undefined;
 };
 export type TTable = {
-	createField: string;
-	primaryKey: string;
+	createField: string | null;
+	primaryKey: string | null;
 	tableFields: string[];
 	tableName: string;
-	updateField: string;
+	updateField: string | null;
 };

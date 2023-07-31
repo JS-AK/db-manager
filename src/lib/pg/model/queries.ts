@@ -1,5 +1,23 @@
 export default {
-	delete(
+	deleteAll(tableName: string) {
+		return `
+			DELETE
+			FROM ${tableName}
+		`;
+	},
+
+	deleteByParams(
+		tableName: string,
+		searchFields: string,
+	) {
+		return `
+			DELETE
+			FROM ${tableName}
+			${searchFields}
+		`;
+	},
+
+	deleteByPk(
 		tableName: string,
 		primaryKeyField: string,
 	) {
@@ -8,13 +26,6 @@ export default {
 			FROM ${tableName}
 			WHERE ${primaryKeyField} = $1
 			RETURNING ${primaryKeyField}
-		`;
-	},
-
-	deleteAll(tableName: string) {
-		return `
-			DELETE
-			FROM ${tableName}
 		`;
 	},
 
@@ -75,7 +86,7 @@ export default {
 	save(
 		tableName: string,
 		fields: string[],
-		createField: string,
+		createField: string | null,
 		onConflict: "ON CONFLICT DO NOTHING" | "",
 	) {
 		const intoFields = [];
@@ -99,11 +110,31 @@ export default {
 		`;
 	},
 
-	update(
+	updateByParams(
+		tableName: string,
+		fields: string[],
+		searchFields: string,
+		updateField: string | null,
+		startOrderNumber: number,
+	) {
+		let idx = startOrderNumber;
+		let updateFields = fields.map((e: string) => `${e} = $${idx++}`).join(",");
+
+		if (updateField) updateFields += `, ${updateField} = NOW()`;
+
+		return `
+			UPDATE ${tableName}
+			SET ${updateFields}
+			${searchFields}
+			RETURNING *
+		`;
+	},
+
+	updateByPk(
 		tableName: string,
 		fields: string[],
 		primaryKeyField: string,
-		updateField: string,
+		updateField: string | null,
 	) {
 		let idx = 1;
 		let updateFields = fields.map((e: string) => `${e} = $${idx++}`).join(",");

@@ -59,12 +59,21 @@ export class BaseDomain<
 		return res;
 	}
 
-	async deleteOneByPk<T = string | number>(pk: T): Promise<T | null> {
-		return this.model.delete<T>(pk);
-	}
-
 	async deleteAll(): Promise<void> {
 		return this.model.deleteAll();
+	}
+
+	async deleteOneByPk<T = string | number>(pk: T): Promise<T | null> {
+		return this.model.deleteOneByPk<T>(pk);
+	}
+
+	async deleteByParams(options: {
+		params: Types.TSearchParams<SearchFields>;
+		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<SearchFields>>;
+	}): Promise<null> {
+		return this.model.deleteByParams(
+			{ $and: options.params, $or: options.paramsOr },
+		);
 	}
 
 	async getArrByParams(options: {
@@ -143,7 +152,17 @@ export class BaseDomain<
 		return { one };
 	}
 
+	async updateByParams(options: {
+		params: Types.TSearchParams<SearchFields>;
+		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<SearchFields>>;
+	}, params: UpdateFields): Promise<TableFields[]> {
+		return this.model.updateByParams(
+			{ $and: options.params, $or: options.paramsOr },
+			params,
+		);
+	}
+
 	async updateOneByPk(pk: string, params: UpdateFields): Promise<TableFields> {
-		return this.model.update(pk, params);
+		return this.model.updateOneByPk(pk, params);
 	}
 }
