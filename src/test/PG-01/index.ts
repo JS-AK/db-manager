@@ -3,8 +3,9 @@ import test from "node:test";
 
 import { PG } from "../../index.js";
 
-import * as TestTable1 from "./testTable1/domain.js";
-import * as TestTable2 from "./testTable2/domain.js";
+import * as TestTable1 from "./test-table-1/domain.js";
+import * as TestTable2 from "./test-table-2/domain.js";
+import * as TestTable3 from "./test-table-3/domain.js";
 
 const creds = {
 	database: "postgres",
@@ -16,13 +17,14 @@ const creds = {
 
 const testTable1 = new TestTable1.default(creds);
 const testTable2 = new TestTable2.default(creds);
+const testTable3 = new TestTable3.default(creds);
 
 test("top level test PG", async (t) => {
 	await t.test("createTables", async () => {
 		const pool = PG.BaseModel.getStandartPool(creds);
 
 		await pool.query(`
-			DROP TABLE IF EXISTS test_table;
+			DROP TABLE IF EXISTS test_table_1;
 
 			CREATE TABLE test_table_1(
 			  id                              BIGSERIAL PRIMARY KEY,
@@ -39,7 +41,7 @@ test("top level test PG", async (t) => {
 		`);
 
 		await pool.query(`
-			DROP TABLE IF EXISTS test_table;
+			DROP TABLE IF EXISTS test_table_2;
 
 			CREATE TABLE test_table_2(
 			  id                              BIGSERIAL PRIMARY KEY,
@@ -50,6 +52,14 @@ test("top level test PG", async (t) => {
 
 			  created_at                      TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
 			  updated_at                      TIMESTAMP WITH TIME ZONE
+			);
+		`);
+
+		await pool.query(`
+			DROP TABLE IF EXISTS test_table_3;
+
+			CREATE TABLE test_table_3(
+			  title                           TEXT NOT NULL
 			);
 		`);
 	});
@@ -190,7 +200,7 @@ test("top level test PG", async (t) => {
 		assert.equal(res.length, 5);
 	});
 
-	await t.test("getArrByParams", async () => {
+	await t.test("getArrByParams 1", async () => {
 		const res = await testTable1.getArrByParams({
 			params: {
 				description: { $like: "test", $nlike: "%TTT%" },
@@ -366,12 +376,62 @@ test("top level test PG", async (t) => {
 		assert.equal(isNotTestFailed, true);
 	});
 
+	await t.test("testing table without id createField updateField", async () => {
+		{
+			const testValue = await testTable3.createOne({
+				title: "test 1",
+			});
+
+			assert.equal(testValue.title, "test 1");
+		}
+
+		{
+			const testValue = await testTable3.getGuaranteedOneByParams({
+				params: { title: "test 1" },
+			});
+
+			assert.equal(testValue.title, "test 1");
+		}
+
+		{
+			const testValue = await testTable3.updateByParams(
+				{ params: { title: "test 1" } },
+				{ title: "test 1 updated" },
+			);
+
+			assert.equal(testValue[0]?.title, "test 1 updated");
+		}
+
+		{
+			const testValue = await testTable3.getGuaranteedOneByParams({
+				params: { title: "test 1 updated" },
+			});
+
+			assert.equal(testValue.title, "test 1 updated");
+		}
+
+		{
+			await testTable3.deleteByParams(
+				{ params: { title: "test 1 updated" } },
+			);
+		}
+
+		{
+			const testValue = await testTable3.getArrByParams({
+				params: {},
+			});
+
+			assert.equal(testValue.length, 0);
+		}
+	});
+
 	await t.test("dropTables", async () => {
 		const pool = PG.BaseModel.getStandartPool(creds);
 		const transactionPool = PG.BaseModel.getTransactionPool(creds);
 
 		await pool.query("DROP TABLE IF EXISTS test_table_1;");
 		await pool.query("DROP TABLE IF EXISTS test_table_2;");
+		await pool.query("DROP TABLE IF EXISTS test_table_3;");
 
 		pool.end();
 		transactionPool.end();
