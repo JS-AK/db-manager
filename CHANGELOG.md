@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/JS-AK/db-manager/compare/v2.0.2...v2.1.0) (2023-07-31)
+
+
+### Features
+
+* updated pg model/domain ([7acf722](https://github.com/JS-AK/db-manager/commit/7acf722e7d07a07f885aa9d99530864b65a42358))
+
 ## [2.0.2](https://github.com/JS-AK/db-manager/compare/v2.0.1...v2.0.2) (2023-06-24)
 
 
