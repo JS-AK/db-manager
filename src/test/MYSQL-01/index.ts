@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { MYSQL } from "../../index.js";
 
-import * as TestTable from "./testTable/domain.js";
+import * as TestTable from "./test-table/domain.js";
 
 const creds = {
 	database: "test-base",
