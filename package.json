@@ -52,7 +52,7 @@
     "@semantic-release/npm": "^10.0.4",
     "@semantic-release/release-notes-generator": "^11.0.4",
     "@types/node": "^20.4.5",
-    "@typescript-eslint/eslint-plugin": "^5.62.0",
+    "@typescript-eslint/eslint-plugin": "^6.3.0",
     "@typescript-eslint/parser": "^5.62.0",
     "eslint": "^8.46.0",
     "eslint-plugin-sort-destructure-keys": "^1.5.0",
