@@ -107,6 +107,24 @@ const processMappings = new Map<keyof Types.TSearchParams, (key: string, value: 
 			},
 		],
 		[
+			"$between",
+			(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], fields: Types.TField[], nullFields: string[], values: unknown[]) => {
+				const v = value as { $between: string[] | number[]; };
+
+				fields.push({ key, operator: "$between" });
+				values.push(v.$between);
+			},
+		],
+		[
+			"$nbetween",
+			(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], fields: Types.TField[], nullFields: string[], values: unknown[]) => {
+				const v = value as { $nbetween: string[] | number[]; };
+
+				fields.push({ key, operator: "$nbetween" });
+				values.push(v.$nbetween);
+			},
+		],
+		[
 			"$nlike",
 			(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], fields: Types.TField[], nullFields: string[], values: unknown[]) => {
 				const v = value as { $nlike: string; };
@@ -116,12 +134,34 @@ const processMappings = new Map<keyof Types.TSearchParams, (key: string, value: 
 			}],
 	]);
 
-const operatorMappings: Map<string, (element: Types.TField, orderNumber: number) => string> = new Map([
-	["$custom", (element: Types.TField, orderNumber: number) => ` ${element.key} ${element.sign} $${orderNumber}`],
-	["$in", (element: Types.TField, orderNumber: number) => `${element.key} = ANY ($${orderNumber})`],
-	["$like", (element: Types.TField, orderNumber: number) => ` ${element.key} LIKE $${orderNumber}`],
-	["$nin", (element: Types.TField, orderNumber: number) => `NOT (${element.key} = ANY ($${orderNumber}))`],
-	["$nlike", (element: Types.TField, orderNumber: number) => ` ${element.key} NOT LIKE $${orderNumber}`],
+const operatorMappings: Map<
+	string,
+	(el: Types.TField, prevOrderNumber: number) => [string, number]
+> = new Map([
+	[
+		"$custom",
+		(el: Types.TField, prevOrderNumber: number) => [` ${el.key} ${el.sign} $${prevOrderNumber + 1}`, prevOrderNumber + 2],
+	],
+	[
+		"$between",
+		(el: Types.TField, prevOrderNumber: number) => [` ${el.key} BETWEEN $${prevOrderNumber + 1} AND $${prevOrderNumber + 2}`, prevOrderNumber + 3],
+	],
+	[
+		"$in",
+		(el: Types.TField, prevOrderNumber: number) => [` ${el.key} = ANY ($${prevOrderNumber + 1})`, prevOrderNumber + 2],
+	],
+	[
+		"$like",
+		(el: Types.TField, prevOrderNumber: number) => [` ${el.key} LIKE $${prevOrderNumber + 1}`, prevOrderNumber + 2],
+	],
+	[
+		"$nin",
+		(el: Types.TField, prevOrderNumber: number) => [` NOT (${el.key} = ANY ($${prevOrderNumber + 1}))`, prevOrderNumber + 2],
+	],
+	[
+		"$nlike",
+		(el: Types.TField, prevOrderNumber: number) => [` ${el.key} NOT LIKE $${prevOrderNumber + 1}`, prevOrderNumber + 2],
+	],
 ]);
 
 export const compareFields = (
@@ -209,12 +249,17 @@ export const getFieldsToSearch = (
 
 	if (fields.length) {
 		searchFields = fields.map((e: Types.TField) => {
-			res.orderNumber += 1;
 			const operatorFunction = operatorMappings.get(e.operator);
 
-			if (operatorFunction) return operatorFunction(e, res.orderNumber);
+			if (operatorFunction) {
+				const [text, nextOrderNumber] = operatorFunction(e, res.orderNumber);
 
-			else return ` ${e.key} ${e.operator} $${res.orderNumber}`;
+				res.orderNumber = nextOrderNumber;
+
+				return text;
+			} else {
+				return ` ${e.key} ${e.operator} $${res.orderNumber}`;
+			}
 		}).join(" AND ");
 	} else {
 		searchFields = "1=1";
@@ -233,13 +278,17 @@ export const getFieldsToSearch = (
 		for (const row of fieldsOr) {
 			const { fields, nullFields } = row;
 			let comparedFields = fields.map((e: Types.TField) => {
-				res.orderNumber += 1;
-
 				const operatorFunction = operatorMappings.get(e.operator);
 
-				if (operatorFunction) return operatorFunction(e, res.orderNumber);
+				if (operatorFunction) {
+					const [text, nextOrderNumber] = operatorFunction(e, res.orderNumber);
 
-				else return ` ${e.key} ${e.operator} $${res.orderNumber}`;
+					res.orderNumber = nextOrderNumber;
+
+					return text;
+				} else {
+					return ` ${e.key} ${e.operator} $${res.orderNumber}`;
+				}
 			}).join(" AND ");
 
 			if (nullFields.length) {

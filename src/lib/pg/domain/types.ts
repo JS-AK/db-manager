@@ -6,6 +6,8 @@ export type TSearchParams<T> = {
 		? NonNullable<T[key]> extends Date
 			? T[key]
 				| { $ne: NonNullable<T[key]> | null; }
+				| { $between: [NonNullable<T[key]>, NonNullable<T[key]>]; }
+				| { $nbetween: [NonNullable<T[key]>, NonNullable<T[key]>]; }
 				| { $gt: NonNullable<T[key]>; $lt: NonNullable<T[key]>; }
 				| { $gte: NonNullable<T[key]>; $lt: NonNullable<T[key]>; }
 				| { $gt: NonNullable<T[key]>; $lte: NonNullable<T[key]>; }
@@ -23,6 +25,8 @@ export type TSearchParams<T> = {
 				| { $jsonb: NonNullable<T[key]>; }
 		: T[key]
 			| { $ne: NonNullable<T[key]> | null; }
+			| { $between: [NonNullable<T[key]>, NonNullable<T[key]>]; }
+			| { $nbetween: [NonNullable<T[key]>, NonNullable<T[key]>]; }
 			| { $gt: NonNullable<T[key]>; $lt: NonNullable<T[key]>; }
 			| { $gte: NonNullable<T[key]>; $lt: NonNullable<T[key]>; }
 			| { $gt: NonNullable<T[key]>; $lte: NonNullable<T[key]>; }

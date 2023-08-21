@@ -13,7 +13,20 @@ export type TDBOptions = {
 export type TField = {
 	key: string;
 	sign?: string;
-	operator: "=" | "<>" | ">" | ">=" | "<" | "<=" | "$in" | "$nin" | "$like" | "$nlike" | "$custom";
+	operator:
+	| "="
+	| "<>"
+	| ">"
+	| ">="
+	| "<"
+	| "<="
+	| "$between"
+	| "$nbetween"
+	| "$in"
+	| "$nin"
+	| "$like"
+	| "$nlike"
+	| "$custom";
 };
 export type TSearchParams = {
 	[key: string]: {
