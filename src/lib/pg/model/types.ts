@@ -13,41 +13,33 @@ export type TDBOptions = {
 export type TField = {
 	key: string;
 	sign?: string;
-	operator:
-	| "="
-	| "<>"
-	| ">"
-	| ">="
-	| "<"
-	| "<="
-	| "$between"
-	| "$nbetween"
-	| "$in"
-	| "$nin"
-	| "$like"
-	| "$nlike"
-	| "$custom";
+	operator: TOperator;
 };
+export type TOperator = "=" | "<>" | ">" | ">=" | "<" | "<=" | "$custom" | "$between" | "$in" | "$like" | "$nbetween" | "$nlike" | "$nin";
 export type TSearchParams = {
-	[key: string]: {
-		$ne?: number | string | boolean | null;
-		$gt?: number | string | boolean;
-		$gte?: number | string | boolean;
-		$json?: object;
-		$jsonb?: object;
-		$lt?: number | string | boolean;
-		$lte?: number | string | boolean;
-		$like?: string;
-		$nlike?: string;
-		$custom?: { sign: string; value: string | number; };
-		$in?: string[] | number[] | boolean[];
-		$nin?: string[] | number[] | boolean[];
-	}
-	| null
-	| string
-	| number
+	[key: string]:
+	| TSearchParamsWithOperator
 	| boolean
+	| null
+	| number
+	| string
 	| undefined;
+};
+export type TSearchParamsWithOperator = {
+	$custom?: { sign: string; value: string | number; };
+	$between?: [number | string, number | string];
+	$gt?: number | string | boolean;
+	$gte?: number | string | boolean;
+	$in?: string[] | number[] | boolean[];
+	$json?: object;
+	$jsonb?: object;
+	$like?: string;
+	$lt?: number | string | boolean;
+	$lte?: number | string | boolean;
+	$nbetween?: [number | string, number | string];
+	$ne?: number | string | boolean | null;
+	$nin?: string[] | number[] | boolean[];
+	$nlike?: string;
 };
 export type TTable = {
 	createField: string | null;

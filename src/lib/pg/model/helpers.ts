@@ -159,6 +159,10 @@ const operatorMappings: Map<
 		(el: Types.TField, prevOrderNumber: number) => [` NOT (${el.key} = ANY ($${prevOrderNumber + 1}))`, prevOrderNumber + 2],
 	],
 	[
+		"$nbetween",
+		(el: Types.TField, prevOrderNumber: number) => [` ${el.key} NOT BETWEEN $${prevOrderNumber + 1} AND $${prevOrderNumber + 2}`, prevOrderNumber + 3],
+	],
+	[
 		"$nlike",
 		(el: Types.TField, prevOrderNumber: number) => [` ${el.key} NOT LIKE $${prevOrderNumber + 1}`, prevOrderNumber + 2],
 	],
@@ -258,6 +262,8 @@ export const getFieldsToSearch = (
 
 				return text;
 			} else {
+				res.orderNumber += 1;
+
 				return ` ${e.key} ${e.operator} $${res.orderNumber}`;
 			}
 		}).join(" AND ");
@@ -287,6 +293,8 @@ export const getFieldsToSearch = (
 
 					return text;
 				} else {
+					res.orderNumber += 1;
+
 					return ` ${e.key} ${e.operator} $${res.orderNumber}`;
 				}
 			}).join(" AND ");
