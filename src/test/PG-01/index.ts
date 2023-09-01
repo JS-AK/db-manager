@@ -194,129 +194,169 @@ test("top level test PG", async (t) => {
 		}
 	});
 
-	await t.test("getArrByParams [params: {}]", async () => {
-		const res = await testTable1.getArrByParams({ params: {} });
+	await t.test(
+		"getArrByParams [params: {}]",
+		async () => {
+			const res = await testTable1.getArrByParams({ params: {} });
 
-		assert.equal(res.length, 5);
-	});
+			assert.equal(res.length, 5);
+		},
+	);
 
-	await t.test("getArrByParams 1", async () => {
-		const res = await testTable1.getArrByParams({
-			params: {
-				description: { $like: "test", $nlike: "%TTT%" },
-				id: {
-					$gte: "2",
-					$in: ["1", "2"],
-					$lte: "2",
-					$ne: null,
-					$nin: ["3", "4"],
-				},
-			},
-			paramsOr: [
-				{
-					description: null,
-					title: "test 1",
-				},
-				{
-					description: { $like: "%tes%", $ne: null, $nlike: "%12345%" },
-					title: "test 2",
-				},
-			],
-		});
-
-		assert.equal(res[0]?.title, "test 2");
-	});
-
-	await t.test("getArrByParams 2", async () => {
-		const res = await testTable1.getArrByParams({
-			params: { number_key: { $gte: 0 } },
-		});
-
-		assert.equal(res[0]?.title, "test 2");
-	});
-
-	await t.test("getArrByParams with ordering", async () => {
-		{
+	await t.test(
+		"getArrByParams [params: { description: { $like: 'test', $nlike: '%TTT%' }, id: { $gte: '2', $in: ['1', '2'], $lte: '2', $ne: null, $nin: ['3', '4'] } }, paramsOr: [{ description: null, title: 'test 1' }, { description: { $like: '%tes%', $ne: null, $nlike: '%12345%' }, title: 'test 2' }]]",
+		async () => {
 			const res = await testTable1.getArrByParams({
-				order: [{ orderBy: "title", ordering: "DESC" }],
-				params: {},
-			});
-
-			assert.equal(res[0]?.title, "test 5");
-		}
-		{
-			const res = await testTable1.getArrByParams({
-				order: [
-					{ orderBy: "title", ordering: "ASC" },
-					{ orderBy: "description", ordering: "DESC" },
+				params: {
+					description: { $like: "test", $nlike: "%TTT%" },
+					id: { $gte: "2", $in: ["1", "2"], $lte: "2", $ne: null, $nin: ["3", "4"] },
+				},
+				paramsOr: [
+					{ description: null, title: "test 1" },
+					{ description: { $like: "%tes%", $ne: null, $nlike: "%12345%" }, title: "test 2" },
 				],
-				params: {},
 			});
 
-			assert.equal(res[0]?.title, "test 1");
-		}
-	});
+			assert.equal(res[0]?.title, "test 2");
+		},
+	);
 
-	await t.test("getArrByParams with params: { title: \"test 1\" }", async () => {
-		const res = await testTable1.getArrByParams({
-			params: { title: "test 1" },
-		});
+	await t.test(
+		"getArrByParams [params: { number_key: { $gte: 0 }]",
+		async () => {
+			const res = await testTable1.getArrByParams({
+				params: { number_key: { $gte: 0 } },
+			});
 
-		assert.equal(res.length, 1);
-	});
+			assert.equal(res[0]?.title, "test 2");
+		},
+	);
 
-	await t.test("getArrByParams with params: { number_range: { $custom: { sign: \"@>\", value: \"[150,150]\" } }", async () => {
-		const res = await testTable1.getArrByParams({
-			params: { number_range: { $custom: { sign: "@>", value: "[150,150]" } } },
-		});
+	await t.test(
+		"getArrByParams [params: { number_key: { $between: [0, 1] }]",
+		async () => {
+			const res = await testTable1.getArrByParams({
+				params: { number_key: { $between: [0, 1] } },
+			});
 
-		assert.equal(res[0]?.title, "test 2");
-	});
+			assert.equal(res[0]?.title, "test 2");
+		},
+	);
 
-	await t.test("getArrByParams description: null", async () => {
-		const res = await testTable1.getArrByParams({
-			params: { description: null },
-		});
+	await t.test(
+		"getArrByParams [params: { number_key: { $nbetween: [1, 2] }]",
+		async () => {
+			const res = await testTable1.getArrByParams({
+				params: { number_key: { $nbetween: [1, 2] } },
+			});
 
-		assert.equal(res.length, 4);
-	});
+			assert.equal(res[0]?.title, "test 2");
+		},
+	);
 
-	await t.test("getGuaranteedOneByParams", async () => {
-		const title = "title transaction 2";
-		const meta = { firstname: "test", lastname: "test" };
+	await t.test(
+		"getArrByParams [order: [{ orderBy: 'title', ordering: 'DESC' }], params: {}]",
+		async () => {
+			{
+				const res = await testTable1.getArrByParams({
+					order: [{ orderBy: "title", ordering: "DESC" }],
+					params: {},
+				});
 
-		const exampleFound = await testTable2.getGuaranteedOneByParams({
-			params: { meta: { $jsonb: meta }, title },
-		});
+				assert.equal(res[0]?.title, "test 5");
+			}
+			{
+				const res = await testTable1.getArrByParams({
+					order: [
+						{ orderBy: "title", ordering: "ASC" },
+						{ orderBy: "description", ordering: "DESC" },
+					],
+					params: {},
+				});
 
-		assert.equal(!!exampleFound.id, true);
-		assert.equal(!!exampleFound.created_at, true);
-		assert.equal(!!exampleFound.updated_at, false);
-		assert.equal(exampleFound.title, title);
-		assert.equal(exampleFound.meta.firstname, meta.firstname);
-		assert.equal(exampleFound.meta.lastname, meta.lastname);
-	});
+				assert.equal(res[0]?.title, "test 1");
+			}
+		},
+	);
 
-	await t.test("getGuaranteedOneByParams with $like", async () => {
-		const titleOrigin = "test 1";
-		const title = "%est 1%";
+	await t.test(
+		"getArrByParams with [params: { title: 'test 1' }]",
+		async () => {
+			const res = await testTable1.getArrByParams({
+				params: { title: "test 1" },
+			});
 
-		const exampleFound = await testTable1.getGuaranteedOneByParams({
-			params: { title: { $like: title } },
-		});
+			assert.equal(res.length, 1);
+		},
+	);
 
-		assert.equal(exampleFound.title, titleOrigin);
-	});
+	await t.test(
+		"getArrByParams with [params: { number_range: { $custom: { sign: '@>', value: '[150,150]' } }]",
+		async () => {
+			const res = await testTable1.getArrByParams({
+				params: { number_range: { $custom: { sign: "@>", value: "[150,150]" } } },
+			});
 
-	await t.test("getGuaranteedOneByParams with $ne", async () => {
-		const titleOrigin = "test 2";
+			assert.equal(res[0]?.title, "test 2");
+		},
+	);
 
-		const exampleFound = await testTable1.getGuaranteedOneByParams({
-			params: { description: { $ne: null } },
-		});
+	await t.test(
+		"getArrByParams [params: { description: null }]",
+		async () => {
+			const res = await testTable1.getArrByParams({
+				params: { description: null },
+			});
 
-		assert.equal(exampleFound.title, titleOrigin);
-	});
+			assert.equal(res.length, 4);
+		},
+	);
+
+	await t.test(
+		"getGuaranteedOneByParams [params: { meta: { $jsonb: meta }, title }]",
+		async () => {
+			const title = "title transaction 2";
+			const meta = { firstname: "test", lastname: "test" };
+
+			const exampleFound = await testTable2.getGuaranteedOneByParams({
+				params: { meta: { $jsonb: meta }, title },
+			});
+
+			assert.equal(!!exampleFound.id, true);
+			assert.equal(!!exampleFound.created_at, true);
+			assert.equal(!!exampleFound.updated_at, false);
+			assert.equal(exampleFound.title, title);
+			assert.equal(exampleFound.meta.firstname, meta.firstname);
+			assert.equal(exampleFound.meta.lastname, meta.lastname);
+		},
+	);
+
+	await t.test(
+		"getGuaranteedOneByParams [params: { title: { $like: title } }]",
+		async () => {
+			const titleOrigin = "test 1";
+			const title = "%est 1%";
+
+			const exampleFound = await testTable1.getGuaranteedOneByParams({
+				params: { title: { $like: title } },
+			});
+
+			assert.equal(exampleFound.title, titleOrigin);
+		},
+	);
+
+	await t.test(
+		"getGuaranteedOneByParams [{ description: { $ne: null } }]",
+		async () => {
+			const titleOrigin = "test 2";
+
+			const exampleFound = await testTable1.getGuaranteedOneByParams({
+				params: { description: { $ne: null } },
+			});
+
+			assert.equal(exampleFound.title, titleOrigin);
+		},
+	);
 
 	await t.test("updateOneByPk", async () => {
 		const meta = { firstname: "test", lastname: "test" };

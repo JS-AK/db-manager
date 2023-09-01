@@ -112,7 +112,8 @@ const processMappings = new Map<keyof Types.TSearchParams, (key: string, value: 
 				const v = value as { $between: string[] | number[]; };
 
 				fields.push({ key, operator: "$between" });
-				values.push(v.$between);
+				values.push(v.$between[0]);
+				values.push(v.$between[1]);
 			},
 		],
 		[
@@ -121,7 +122,8 @@ const processMappings = new Map<keyof Types.TSearchParams, (key: string, value: 
 				const v = value as { $nbetween: string[] | number[]; };
 
 				fields.push({ key, operator: "$nbetween" });
-				values.push(v.$nbetween);
+				values.push(v.$nbetween[0]);
+				values.push(v.$nbetween[1]);
 			},
 		],
 		[
@@ -136,35 +138,35 @@ const processMappings = new Map<keyof Types.TSearchParams, (key: string, value: 
 
 const operatorMappings: Map<
 	string,
-	(el: Types.TField, prevOrderNumber: number) => [string, number]
+	(el: Types.TField, orderNumber: number) => [string, number]
 > = new Map([
 	[
 		"$custom",
-		(el: Types.TField, prevOrderNumber: number) => [` ${el.key} ${el.sign} $${prevOrderNumber + 1}`, prevOrderNumber + 2],
+		(el: Types.TField, orderNumber: number) => [`${el.key} ${el.sign} $${orderNumber + 1}`, orderNumber + 1],
 	],
 	[
 		"$between",
-		(el: Types.TField, prevOrderNumber: number) => [` ${el.key} BETWEEN $${prevOrderNumber + 1} AND $${prevOrderNumber + 2}`, prevOrderNumber + 3],
+		(el: Types.TField, orderNumber: number) => [`${el.key} BETWEEN $${orderNumber + 1} AND $${orderNumber + 2}`, orderNumber + 2],
 	],
 	[
 		"$in",
-		(el: Types.TField, prevOrderNumber: number) => [` ${el.key} = ANY ($${prevOrderNumber + 1})`, prevOrderNumber + 2],
+		(el: Types.TField, orderNumber: number) => [`${el.key} = ANY ($${orderNumber + 1})`, orderNumber + 1],
 	],
 	[
 		"$like",
-		(el: Types.TField, prevOrderNumber: number) => [` ${el.key} LIKE $${prevOrderNumber + 1}`, prevOrderNumber + 2],
+		(el: Types.TField, orderNumber: number) => [`${el.key} LIKE $${orderNumber + 1}`, orderNumber + 1],
 	],
 	[
 		"$nin",
-		(el: Types.TField, prevOrderNumber: number) => [` NOT (${el.key} = ANY ($${prevOrderNumber + 1}))`, prevOrderNumber + 2],
+		(el: Types.TField, orderNumber: number) => [`NOT (${el.key} = ANY ($${orderNumber + 1}))`, orderNumber + 1],
 	],
 	[
 		"$nbetween",
-		(el: Types.TField, prevOrderNumber: number) => [` ${el.key} NOT BETWEEN $${prevOrderNumber + 1} AND $${prevOrderNumber + 2}`, prevOrderNumber + 3],
+		(el: Types.TField, orderNumber: number) => [`${el.key} NOT BETWEEN $${orderNumber + 1} AND $${orderNumber + 2}`, orderNumber + 2],
 	],
 	[
 		"$nlike",
-		(el: Types.TField, prevOrderNumber: number) => [` ${el.key} NOT LIKE $${prevOrderNumber + 1}`, prevOrderNumber + 2],
+		(el: Types.TField, orderNumber: number) => [`${el.key} NOT LIKE $${orderNumber + 1}`, orderNumber + 1],
 	],
 ]);
 
@@ -256,15 +258,17 @@ export const getFieldsToSearch = (
 			const operatorFunction = operatorMappings.get(e.operator);
 
 			if (operatorFunction) {
-				const [text, nextOrderNumber] = operatorFunction(e, res.orderNumber);
+				const [text, orderNumber] = operatorFunction(e, res.orderNumber);
 
-				res.orderNumber = nextOrderNumber;
+				res.orderNumber = orderNumber;
 
 				return text;
 			} else {
 				res.orderNumber += 1;
 
-				return ` ${e.key} ${e.operator} $${res.orderNumber}`;
+				const text = `${e.key} ${e.operator} $${res.orderNumber}`;
+
+				return text;
 			}
 		}).join(" AND ");
 	} else {
@@ -287,15 +291,17 @@ export const getFieldsToSearch = (
 				const operatorFunction = operatorMappings.get(e.operator);
 
 				if (operatorFunction) {
-					const [text, nextOrderNumber] = operatorFunction(e, res.orderNumber);
+					const [text, orderNumber] = operatorFunction(e, res.orderNumber);
 
-					res.orderNumber = nextOrderNumber;
+					res.orderNumber = orderNumber;
 
 					return text;
 				} else {
 					res.orderNumber += 1;
 
-					return ` ${e.key} ${e.operator} $${res.orderNumber}`;
+					const text = `${e.key} ${e.operator} $${res.orderNumber}`;
+
+					return text;
 				}
 			}).join(" AND ");
 
