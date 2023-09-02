@@ -4,7 +4,7 @@ import * as Helpers from "./helpers.js";
 import * as SharedHelpers from "../../../shared-helpers/index.js";
 import * as SharedTypes from "../../../shared-types/index.js";
 import * as Types from "./types.js";
-import { getStandartPool, getTransactionPool } from "../connection.js";
+import * as connection from "../connection.js";
 import queries from "./queries.js";
 
 export class BaseModel {
@@ -25,7 +25,7 @@ export class BaseModel {
 		options?: Types.TDBOptions,
 	) {
 		this.createField = tableData.createField;
-		this.pool = getStandartPool(dbCreds);
+		this.pool = connection.getStandartPool(dbCreds);
 		this.primaryKey = tableData.primaryKey;
 		this.tableName = tableData.tableName;
 		this.tableFields = tableData.tableFields;
@@ -340,11 +340,19 @@ export class BaseModel {
 
 	// STATIC METHODS
 	static getStandartPool(creds: Types.TDBCreds, poolName?: string): pg.Pool {
-		return getStandartPool(creds, poolName);
+		return connection.getStandartPool(creds, poolName);
+	}
+
+	static async removeStandartPool(creds: Types.TDBCreds, poolName?: string): Promise<boolean> {
+		return connection.removeStandartPool(creds, poolName);
 	}
 
 	static getTransactionPool(creds: Types.TDBCreds, poolName?: string): pg.Pool {
-		return getTransactionPool(creds, poolName);
+		return connection.getTransactionPool(creds, poolName);
+	}
+
+	static async removeTransactionPool(creds: Types.TDBCreds, poolName?: string): Promise<boolean> {
+		return connection.removeTransactionPool(creds, poolName);
 	}
 
 	static getInsertFields<

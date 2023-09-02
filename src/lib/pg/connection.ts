@@ -43,3 +43,39 @@ export const getTransactionPool = (config: PG.ModelTypes.TDBCreds, poolName = "0
 		return pool;
 	}
 };
+
+export const removeStandartPool = async (config: PG.ModelTypes.TDBCreds, poolName = "00") => {
+	const { database, host, password, port, user } = config;
+	const poolNameResult = "st" + poolName;
+	const credsString = `${poolNameResult}#${user}:${password}@${host}:${port}/${database}`;
+
+	const pool = pools.get(credsString);
+
+	if (pool) {
+		pools.delete(credsString);
+
+		await pool.end();
+
+		return true;
+	} else {
+		throw new Error("Pool not found");
+	}
+};
+
+export const removeTransactionPool = async (config: PG.ModelTypes.TDBCreds, poolName = "00") => {
+	const { database, host, password, port, user } = config;
+	const poolNameResult = "tr" + poolName;
+	const credsString = `${poolNameResult}#${user}:${password}@${host}:${port}/${database}`;
+
+	const pool = pools.get(credsString);
+
+	if (pool) {
+		pools.delete(credsString);
+
+		await pool.end();
+
+		return true;
+	} else {
+		throw new Error("Pool not found");
+	}
+};
