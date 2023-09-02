@@ -1,3 +1,14 @@
+## [2.1.1](https://github.com/JS-AK/db-manager/compare/v2.1.0...v2.1.1) (2023-09-02)
+
+
+### Bug Fixes
+
+* fixed increase order ([d6a0c23](https://github.com/JS-AK/db-manager/commit/d6a0c233b4f5aeb633100ca3ad49982662198e57))
+* updated pg test flow ([3bf5afb](https://github.com/JS-AK/db-manager/commit/3bf5afb6b4ef8aa6aac98bbc00b2bdc4fda43ba5))
+* updated pg test flow ([a29c9bf](https://github.com/JS-AK/db-manager/commit/a29c9bf1624dfc25b9bd31f7295f7aa49fb1e875))
+* updated pg test flow ([e1fa86c](https://github.com/JS-AK/db-manager/commit/e1fa86c864938aa4b7f35b8025354a9492cbb590))
+* updated pg tests ([3d50d88](https://github.com/JS-AK/db-manager/commit/3d50d881452058335b07b75c9ea39565667ae7cc))
+
 # [2.1.0](https://github.com/JS-AK/db-manager/compare/v2.0.2...v2.1.0) (2023-07-31)
 
 
