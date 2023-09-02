@@ -55,10 +55,6 @@ export const removeStandartPool = async (config: PG.ModelTypes.TDBCreds, poolNam
 		pools.delete(credsString);
 
 		await pool.end();
-
-		return true;
-	} else {
-		throw new Error("Pool not found");
 	}
 };
 
@@ -73,9 +69,5 @@ export const removeTransactionPool = async (config: PG.ModelTypes.TDBCreds, pool
 		pools.delete(credsString);
 
 		await pool.end();
-
-		return true;
-	} else {
-		throw new Error("Pool not found");
 	}
 };

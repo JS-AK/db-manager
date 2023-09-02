@@ -152,10 +152,13 @@ export class BaseDomain<
 		return { one };
 	}
 
-	async updateByParams(options: {
-		params: Types.TSearchParams<SearchFields>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<SearchFields>>;
-	}, params: UpdateFields): Promise<TableFields[]> {
+	async updateByParams(
+		options: {
+			params: Types.TSearchParams<SearchFields>;
+			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<SearchFields>>;
+		},
+		params: UpdateFields,
+	): Promise<TableFields[]> {
 		return this.model.updateByParams(
 			{ $and: options.params, $or: options.paramsOr },
 			params,

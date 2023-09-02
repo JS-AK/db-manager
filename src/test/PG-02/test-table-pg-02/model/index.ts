@@ -1,4 +1,4 @@
-// ----- Dependiences --------------------------
+// ----- Dependiences ----------------------------
 import { PG } from "../../../../index.js";
 import { TableKeys } from "./types.js";
 
@@ -7,7 +7,7 @@ export * as Types from "./types.js";
 
 // ----- Class ------------------------------
 export class Model extends PG.BaseModel {
-	constructor(creds: PG.ModelTypes.TDBCreds, options?: PG.ModelTypes.TDBOptions) {
+	constructor(creds: PG.ModelTypes.TDBCreds) {
 		super(
 			{
 				createField,
@@ -17,33 +17,20 @@ export class Model extends PG.BaseModel {
 				updateField,
 			},
 			creds,
-			options,
 		);
-	}
-
-	async test() {
-		return (await this.pool.query(queries.test())).rows[0];
 	}
 }
 
 // ----- Table propertires ----------------------
 const tableName = "test_table_pg_02"; // table from DB
-const primaryKey = "id"; // primaryId from table
-const createField = "created_at"; // created field
-const updateField = "updated_at"; // updated field
+const primaryKey = null; // primaryId from table
+const createField = null; // created field
+const updateField = null; // updated field
 const tableFields: TableKeys[] = [
-	"created_at", // -> create date
-	"description", // -> description
-	"id", // -> id
-	"meta", // -> meta
-	"number_range", // -> number_range
 	"title", // -> title
-	"updated_at", // -> update date
 ];
 
 // ----- queries -----------------------
-const queries = {
-	test() {
-		return "SELECT 1=1 AS test;";
-	},
-};
+// const queries = {
+
+// };

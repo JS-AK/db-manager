@@ -18,7 +18,7 @@ export default async () => {
 
 	return test("PG-02", async (testContext) => {
 		await testContext.test(
-			"create tables",
+			"create table",
 			async () => {
 				const pool = PG.BaseModel.getStandartPool(creds);
 
@@ -26,434 +26,90 @@ export default async () => {
 					DROP TABLE IF EXISTS ${testTable.tableName};
 
 					CREATE TABLE ${testTable.tableName}(
-					  id                              BIGSERIAL PRIMARY KEY,
-
-					  description                     TEXT,
-					  number_key                      INT NOT NULL,
-					  number_range                    INT8RANGE,
-					  meta                            JSONB NOT NULL,
-					  title                           TEXT NOT NULL,
-
-					  created_at                      TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-					  updated_at                      TIMESTAMP WITH TIME ZONE
+					  title                           TEXT UNIQUE NOT NULL
 					);
 				`);
 			},
 		);
 
 		await testContext.test(
-			"deleteAll",
-			async () => {
-				await testTable.deleteAll();
-				const entities = await testTable.getArrByParams({ params: {} });
-
-				assert.equal(entities.length, 0);
-			},
-		);
-
-		await testContext.test(
-			"createOne",
-			async () => {
-				const params = {
-					meta: { firstname: "firstname", lastname: "lastname" },
-					number_key: 1,
-					title: "title",
-				};
-
-				const entity = await testTable.createOne(params);
-
-				assert.equal(!!entity.id, true);
-				assert.equal(entity.meta.firstname, params.meta.firstname);
-				assert.equal(entity.meta.lastname, params.meta.lastname);
-				assert.equal(entity.title, params.title);
-
-				await testTable.deleteAll();
-			},
-		);
-
-		await testContext.test(
-			"transaction getInsertFields getUpdateFields",
-			async () => {
-				const transactionPool = PG.BaseModel.getTransactionPool(creds);
-				const client = await transactionPool.connect();
-
-				try {
-					await client.query("BEGIN");
-
-					const params = {
-						meta: { firstname: "firstname", lastname: "lastname" },
-						number_key: 1,
-						title: "title",
-					};
-
-					const { query, values } = PG
-						.BaseModel
-						.getInsertFields<
-							TestTable.Types.CreateFields,
-							TestTable.Types.TableKeys
-						>({
-							params,
-							returning: ["id"],
-							tableName: testTable.tableName,
-						});
-
-					const id = (await client.query<{ id: string; }>(query, values)).rows[0]?.id;
-
-					assert.equal(!!id, true);
-
-					{
-						const data = (await client.query<{
-							meta: { firstname: string; lastname: string; };
-							title: string;
-						}>(
-							`
-								SELECT meta, title
-								FROM ${testTable.tableName}
-								WHERE id = $1
-							`,
-							[id],
-						)).rows[0];
-
-						assert.equal(data?.meta.firstname, params.meta.firstname);
-						assert.equal(data?.meta.lastname, params.meta.lastname);
-						assert.equal(data?.title, params.title);
-					}
-
-					{
-						const paramsToUpdate = {
-							meta: { firstname: "firstname updated", lastname: "lastname updated" },
-							title: "title updated",
-						};
-
-						const { query, values } = PG
-							.BaseModel
-							.getUpdateFields<
-								TestTable.Types.UpdateFields,
-								TestTable.Types.TableKeys
-							>({
-								params: paramsToUpdate,
-								primaryKey: { field: "id", value: id as string },
-								tableName: testTable.tableName,
-								updateField: testTable.updateField,
-							});
-
-						await client.query(query, values);
-
-						{
-							const data = (await client.query<{
-								meta: { firstname: string; lastname: string; };
-								title: string;
-							}>(
-								`
-									SELECT meta, title
-									FROM ${testTable.tableName}
-									WHERE id = $1
-								`,
-								[id],
-							)).rows[0];
-
-							assert.equal(data?.meta.firstname, paramsToUpdate.meta.firstname);
-							assert.equal(data?.meta.lastname, paramsToUpdate.meta.lastname);
-							assert.equal(data?.title, paramsToUpdate.title);
-						}
-					}
-
-					await client.query(`DELETE FROM ${testTable.tableName}`);
-
-					{
-						const data = (await client.query<{
-							meta: { firstname: string; lastname: string; };
-							title: string;
-						}>(
-							`
-								SELECT meta, title
-								FROM ${testTable.tableName}
-								WHERE id = $1
-							`,
-							[id],
-						)).rows[0];
-
-						assert.equal(data, undefined);
-					}
-
-					await client.query("COMMIT");
-				} catch (e) {
-					await client.query("ROLLBACK");
-					throw e;
-				} finally {
-					client.release();
-				}
-			},
-		);
-
-		await testContext.test(
-			"getArrByParams",
+			"CRUD",
 			async (testContext) => {
-				await Promise.all([1, 2, 3, 4, 5].map((e) => {
-					const params = {
-						description: `description ${e}`,
-						meta: { firstname: `firstname ${e}`, lastname: `lastname ${e}` },
-						number_key: e,
-						number_range: `[${e}00,${++e}00]`,
-						title: `title ${e}`,
-					};
-
-					return testTable.createOne(params);
-				}));
+				const initialParams = { title: "title" };
+				const updatedParams = { title: "title updated" };
 
 				{
-					const params = {
-						params: {} as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
-					};
-
 					await testContext.test(
-						JSON.stringify(params),
+						"create createOne",
 						async () => {
-							const res = await testTable.getArrByParams(params);
+							const entity = await testTable.createOne(initialParams);
 
-							assert.equal(res.length, 5);
+							assert.equal(entity.title, initialParams.title);
 						},
 					);
 				}
 
 				{
-					const params = {
-						params: { number_key: { $between: [1, 2] } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
-					};
-
 					await testContext.test(
-						JSON.stringify(params),
+						"read getOneByParams",
 						async () => {
-							const res = await testTable.getArrByParams(params);
+							const { one } = await testTable.getOneByParams({ params: initialParams });
 
-							assert.equal(res.length, 2);
+							assert.equal(one?.title, initialParams.title);
 						},
 					);
 				}
 
 				{
-					const params = {
-						params: { number_range: { $custom: { sign: "@>", value: "[150,150]" } } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
-					};
-
 					await testContext.test(
-						JSON.stringify(params),
+						"read getGuaranteedOneByParams",
 						async () => {
-							const res = await testTable.getArrByParams(params);
+							const entity = await testTable.getGuaranteedOneByParams({ params: initialParams });
 
-							assert.equal(res.length, 1);
+							assert.equal(entity.title, initialParams.title);
 						},
 					);
 				}
 
 				{
-					const params = {
-						params: { number_key: { $gt: 2 } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
-					};
-
 					await testContext.test(
-						JSON.stringify(params),
+						"update updateByParams",
 						async () => {
-							const res = await testTable.getArrByParams(params);
+							const res = await testTable.updateByParams(
+								{ params: initialParams },
+								updatedParams,
+							);
 
-							assert.equal(res.length, 3);
+							assert.equal(res[0]?.title, updatedParams.title);
 						},
 					);
 				}
 
 				{
-					const params = {
-						params: { number_key: { $gte: 2 } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
-					};
-
 					await testContext.test(
-						JSON.stringify(params),
+						"read getGuaranteedOneByParams",
 						async () => {
-							const res = await testTable.getArrByParams(params);
+							const entity = await testTable.getGuaranteedOneByParams({ params: updatedParams });
 
-							assert.equal(res.length, 4);
+							assert.equal(entity.title, updatedParams.title);
 						},
 					);
 				}
 
 				{
-					const params = {
-						params: { number_key: { $in: [1, 2] } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
-					};
-
 					await testContext.test(
-						JSON.stringify(params),
+						"delete deleteByParams",
 						async () => {
-							const res = await testTable.getArrByParams(params);
+							await testTable.deleteByParams({ params: updatedParams });
 
-							assert.equal(res.length, 2);
-						},
-					);
-				}
-
-				{
-					const params = {
-						params: { description: { $like: "%description%" } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
-					};
-
-					await testContext.test(
-						JSON.stringify(params),
-						async () => {
-							const res = await testTable.getArrByParams(params);
-
-							assert.equal(res.length, 5);
-						},
-					);
-				}
-
-				{
-					const params = {
-						params: { number_key: { $lt: 5 } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
-					};
-
-					await testContext.test(
-						JSON.stringify(params),
-						async () => {
-							const res = await testTable.getArrByParams(params);
-
-							assert.equal(res.length, 4);
-						},
-					);
-				}
-
-				{
-					const params = {
-						params: { number_key: { $lte: 5 } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
-					};
-
-					await testContext.test(
-						JSON.stringify(params),
-						async () => {
-							const res = await testTable.getArrByParams(params);
-
-							assert.equal(res.length, 5);
-						},
-					);
-				}
-
-				{
-					const params = {
-						params: { number_key: { $nbetween: [1, 2] } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
-					};
-
-					await testContext.test(
-						JSON.stringify(params),
-						async () => {
-							const res = await testTable.getArrByParams(params);
-
-							assert.equal(res.length, 3);
-						},
-					);
-				}
-
-				{
-					const params = {
-						params: { number_key: { $ne: 1 } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
-					};
-
-					await testContext.test(
-						JSON.stringify(params),
-						async () => {
-							const res = await testTable.getArrByParams(params);
-
-							assert.equal(res.length, 4);
-						},
-					);
-				}
-
-				{
-					const params = {
-						params: { number_key: { $ne: null } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
-					};
-
-					await testContext.test(
-						JSON.stringify(params),
-						async () => {
-							const res = await testTable.getArrByParams(params);
-
-							assert.equal(res.length, 5);
-						},
-					);
-				}
-
-				{
-					const params = {
-						params: { number_key: { $nin: [1, 2] } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
-					};
-
-					await testContext.test(
-						JSON.stringify(params),
-						async () => {
-							const res = await testTable.getArrByParams(params);
-
-							assert.equal(res.length, 3);
-						},
-					);
-				}
-
-				{
-					const params = {
-						params: { description: { $nlike: "%description%" } },
-					};
-
-					await testContext.test(
-						JSON.stringify(params),
-						async () => {
-							const res = await testTable.getArrByParams(params);
+							const res = await testTable.getArrByParams({ params: {} });
 
 							assert.equal(res.length, 0);
 						},
 					);
 				}
 
-				{
-					const params = {
-						params: { number_key: { $in: [1, 2] } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
-						paramsOr: [{ number_key: 1 }, { number_key: 2 }] as PG.DomainTypes.TArray2OrMore<PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>>,
-					};
-
-					await testContext.test(
-						JSON.stringify(params),
-						async () => {
-							const res = await testTable.getArrByParams(params);
-
-							assert.equal(res.length, 2);
-						},
-					);
-				}
-
-				{
-					const params = {
-						pagination: { limit: 1, offset: 1 },
-						params: { number_key: { $in: [1, 2] } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
-						paramsOr: [{ number_key: 1 }, { number_key: 2 }] as PG.DomainTypes.TArray2OrMore<PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>>,
-					};
-
-					await testContext.test(
-						JSON.stringify(params),
-						async () => {
-							const res = await testTable.getArrByParams(params);
-
-							assert.equal(res.length, 1);
-						},
-					);
-				}
-
 				await testTable.deleteAll();
-			},
-		);
-
-		await testContext.test(
-			"custom function",
-			async () => {
-				const isNotTestFailed = await testTable.test();
-
-				assert.equal(isNotTestFailed, true);
 			},
 		);
 

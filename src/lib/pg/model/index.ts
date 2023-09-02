@@ -343,7 +343,7 @@ export class BaseModel {
 		return connection.getStandartPool(creds, poolName);
 	}
 
-	static async removeStandartPool(creds: Types.TDBCreds, poolName?: string): Promise<boolean> {
+	static async removeStandartPool(creds: Types.TDBCreds, poolName?: string): Promise<void> {
 		return connection.removeStandartPool(creds, poolName);
 	}
 
@@ -351,7 +351,7 @@ export class BaseModel {
 		return connection.getTransactionPool(creds, poolName);
 	}
 
-	static async removeTransactionPool(creds: Types.TDBCreds, poolName?: string): Promise<boolean> {
+	static async removeTransactionPool(creds: Types.TDBCreds, poolName?: string): Promise<void> {
 		return connection.removeTransactionPool(creds, poolName);
 	}
 
