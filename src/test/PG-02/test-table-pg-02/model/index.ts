@@ -22,7 +22,7 @@ export class Model extends PG.BaseModel {
 }
 
 // ----- Table propertires ----------------------
-const tableName = "test_table_3"; // table from DB
+const tableName = "test_table_pg_02"; // table from DB
 const primaryKey = null; // primaryId from table
 const createField = null; // created field
 const updateField = null; // updated field
