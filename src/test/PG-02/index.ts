@@ -201,156 +201,248 @@ export default async () => {
 					return testTable.createOne(params);
 				}));
 
-				await testContext.test(
-					"{ params: {} }",
-					async () => {
-						const res = await testTable.getArrByParams({ params: {} });
+				{
+					const params = {
+						params: {} as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
+					};
 
-						assert.equal(res.length, 5);
-					},
-				);
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const res = await testTable.getArrByParams(params);
 
-				await testContext.test(
-					"{ params: { number_key: { $between: [1, 2] } } }",
-					async () => {
-						const res = await testTable.getArrByParams({
-							params: { number_key: { $between: [1, 2] } },
-						});
-
-						assert.equal(res.length, 2);
-					},
-				);
-
-				await testContext.test(
-					"{ params: { number_range: { $custom: { sign: \"@>\", value: \"[150,150]\" } } } }",
-					async () => {
-						const res = await testTable.getArrByParams({
-							params: { number_range: { $custom: { sign: "@>", value: "[150,150]" } } },
-						});
-
-						assert.equal(res.length, 1);
-					},
-				);
-
-				await testContext.test(
-					"{ params: { number_key: { $gt: 2 } } }",
-					async () => {
-						const res = await testTable.getArrByParams({
-							params: { number_key: { $gt: 2 } },
-						});
-
-						assert.equal(res.length, 3);
-					},
-				);
-
-				await testContext.test(
-					"{ params: { number_key: { $gte: 2 } } }",
-					async () => {
-						const res = await testTable.getArrByParams({
-							params: { number_key: { $gte: 2 } },
-						});
-
-						assert.equal(res.length, 4);
-					},
-				);
-
-				await testContext.test(
-					"{ params: { number_key: { $in: [1, 2] } } }",
-					async () => {
-						const res = await testTable.getArrByParams({
-							params: { number_key: { $in: [1, 2] } },
-						});
-
-						assert.equal(res.length, 2);
-					},
-				);
-
-				await testContext.test(
-					"{ params: { description: { $like: \"%description%\" } } }",
-					async () => {
-						const res = await testTable.getArrByParams({
-							params: { description: { $like: "%description%" } },
-						});
-
-						assert.equal(res.length, 5);
-					},
-				);
-
-				await testContext.test(
-					"{ params: { number_key: { $lt: 5 } } }",
-					async () => {
-						const res = await testTable.getArrByParams({
-							params: { number_key: { $lt: 5 } },
-						});
-
-						assert.equal(res.length, 4);
-					},
-				);
-
-				await testContext.test(
-					"{ params: { number_key: { $lte: 5 } } }",
-					async () => {
-						const res = await testTable.getArrByParams({
-							params: { number_key: { $lte: 5 } },
-						});
-
-						assert.equal(res.length, 5);
-					},
-				);
-
-				await testContext.test(
-					"{ params: { number_key: { $nbetween: [1, 2] } } }",
-					async () => {
-						const res = await testTable.getArrByParams({
-							params: { number_key: { $nbetween: [1, 2] } },
-						});
-
-						assert.equal(res.length, 3);
-					},
-				);
-
-				await testContext.test(
-					"{ params: { number_key: { $ne: 1 } } }",
-					async () => {
-						const res = await testTable.getArrByParams({
-							params: { number_key: { $ne: 1 } },
-						});
-
-						assert.equal(res.length, 4);
-					});
-
-				await testContext.test(
-					"{ params: { number_key: { $ne: null } } }",
-					async () => {
-						const res = await testTable.getArrByParams({
-							params: { number_key: { $ne: null } },
+							assert.equal(res.length, 5);
 						},
-						);
+					);
+				}
 
-						assert.equal(res.length, 5);
-					});
+				{
+					const params = {
+						params: { number_key: { $between: [1, 2] } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
+					};
 
-				await testContext.test(
-					"{ params: { number_key: { $nin: [1, 2] } } }",
-					async () => {
-						const res = await testTable.getArrByParams({
-							params: { number_key: { $nin: [1, 2] } },
-						});
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const res = await testTable.getArrByParams(params);
 
-						assert.equal(res.length, 3);
-					},
-				);
+							assert.equal(res.length, 2);
+						},
+					);
+				}
 
-				await testContext.test(
-					"{ params: { description: { $nlike: \"%description %\" } } }",
-					async () => {
-						const res = await testTable.getArrByParams({
-							params: { description: { $nlike: "%description%" } },
-						});
+				{
+					const params = {
+						params: { number_range: { $custom: { sign: "@>", value: "[150,150]" } } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
+					};
 
-						assert.equal(res.length, 0);
-					},
-				);
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const res = await testTable.getArrByParams(params);
+
+							assert.equal(res.length, 1);
+						},
+					);
+				}
+
+				{
+					const params = {
+						params: { number_key: { $gt: 2 } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const res = await testTable.getArrByParams(params);
+
+							assert.equal(res.length, 3);
+						},
+					);
+				}
+
+				{
+					const params = {
+						params: { number_key: { $gte: 2 } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const res = await testTable.getArrByParams(params);
+
+							assert.equal(res.length, 4);
+						},
+					);
+				}
+
+				{
+					const params = {
+						params: { number_key: { $in: [1, 2] } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const res = await testTable.getArrByParams(params);
+
+							assert.equal(res.length, 2);
+						},
+					);
+				}
+
+				{
+					const params = {
+						params: { description: { $like: "%description%" } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const res = await testTable.getArrByParams(params);
+
+							assert.equal(res.length, 5);
+						},
+					);
+				}
+
+				{
+					const params = {
+						params: { number_key: { $lt: 5 } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const res = await testTable.getArrByParams(params);
+
+							assert.equal(res.length, 4);
+						},
+					);
+				}
+
+				{
+					const params = {
+						params: { number_key: { $lte: 5 } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const res = await testTable.getArrByParams(params);
+
+							assert.equal(res.length, 5);
+						},
+					);
+				}
+
+				{
+					const params = {
+						params: { number_key: { $nbetween: [1, 2] } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const res = await testTable.getArrByParams(params);
+
+							assert.equal(res.length, 3);
+						},
+					);
+				}
+
+				{
+					const params = {
+						params: { number_key: { $ne: 1 } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const res = await testTable.getArrByParams(params);
+
+							assert.equal(res.length, 4);
+						},
+					);
+				}
+
+				{
+					const params = {
+						params: { number_key: { $ne: null } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const res = await testTable.getArrByParams(params);
+
+							assert.equal(res.length, 5);
+						},
+					);
+				}
+
+				{
+					const params = {
+						params: { number_key: { $nin: [1, 2] } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const res = await testTable.getArrByParams(params);
+
+							assert.equal(res.length, 3);
+						},
+					);
+				}
+
+				{
+					const params = {
+						params: { description: { $nlike: "%description%" } },
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const res = await testTable.getArrByParams(params);
+
+							assert.equal(res.length, 0);
+						},
+					);
+				}
+
+				{
+					const params = {
+						params: { number_key: { $in: [1, 2] } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
+						paramsOr: [{ number_key: 1 }, { number_key: 2 }] as PG.DomainTypes.TArray2OrMore<PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>>,
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const res = await testTable.getArrByParams(params);
+
+							assert.equal(res.length, 2);
+						},
+					);
+				}
+
+				{
+					const params = {
+						pagination: { limit: 1, offset: 1 },
+						params: { number_key: { $in: [1, 2] } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
+						paramsOr: [{ number_key: 1 }, { number_key: 2 }] as PG.DomainTypes.TArray2OrMore<PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>>,
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const res = await testTable.getArrByParams(params);
+
+							assert.equal(res.length, 1);
+						},
+					);
+				}
 
 				await testTable.deleteAll();
 			},
