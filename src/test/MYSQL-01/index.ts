@@ -115,7 +115,7 @@ test("top level test MYSQL", async (t) => {
 
 				const [inserted] = (await connection.query<MYSQL.ModelTypes.ResultSetHeader>(query, values));
 
-				const [entities] = (await connection.query<MYSQL.ModelTypes.RowDataPacket[]>(`
+				const [entities] = (await connection.query<(MYSQL.ModelTypes.RowDataPacket & TestTable.Types.TableFields)[]>(`
 					SELECT *
 					FROM test_table
 					WHERE id = ?
@@ -142,7 +142,7 @@ test("top level test MYSQL", async (t) => {
 
 				await connection.query(query, values);
 
-				const [entities] = (await connection.query<MYSQL.ModelTypes.RowDataPacket[]>(`
+				const [entities] = (await connection.query<(MYSQL.ModelTypes.RowDataPacket & TestTable.Types.TableFields)[]>(`
 					SELECT *
 					FROM test_table
 					WHERE id = ?
@@ -158,7 +158,7 @@ test("top level test MYSQL", async (t) => {
 				WHERE id = ?
 			`, [id]);
 
-			const [entities] = (await connection.query<MYSQL.ModelTypes.RowDataPacket[]>(`
+			const [entities] = (await connection.query<(MYSQL.ModelTypes.RowDataPacket & TestTable.Types.TableFields)[]>(`
 				SELECT *
 				FROM test_table
 				WHERE id = ?

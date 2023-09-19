@@ -2,13 +2,16 @@ import * as SharedTypes from "../../../shared-types/index.js";
 import * as Types from "./types.js";
 import { BaseModel } from "../model/index.js";
 
-export class BaseDomain<
-	Model extends BaseModel,
-	CreateFields extends SharedTypes.TRawParams,
-	SearchFields extends Types.TDomainFields,
-	TableFields extends SharedTypes.TRawParams,
-	UpdateFields extends SharedTypes.TRawParams,
-> {
+export type DomainOptions = {
+	model: BaseModel;
+};
+export class BaseDomain<TC extends {
+	Model: BaseModel;
+	CreateFields: SharedTypes.TRawParams;
+	SearchFields: Types.TDomainFields;
+	TableFields: SharedTypes.TRawParams;
+	UpdateFields: SharedTypes.TRawParams;
+}> {
 	#createField;
 	#primaryKey;
 	#tableName;
@@ -17,7 +20,7 @@ export class BaseDomain<
 
 	model;
 
-	constructor(data: Types.TDomain<Model>) {
+	constructor(data: Types.TDomain<TC["Model"]>) {
 		if (!(data.model instanceof BaseModel)) {
 			throw new Error("You need pass extended of PG.");
 		}
@@ -48,10 +51,10 @@ export class BaseDomain<
 	}
 
 	get updateField() {
-		return this.#updateField as keyof TableFields;
+		return this.#updateField as keyof TC["TableFields"];
 	}
 
-	async createOne(createFields: CreateFields): Promise<TableFields> {
+	async createOne(createFields: TC["CreateFields"]): Promise<TC["TableFields"]> {
 		const res = await this.model.save(createFields);
 
 		if (!res) throw new Error(`Save to ${this.model.tableName} table error`);
@@ -68,21 +71,21 @@ export class BaseDomain<
 	}
 
 	async deleteByParams(options: {
-		params: Types.TSearchParams<SearchFields>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<SearchFields>>;
+		params: Types.TSearchParams<TC["SearchFields"]>;
+		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<TC["SearchFields"]>>;
 	}): Promise<null> {
 		return this.model.deleteByParams(
 			{ $and: options.params, $or: options.paramsOr },
 		);
 	}
 
-	async getArrByParams<T extends keyof TableFields>(options: {
-		params: Types.TSearchParams<SearchFields>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<SearchFields>>;
+	async getArrByParams<T extends keyof TC["TableFields"]>(options: {
+		params: Types.TSearchParams<TC["SearchFields"]>;
+		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<TC["SearchFields"]>>;
 		selected?: [T, ...T[]];
 		pagination?: SharedTypes.TPagination;
-		order?: { orderBy: Extract<keyof TableFields, string>; ordering: SharedTypes.TOrdering; }[];
-	}): Promise<Array<Pick<TableFields, T>>> {
+		order?: { orderBy: Extract<keyof TC["TableFields"], string>; ordering: SharedTypes.TOrdering; }[];
+	}): Promise<Array<Pick<TC["TableFields"], T>>> {
 		return this.model.getArrByParams(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
@@ -98,8 +101,8 @@ export class BaseDomain<
 	async getCountByPksAndParams(
 		pks: string[],
 		options: {
-			params: Types.TSearchParams<SearchFields>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<SearchFields>>;
+			params: Types.TSearchParams<TC["SearchFields"]>;
+			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<TC["SearchFields"]>>;
 		},
 	): Promise<number> {
 		return this.model.getCountByPksAndParams(
@@ -109,8 +112,8 @@ export class BaseDomain<
 	}
 
 	async getCountByParams(options: {
-		params: Types.TSearchParams<SearchFields>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<SearchFields>>;
+		params: Types.TSearchParams<TC["SearchFields"]>;
+		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<TC["SearchFields"]>>;
 	}): Promise<number> {
 		return this.model.getCountByParams({
 			$and: options.params,
@@ -118,22 +121,22 @@ export class BaseDomain<
 		});
 	}
 
-	async getGuaranteedOneByParams<T extends keyof TableFields>(options: {
-		params: Types.TSearchParams<SearchFields>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<SearchFields>>;
+	async getGuaranteedOneByParams<T extends keyof TC["TableFields"]>(options: {
+		params: Types.TSearchParams<TC["SearchFields"]>;
+		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<TC["SearchFields"]>>;
 		selected?: [T, ...T[]];
-	}): Promise<Pick<TableFields, T>> {
+	}): Promise<Pick<TC["TableFields"], T>> {
 		return this.model.getOneByParams(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 		);
 	}
 
-	async getOneByParams<T extends keyof TableFields>(options: {
-		params: Types.TSearchParams<SearchFields>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<SearchFields>>;
+	async getOneByParams<T extends keyof TC["TableFields"]>(options: {
+		params: Types.TSearchParams<TC["SearchFields"]>;
+		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<TC["SearchFields"]>>;
 		selected?: [T, ...T[]];
-	}): Promise<{ message?: string; one?: Pick<TableFields, T>; }> {
+	}): Promise<{ message?: string; one?: Pick<TC["TableFields"], T>; }> {
 		const one = await this.model.getOneByParams(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
@@ -144,7 +147,7 @@ export class BaseDomain<
 		return { one };
 	}
 
-	async getOneByPk(pk: string): Promise<{ message?: string; one?: TableFields; }> {
+	async getOneByPk(pk: string): Promise<{ message?: string; one?: TC["TableFields"]; }> {
 		const one = await this.model.getOneByPk(pk);
 
 		if (!one) return { message: `Not found from ${this.model.tableName}` };
@@ -154,18 +157,18 @@ export class BaseDomain<
 
 	async updateByParams(
 		options: {
-			params: Types.TSearchParams<SearchFields>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<SearchFields>>;
+			params: Types.TSearchParams<TC["SearchFields"]>;
+			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<TC["SearchFields"]>>;
 		},
-		params: UpdateFields,
-	): Promise<TableFields[]> {
+		params: TC["UpdateFields"],
+	): Promise<TC["TableFields"][]> {
 		return this.model.updateByParams(
 			{ $and: options.params, $or: options.paramsOr },
 			params,
 		);
 	}
 
-	async updateOneByPk(pk: string, params: UpdateFields): Promise<TableFields> {
+	async updateOneByPk(pk: string, params: TC["UpdateFields"]): Promise<TC["TableFields"]> {
 		return this.model.updateOneByPk(pk, params);
 	}
 }
