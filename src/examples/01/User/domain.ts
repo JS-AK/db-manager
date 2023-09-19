@@ -1,8 +1,8 @@
 import { PG } from "../../../index.js";
 
-import { Model, Types } from "./model.js";
+import { Model, Types } from "./model/index.js";
 
-export class UserDM
+export class Domain
 	extends PG.BaseDomain<
 		Model,
 		Types.CreateFields,

@@ -31,7 +31,7 @@ export type TableFields = {
 	created_at: Date;
 	description: string | null;
 	id: string;
-	meta: { firstname: string; lastname: string; };
+	meta: { firstName: string; lastName: string; };
 	number_key: number;
 	number_range: string | null;
 	title: string;

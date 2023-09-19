@@ -4,7 +4,7 @@ import * as Helpers from "./helpers.js";
 import * as SharedHelpers from "../../../shared-helpers/index.js";
 import * as SharedTypes from "../../../shared-types/index.js";
 import * as Types from "./types.js";
-import { getStandartPool, getTransactionPool } from "../connection.js";
+import { getStandardPool, getTransactionPool } from "../connection.js";
 import queries from "./queries.js";
 
 export class BaseModel {
@@ -21,7 +21,7 @@ export class BaseModel {
 
 	constructor(tableData: Types.TTable, options: Types.TDBCreds) {
 		this.createField = tableData.createField;
-		this.pool = getStandartPool(options);
+		this.pool = getStandardPool(options);
 		this.primaryKey = tableData.primaryKey;
 		this.isPKAutoIncremented = typeof tableData.isPKAutoIncremented === "boolean"
 			? tableData.isPKAutoIncremented
@@ -66,6 +66,8 @@ export class BaseModel {
 				}
 			}
 		}
+
+		if (!selected.length) selected.push("*");
 
 		const {
 			fields,
@@ -132,6 +134,8 @@ export class BaseModel {
 		},
 		selected = ["*"],
 	) {
+		if (!selected.length) selected.push("*");
+
 		const {
 			fields,
 			fieldsOr,
@@ -172,12 +176,12 @@ export class BaseModel {
 	}
 
 	async save(params = {}): Promise<number> {
-		const prms = SharedHelpers.clearUndefinedFields(params);
-		const fields = Object.keys(prms);
+		const clearedParams = SharedHelpers.clearUndefinedFields(params);
+		const fields = Object.keys(clearedParams);
 
 		const [rows]: [mysql.OkPacket, mysql.FieldPacket[]] = await this.pool.query(
 			queries.save(this.tableName, fields, this.createField),
-			Object.values(prms),
+			Object.values(clearedParams),
 		);
 
 		if (!this.isPKAutoIncremented) {
@@ -191,19 +195,19 @@ export class BaseModel {
 		primaryKey: SharedTypes.TPrimaryKeyValue,
 		params = {},
 	) {
-		const prms = SharedHelpers.clearUndefinedFields(params);
-		const fields = Object.keys(prms);
+		const clearedParams = SharedHelpers.clearUndefinedFields(params);
+		const fields = Object.keys(clearedParams);
 		const primaryKeyValue = Array.isArray(primaryKey) ? [...primaryKey] : [primaryKey];
 
 		await this.pool.query(
 			queries.update(this.tableName, fields, this.primaryKey, this.updateField),
-			[...Object.values(prms), ...primaryKeyValue],
+			[...Object.values(clearedParams), ...primaryKeyValue],
 		);
 	}
 
 	// STATIC METHODS
-	static getStandartPool(creds: Types.TDBCreds, poolName?: string): mysql.Pool {
-		return getStandartPool(creds, poolName);
+	static getStandardPool(creds: Types.TDBCreds, poolName?: string): mysql.Pool {
+		return getStandardPool(creds, poolName);
 	}
 
 	static getTransactionPool(creds: Types.TDBCreds, poolName?: string): mysql.Pool {

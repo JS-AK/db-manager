@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 
-import { UserDM } from "./User/domain-model";
+import * as User from "./User/index.js";
 
 const creds = {
 	database: "postgres",
@@ -10,26 +10,26 @@ const creds = {
 	user: "postgres",
 };
 
-const userDM = new UserDM(creds);
+const UserDomain = new User.Domain(creds);
 
-const user = await userDM.createOne({
-	firstname: "user firstname",
-	lastname: "user secondname",
+const user = await UserDomain.createOne({
+	firstName: "user firstName",
+	lastName: "user lastName",
 });
 
 console.log(user);
 
 {
-	const { message, one: userFounded } = await userDM.getOneByParams({
-		params: { firstname: "user firstname" },
+	const { message, one: userFounded } = await UserDomain.getOneByParams({
+		params: { firstName: "user firstName" },
 		selected: ["id"],
 	});
 
 	if (userFounded) {
 		console.log(userFounded);
 
-		const userUpdated = await userDM.updateOneByPk(userFounded.id, {
-			firstname: "user firstname updated",
+		const userUpdated = await UserDomain.updateOneByPk(userFounded.id, {
+			firstName: "user firstName updated",
 		});
 
 		console.log(userUpdated);
