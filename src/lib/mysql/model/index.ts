@@ -179,7 +179,7 @@ export class BaseModel {
 		const clearedParams = SharedHelpers.clearUndefinedFields(params);
 		const fields = Object.keys(clearedParams);
 
-		const [rows]: [mysql.OkPacket, mysql.FieldPacket[]] = await this.pool.query(
+		const [rows]: [mysql.ResultSetHeader, mysql.FieldPacket[]] = await this.pool.query(
 			queries.save(this.tableName, fields, this.createField),
 			Object.values(clearedParams),
 		);
