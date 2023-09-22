@@ -1,7 +1,7 @@
 name: Lint & Test Commit
 on:
   push:
-    branches: [ dev, master, next ]
+    branches: ['dev', 'master', 'next']
 
 jobs:
   runner-job:
