@@ -1,8 +1,6 @@
 name: Make release
 
 on:
-  push:
-    branches: [ dev, master, next ]
   workflow_run:
     workflows: ["Lint & Test"]
     branches: [ dev, master, next ]
