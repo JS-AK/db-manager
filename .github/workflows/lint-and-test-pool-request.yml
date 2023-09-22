@@ -1,7 +1,5 @@
-name: Lint & Test
+name: Lint & Test PR
 on:
-  push:
-    branches: [ dev, master, next ]
   pull_request:
     branches: [ dev, master, next ]
 
