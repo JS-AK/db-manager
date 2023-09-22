@@ -1,15 +1,17 @@
 name: Make release
 
 on:
+  push:
+    branches: [ dev, master, next ]
   workflow_run:
     workflows: ["Lint & Test"]
-    branches: [ dev, master ]
+    branches: [ dev, master, next ]
     types:
       - completed
 
 jobs:
   release:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name == 'push' && github.event.workflow == 'Lint & Test' && github.event.workflow_run.conclusion == 'success' }}
     name: Release
     runs-on: ubuntu-latest
     steps:
