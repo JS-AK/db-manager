@@ -8,7 +8,7 @@ export const createClient = (config: PG.ModelTypes.TDBCreds) => {
 	return new pg.Client(config);
 };
 
-export const getStandartPool = (config: PG.ModelTypes.TDBCreds, poolName = "00") => {
+export const getStandardPool = (config: PG.ModelTypes.TDBCreds, poolName = "00") => {
 	const { database, host, password, port, user } = config;
 	const poolNameResult = "st" + poolName;
 	const credsString = `${poolNameResult}#${user}:${password}@${host}:${port}/${database}`;
@@ -44,7 +44,7 @@ export const getTransactionPool = (config: PG.ModelTypes.TDBCreds, poolName = "0
 	}
 };
 
-export const removeStandartPool = async (config: PG.ModelTypes.TDBCreds, poolName = "00") => {
+export const removeStandardPool = async (config: PG.ModelTypes.TDBCreds, poolName = "00") => {
 	const { database, host, password, port, user } = config;
 	const poolNameResult = "st" + poolName;
 	const credsString = `${poolNameResult}#${user}:${password}@${host}:${port}/${database}`;

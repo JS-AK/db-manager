@@ -2,16 +2,14 @@ import { MYSQL } from "../../../index.js";
 
 import { Model, Types } from "./model/index.js";
 
-export type { Types } from "./model/index.js";
+export class Domain extends MYSQL.BaseDomain<{
+	Model: Model;
+	CreateFields: Types.CreateFields;
+	SearchFields: Types.SearchFields;
+	TableFields: Types.TableFields;
+	UpdateFields: Types.UpdateFields;
+}> {
 
-export default class Domain
-	extends MYSQL.BaseDomain<
-		Model,
-		Types.CreateFields,
-		Types.SearchFields,
-		Types.TableFields,
-		Types.UpdateFields
-	> {
 	constructor(creds: MYSQL.ModelTypes.TDBCreds) {
 		super({ model: new Model(creds) });
 	}

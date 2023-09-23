@@ -8,7 +8,7 @@ export const createConnection = (config: MYSQL.ModelTypes.TDBCreds) => {
 	return mysql.createConnection(config);
 };
 
-export const getStandartPool = (config: MYSQL.ModelTypes.TDBCreds, poolName = "00") => {
+export const getStandardPool = (config: MYSQL.ModelTypes.TDBCreds, poolName = "00") => {
 	const { database, host, password, port, user } = config;
 	const poolNameResult = "st" + poolName;
 	const credsString = `${poolNameResult}#${user}:${password}@${host}:${port}/${database}`;

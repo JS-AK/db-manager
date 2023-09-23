@@ -3,7 +3,8 @@ import test from "node:test";
 
 import { PG } from "../../index.js";
 
-import * as TestTable from "./test-table-pg-01/domain.js";
+import * as TestTable from "./test-table-pg-01/index.js";
+import { isHasFields } from "../../shared-helpers/index.js";
 
 const creds = {
 	database: "postgres",
@@ -14,13 +15,13 @@ const creds = {
 };
 
 export default async () => {
-	const testTable = new TestTable.default(creds);
+	const testTable = new TestTable.Domain(creds);
 
 	return test("PG-02", async (testContext) => {
 		await testContext.test(
 			"create table",
 			async () => {
-				const pool = PG.BaseModel.getStandartPool(creds);
+				const pool = PG.BaseModel.getStandardPool(creds);
 
 				await pool.query(`
 					DROP TABLE IF EXISTS ${testTable.tableName};
@@ -55,7 +56,7 @@ export default async () => {
 			"createOne",
 			async () => {
 				const params = {
-					meta: { firstname: "firstname", lastname: "lastname" },
+					meta: { firstName: "firstName", lastName: "lastName" },
 					number_key: 1,
 					title: "title",
 				};
@@ -63,8 +64,8 @@ export default async () => {
 				const entity = await testTable.createOne(params);
 
 				assert.equal(!!entity.id, true);
-				assert.equal(entity.meta.firstname, params.meta.firstname);
-				assert.equal(entity.meta.lastname, params.meta.lastname);
+				assert.equal(entity.meta.firstName, params.meta.firstName);
+				assert.equal(entity.meta.lastName, params.meta.lastName);
 				assert.equal(entity.title, params.title);
 
 				await testTable.deleteAll();
@@ -81,7 +82,7 @@ export default async () => {
 					await client.query("BEGIN");
 
 					const params = {
-						meta: { firstname: "firstname", lastname: "lastname" },
+						meta: { firstName: "firstName", lastName: "lastName" },
 						number_key: 1,
 						title: "title",
 					};
@@ -103,7 +104,7 @@ export default async () => {
 
 					{
 						const data = (await client.query<{
-							meta: { firstname: string; lastname: string; };
+							meta: { firstName: string; lastName: string; };
 							title: string;
 						}>(
 							`
@@ -114,14 +115,14 @@ export default async () => {
 							[id],
 						)).rows[0];
 
-						assert.equal(data?.meta.firstname, params.meta.firstname);
-						assert.equal(data?.meta.lastname, params.meta.lastname);
+						assert.equal(data?.meta.firstName, params.meta.firstName);
+						assert.equal(data?.meta.lastName, params.meta.lastName);
 						assert.equal(data?.title, params.title);
 					}
 
 					{
 						const paramsToUpdate = {
-							meta: { firstname: "firstname updated", lastname: "lastname updated" },
+							meta: { firstName: "firstName updated", lastName: "lastName updated" },
 							title: "title updated",
 						};
 
@@ -141,7 +142,7 @@ export default async () => {
 
 						{
 							const data = (await client.query<{
-								meta: { firstname: string; lastname: string; };
+								meta: { firstName: string; lastName: string; };
 								title: string;
 							}>(
 								`
@@ -152,8 +153,8 @@ export default async () => {
 								[id],
 							)).rows[0];
 
-							assert.equal(data?.meta.firstname, paramsToUpdate.meta.firstname);
-							assert.equal(data?.meta.lastname, paramsToUpdate.meta.lastname);
+							assert.equal(data?.meta.firstName, paramsToUpdate.meta.firstName);
+							assert.equal(data?.meta.lastName, paramsToUpdate.meta.lastName);
 							assert.equal(data?.title, paramsToUpdate.title);
 						}
 					}
@@ -162,7 +163,7 @@ export default async () => {
 
 					{
 						const data = (await client.query<{
-							meta: { firstname: string; lastname: string; };
+							meta: { firstName: string; lastName: string; };
 							title: string;
 						}>(
 							`
@@ -192,7 +193,7 @@ export default async () => {
 				await Promise.all([1, 2, 3, 4, 5].map((e) => {
 					const params = {
 						description: `description ${e}`,
-						meta: { firstname: `firstname ${e}`, lastname: `lastname ${e}` },
+						meta: { firstName: `firstName ${e}`, lastName: `lastName ${e}` },
 						number_key: e,
 						number_range: `[${e}00,${++e}01)`,
 						title: `title ${e}`,
@@ -215,7 +216,7 @@ export default async () => {
 				await Promise.all([1, 2, 3, 4, 5].map((e) => {
 					const params = {
 						description: `description ${e}`,
-						meta: { firstname: `firstname ${e}`, lastname: `lastname ${e}` },
+						meta: { firstName: `firstName ${e}`, lastName: `lastName ${e}` },
 						number_key: e,
 						number_range: `[${e}00,${++e}01)`,
 						title: `title ${e}`,
@@ -239,7 +240,7 @@ export default async () => {
 				await Promise.all([1, 2, 3, 4, 5].map((e) => {
 					const params = {
 						description: `description ${e}`,
-						meta: { firstname: `firstname ${e}`, lastname: `lastname ${e}` },
+						meta: { firstName: `firstName ${e}`, lastName: `lastName ${e}` },
 						number_key: e,
 						number_range: `[${e}00,${++e}01)`,
 						title: `title ${e}`,
@@ -266,7 +267,7 @@ export default async () => {
 				await Promise.all([1, 2, 3, 4, 5].map((e) => {
 					const params = {
 						description: `description ${e}`,
-						meta: { firstname: `firstname ${e}`, lastname: `lastname ${e}` },
+						meta: { firstName: `firstName ${e}`, lastName: `lastName ${e}` },
 						number_key: e,
 						number_range: `[${e}00,${++e}01)`,
 						title: `title ${e}`,
@@ -286,6 +287,25 @@ export default async () => {
 							const res = await testTable.getArrByParams(params);
 
 							assert.equal(res.length, 5);
+							assert.equal(isHasFields(res[0] as TestTable.Types.TableFields, ["created_at", "description", "id", "meta", "number_key", "number_range", "title", "updated_at"]), true);
+						},
+					);
+				}
+
+				{
+					const params = {
+						params: {} as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
+						selected: ["number_key"] as ["number_key"],
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const res = await testTable.getArrByParams(params);
+
+							assert.equal(res.length, 5);
+							assert.equal(isHasFields(res[0] as TestTable.Types.TableFields, ["number_key"]), true);
+							assert.equal(isHasFields(res[0] as TestTable.Types.TableFields, ["created_at", "description", "id", "meta", "number_range", "title", "updated_at"]), false);
 						},
 					);
 				}
@@ -528,7 +548,7 @@ export default async () => {
 				await Promise.all([1, 2, 3, 4, 5].map((e) => {
 					const params = {
 						description: `description ${e}`,
-						meta: { firstname: `firstname ${e}`, lastname: `lastname ${e}` },
+						meta: { firstName: `firstName ${e}`, lastName: `lastName ${e}` },
 						number_key: e,
 						number_range: `[${e}00,${++e}01)`,
 						title: `title ${e}`,
@@ -545,9 +565,33 @@ export default async () => {
 					await testContext.test(
 						JSON.stringify(params),
 						async () => {
-							const res = await testTable.getGuaranteedOneByParams(params);
+							const res = await testTable.getGuaranteedOneByParams({
+								params: { number_key: 1 },
+							});
 
 							assert.equal(res.number_key, 1);
+							assert.equal(isHasFields(res, ["created_at", "description", "id", "meta", "number_key", "number_range", "title", "updated_at"]), true);
+						},
+					);
+				}
+
+				{
+					const params = {
+						params: { number_key: 1 } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
+						selected: ["number_key"] as ["number_key"],
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const res = await testTable.getGuaranteedOneByParams({
+								params: params.params,
+								selected: params.selected,
+							});
+
+							assert.equal(res.number_key, 1);
+							assert.equal(isHasFields(res as TestTable.Types.TableFields, ["number_key"]), true);
+							assert.equal(isHasFields(res as TestTable.Types.TableFields, ["created_at", "description", "id", "meta", "number_range", "title", "updated_at"]), false);
 						},
 					);
 				}
@@ -603,19 +647,123 @@ export default async () => {
 		);
 
 		await testContext.test(
+			"getOneByParams",
+			async (testContext) => {
+				await Promise.all([1, 2, 3, 4, 5].map((e) => {
+					const params = {
+						description: `description ${e}`,
+						meta: { firstName: `firstName ${e}`, lastName: `lastName ${e}` },
+						number_key: e,
+						number_range: `[${e}00,${++e}01)`,
+						title: `title ${e}`,
+					};
+
+					return testTable.createOne(params);
+				}));
+
+				{
+					const params = {
+						params: { number_key: 1 } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const res = await testTable.getOneByParams({
+								params: { number_key: 1 },
+							});
+
+							assert.equal(res.one?.number_key, 1);
+							assert.equal(isHasFields(res.one as TestTable.Types.TableFields, ["created_at", "description", "id", "meta", "number_key", "number_range", "title", "updated_at"]), true);
+						},
+					);
+				}
+
+				{
+					const params = {
+						params: { number_key: 1 } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
+						selected: ["number_key"] as ["number_key"],
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const res = await testTable.getOneByParams({
+								params: params.params,
+								selected: params.selected,
+							});
+
+							assert.equal(res.one?.number_key, 1);
+							assert.equal(isHasFields(res.one as TestTable.Types.TableFields, ["number_key"]), true);
+							assert.equal(isHasFields(res.one as TestTable.Types.TableFields, ["created_at", "description", "id", "meta", "number_range", "title", "updated_at"]), false);
+						},
+					);
+				}
+
+				{
+					const likeText = "description 5";
+					const params = {
+						params: { description: { $like: `%${likeText}%` } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const res = await testTable.getOneByParams(params);
+
+							assert.equal(res.one?.description, likeText);
+						},
+					);
+				}
+
+				{
+					const params = {
+						params: { number_key: { $lt: 2 } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const res = await testTable.getOneByParams(params);
+
+							assert.equal(res.one?.number_key, 1);
+						},
+					);
+				}
+
+				{
+					const params = {
+						params: { number_key: { $lte: 1 } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const res = await testTable.getOneByParams(params);
+
+							assert.equal(res.one?.number_key, 1);
+						},
+					);
+				}
+
+				await testTable.deleteAll();
+			},
+		);
+
+		await testContext.test(
 			"CRUD",
 			async (testContext) => {
 				let id = "";
 				const initialParams = {
 					description: "description",
-					meta: { firstname: "firstname", lastname: "lastname" },
+					meta: { firstName: "firstName", lastName: "lastName" },
 					number_key: 1,
 					number_range: "[100,201)",
 					title: "title",
 				};
 				const updatedParams = {
 					description: "description updated",
-					meta: { firstname: "firstname updated", lastname: "lastname updated" },
+					meta: { firstName: "firstName updated", lastName: "lastName updated" },
 					number_key: 2,
 					number_range: "[200,301)",
 					title: "title updated",
@@ -630,8 +778,8 @@ export default async () => {
 							id = entity.id;
 
 							assert.equal(entity.description, initialParams.description);
-							assert.equal(entity.meta.firstname, initialParams.meta.firstname);
-							assert.equal(entity.meta.lastname, initialParams.meta.lastname);
+							assert.equal(entity.meta.firstName, initialParams.meta.firstName);
+							assert.equal(entity.meta.lastName, initialParams.meta.lastName);
 							assert.equal(entity.number_key, initialParams.number_key);
 							assert.equal(entity.number_range, initialParams.number_range);
 							assert.equal(entity.title, initialParams.title);
@@ -646,8 +794,8 @@ export default async () => {
 							const { one } = await testTable.getOneByPk(id);
 
 							assert.equal(one?.description, initialParams.description);
-							assert.equal(one?.meta.firstname, initialParams.meta.firstname);
-							assert.equal(one?.meta.lastname, initialParams.meta.lastname);
+							assert.equal(one?.meta.firstName, initialParams.meta.firstName);
+							assert.equal(one?.meta.lastName, initialParams.meta.lastName);
 							assert.equal(one?.number_key, initialParams.number_key);
 							assert.equal(one?.number_range, initialParams.number_range);
 							assert.equal(one?.title, initialParams.title);
@@ -662,8 +810,8 @@ export default async () => {
 							const { one } = await testTable.getOneByParams({ params: { id } });
 
 							assert.equal(one?.description, initialParams.description);
-							assert.equal(one?.meta.firstname, initialParams.meta.firstname);
-							assert.equal(one?.meta.lastname, initialParams.meta.lastname);
+							assert.equal(one?.meta.firstName, initialParams.meta.firstName);
+							assert.equal(one?.meta.lastName, initialParams.meta.lastName);
 							assert.equal(one?.number_key, initialParams.number_key);
 							assert.equal(one?.number_range, initialParams.number_range);
 							assert.equal(one?.title, initialParams.title);
@@ -678,8 +826,8 @@ export default async () => {
 							const entity = await testTable.getGuaranteedOneByParams({ params: { id } });
 
 							assert.equal(entity.description, initialParams.description);
-							assert.equal(entity.meta.firstname, initialParams.meta.firstname);
-							assert.equal(entity.meta.lastname, initialParams.meta.lastname);
+							assert.equal(entity.meta.firstName, initialParams.meta.firstName);
+							assert.equal(entity.meta.lastName, initialParams.meta.lastName);
 							assert.equal(entity.number_key, initialParams.number_key);
 							assert.equal(entity.number_range, initialParams.number_range);
 							assert.equal(entity.title, initialParams.title);
@@ -694,8 +842,8 @@ export default async () => {
 							const entity = await testTable.updateOneByPk(id, updatedParams);
 
 							assert.equal(entity.description, updatedParams.description);
-							assert.equal(entity.meta.firstname, updatedParams.meta.firstname);
-							assert.equal(entity.meta.lastname, updatedParams.meta.lastname);
+							assert.equal(entity.meta.firstName, updatedParams.meta.firstName);
+							assert.equal(entity.meta.lastName, updatedParams.meta.lastName);
 							assert.equal(entity.number_key, updatedParams.number_key);
 							assert.equal(entity.number_range, updatedParams.number_range);
 							assert.equal(entity.title, updatedParams.title);
@@ -710,8 +858,8 @@ export default async () => {
 							const entity = await testTable.getGuaranteedOneByParams({ params: { id } });
 
 							assert.equal(entity.description, updatedParams.description);
-							assert.equal(entity.meta.firstname, updatedParams.meta.firstname);
-							assert.equal(entity.meta.lastname, updatedParams.meta.lastname);
+							assert.equal(entity.meta.firstName, updatedParams.meta.firstName);
+							assert.equal(entity.meta.lastName, updatedParams.meta.lastName);
 							assert.equal(entity.number_key, updatedParams.number_key);
 							assert.equal(entity.number_range, updatedParams.number_range);
 							assert.equal(entity.title, updatedParams.title);
@@ -751,7 +899,7 @@ export default async () => {
 				await Promise.all([1, 2, 3, 4, 5].map((e) => {
 					const params = {
 						description: `description ${e}`,
-						meta: { firstname: `firstname ${e}`, lastname: `lastname ${e}` },
+						meta: { firstName: `firstName ${e}`, lastName: `lastName ${e}` },
 						number_key: e,
 						number_range: `[${e}00,${++e}01)`,
 						title: `title ${e}`,
@@ -776,7 +924,7 @@ export default async () => {
 				await Promise.all([1, 2, 3, 4, 5].map((e) => {
 					const params = {
 						description: `description ${e}`,
-						meta: { firstname: `firstname ${e}`, lastname: `lastname ${e}` },
+						meta: { firstName: `firstName ${e}`, lastName: `lastName ${e}` },
 						number_key: e,
 						number_range: `[${e}00,${++e}01)`,
 						title: `title ${e}`,
@@ -810,7 +958,7 @@ export default async () => {
 		await testContext.test(
 			"dropTable",
 			async () => {
-				const pool = PG.BaseModel.getStandartPool(creds);
+				const pool = PG.BaseModel.getStandardPool(creds);
 
 				await pool.query(`DROP TABLE IF EXISTS ${testTable.tableName};`);
 			},
@@ -819,7 +967,7 @@ export default async () => {
 		await testContext.test(
 			"remove pools",
 			async () => {
-				await PG.BaseModel.removeStandartPool(creds);
+				await PG.BaseModel.removeStandardPool(creds);
 				await PG.BaseModel.removeTransactionPool(creds);
 			},
 		);

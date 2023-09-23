@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 export type TArray2OrMore<T> = { 0: T; 1: T; } & Array<T>;
 export type TDomain<Model> = { model: Model; };
 export type TDomainFields = { [key: string]: any; };

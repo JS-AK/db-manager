@@ -1,22 +1,20 @@
 export type CreateFields = Pick<TableFields,
-	| "meta"
-	| "number_key"
-	| "title"
-> & Partial<Pick<TableFields,
-	| "description"
-	| "number_range"
->>;
+	| "firstName"
+	| "lastName"
+>;
 
 export type EntityFull = Pick<TableFields,
 	| "created_at"
 	| "id"
-	| "title"
+	| "firstName"
+	| "lastName"
 	| "updated_at"
 >;
 
 export type EntityListed = Pick<TableFields,
 	| "id"
-	| "title"
+	| "firstName"
+	| "lastName"
 >;
 
 export type SearchFields = Partial<Omit<TableFields,
@@ -29,20 +27,15 @@ export type SearchFields = Partial<Omit<TableFields,
 
 export type TableFields = {
 	created_at: Date;
-	description: string | null;
 	id: string;
-	meta: { firstName: string; lastName: string; };
-	number_key: number;
-	number_range: string | null;
-	title: string;
+	firstName: string;
+	lastName: string;
 	updated_at: Date | null;
 };
 
 export type TableKeys = keyof TableFields;
 
 export type UpdateFields = Partial<Pick<TableFields,
-	| "description"
-	| "meta"
-	| "number_range"
-	| "title"
+	| "firstName"
+	| "lastName"
 >>;
