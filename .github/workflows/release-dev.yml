@@ -1,9 +1,9 @@
-name: Make release
+name: Make release dev
 
 on:
   workflow_run:
     workflows: ['Lint & Test Commit']
-    branches: ['dev', 'master', 'next']
+    branches: ['dev']
     types:
       - completed
 
