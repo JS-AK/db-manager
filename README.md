@@ -1,8 +1,7 @@
 # @js-ak/db-manager
 
-![release](https://github.com/JS-AK/db-manager/actions/workflows/release-master.yml/badge.svg)
-![lint-and-test](https://github.com/JS-AK/db-manager/actions/workflows/lint-and-test-commit.yml/badge.svg)
-![jekyll-gh-pages](https://github.com/JS-AK/db-manager/actions/workflows/jekyll-gh-pages.yml/badge.svg)
+![ci-cd](https://github.com/JS-AK/db-manager/actions/workflows/ci-cd-master.yml/badge.svg)
+![publish-documentation](https://github.com/JS-AK/db-manager/actions/workflows/jekyll-gh-pages.yml/badge.svg)
 
 It is a tool for work with databases (PG or MySQL) via pool connections
 

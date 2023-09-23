@@ -2,8 +2,7 @@ name: Deploy documentation to GitHub Pages
 
 on:
   workflow_run:
-    workflows: ['Make release master']
-    branches: [ master ]
+    workflows: ['CI CD master']
     types:
       - completed
 
