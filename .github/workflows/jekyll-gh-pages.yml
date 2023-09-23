@@ -2,7 +2,7 @@ name: Deploy documentation to GitHub Pages
 
 on:
   workflow_run:
-    workflows: ["Make release"]
+    workflows: ['Make release']
     branches: [ master ]
     types:
       - completed

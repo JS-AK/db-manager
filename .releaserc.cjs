@@ -32,6 +32,7 @@ module.exports = {
 	branches: [
 		'master',
 		{ name: 'dev', prerelease: true, },
+		{ name: 'next', prerelease: true, },
 	],
 	plugins: getPlugins(),
 }

@@ -1,0 +1,55 @@
+name: Lint & Test Commit
+on:
+  push:
+    branches: ['dev', 'master', 'next']
+
+jobs:
+  runner-job:
+    runs-on: ubuntu-latest
+
+    services:
+
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: admin
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      mysql:
+        image: mysql
+        env:
+          MYSQL_DATABASE: test-base
+          MYSQL_USER: test-user
+          MYSQL_PASSWORD: test-password
+          MYSQL_ROOT_PASSWORD: root-password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run Tests
+        run: npm test
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          MYSQL_HOST: localhost
+          MYSQL_PORT: 3306
