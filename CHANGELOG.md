@@ -1,3 +1,10 @@
+# [3.0.0-next.2](https://github.com/JS-AK/db-manager/compare/v3.0.0-next.1...v3.0.0-next.2) (2023-09-23)
+
+
+### Bug Fixes
+
+* updated gh workflows ([678f703](https://github.com/JS-AK/db-manager/commit/678f703cac5029e41061b83435d7bbbf5f17ad5e))
+
 ## [2.1.3](https://github.com/JS-AK/db-manager/compare/v2.1.2...v2.1.3) (2023-09-23)
 
 
