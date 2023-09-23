@@ -2,7 +2,7 @@ const ref = process.env.GITHUB_REF;
 const branch = ref.split('/').pop();
 
 function getPlugins() {
-	if (branch === 'master') {
+	if (['dev', 'master', 'next'].includes(branch)) {
 		return [
 			'@semantic-release/commit-analyzer',
 			'@semantic-release/release-notes-generator',
