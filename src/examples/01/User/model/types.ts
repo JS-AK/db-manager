@@ -1,20 +1,20 @@
 export type CreateFields = Pick<TableFields,
-	| "firstname"
-	| "lastname"
+	| "firstName"
+	| "lastName"
 >;
 
 export type EntityFull = Pick<TableFields,
 	| "created_at"
 	| "id"
-	| "firstname"
-	| "lastname"
+	| "firstName"
+	| "lastName"
 	| "updated_at"
 >;
 
 export type EntityListed = Pick<TableFields,
 	| "id"
-	| "firstname"
-	| "lastname"
+	| "firstName"
+	| "lastName"
 >;
 
 export type SearchFields = Partial<Omit<TableFields,
@@ -28,14 +28,14 @@ export type SearchFields = Partial<Omit<TableFields,
 export type TableFields = {
 	created_at: Date;
 	id: string;
-	firstname: string;
-	lastname: string;
+	firstName: string;
+	lastName: string;
 	updated_at: Date | null;
 };
 
 export type TableKeys = keyof TableFields;
 
 export type UpdateFields = Partial<Pick<TableFields,
-	| "firstname"
-	| "lastname"
+	| "firstName"
+	| "lastName"
 >>;

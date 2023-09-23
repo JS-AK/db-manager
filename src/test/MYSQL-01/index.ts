@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { MYSQL } from "../../index.js";
 
-import * as TestTable from "./test-table/domain.js";
+import * as TestTable from "./test-table/index.js";
 
 const creds = {
 	database: "test-base",
@@ -13,11 +13,11 @@ const creds = {
 	user: "test-user",
 };
 
-const testTable = new TestTable.default(creds);
+const testTable = new TestTable.Domain(creds);
 
 test("top level test MYSQL", async (t) => {
 	await t.test("createTable", async () => {
-		const pool = MYSQL.BaseModel.getStandartPool(creds);
+		const pool = MYSQL.BaseModel.getStandardPool(creds);
 
 		await pool.query("DROP TABLE IF EXISTS test_table;");
 
@@ -115,16 +115,16 @@ test("top level test MYSQL", async (t) => {
 
 				const [inserted] = (await connection.query<MYSQL.ModelTypes.ResultSetHeader>(query, values));
 
-				const [entites] = (await connection.query<MYSQL.ModelTypes.RowDataPacket[]>(`
+				const [entities] = (await connection.query<(MYSQL.ModelTypes.RowDataPacket & TestTable.Types.TableFields)[]>(`
 					SELECT *
 					FROM test_table
 					WHERE id = ?
 				`, [inserted?.insertId]));
 
-				assert.equal(entites[0]?.title, title);
-				assert.equal(entites[0]?.description, description);
+				assert.equal(entities[0]?.title, title);
+				assert.equal(entities[0]?.description, description);
 
-				id = entites[0]?.id as string;
+				id = entities[0]?.id as string;
 			}
 
 			{
@@ -142,14 +142,14 @@ test("top level test MYSQL", async (t) => {
 
 				await connection.query(query, values);
 
-				const [entites] = (await connection.query<MYSQL.ModelTypes.RowDataPacket[]>(`
+				const [entities] = (await connection.query<(MYSQL.ModelTypes.RowDataPacket & TestTable.Types.TableFields)[]>(`
 					SELECT *
 					FROM test_table
 					WHERE id = ?
 				`, [id]));
 
-				assert.equal(entites[0]?.title, title);
-				assert.equal(entites[0]?.description, description);
+				assert.equal(entities[0]?.title, title);
+				assert.equal(entities[0]?.description, description);
 			}
 
 			await connection.query(`
@@ -158,13 +158,13 @@ test("top level test MYSQL", async (t) => {
 				WHERE id = ?
 			`, [id]);
 
-			const [entites] = (await connection.query<MYSQL.ModelTypes.RowDataPacket[]>(`
-			SELECT *
-			FROM test_table
-			WHERE id = ?
-		`, [id]));
+			const [entities] = (await connection.query<(MYSQL.ModelTypes.RowDataPacket & TestTable.Types.TableFields)[]>(`
+				SELECT *
+				FROM test_table
+				WHERE id = ?
+			`, [id]));
 
-			assert.equal(entites[0], undefined);
+			assert.equal(entities[0], undefined);
 
 			await connection.commit();
 		} catch (error) {
@@ -364,7 +364,7 @@ test("top level test MYSQL", async (t) => {
 	});
 
 	await t.test("dropTable", async () => {
-		const pool = MYSQL.BaseModel.getStandartPool(creds);
+		const pool = MYSQL.BaseModel.getStandardPool(creds);
 		const transactionPool = MYSQL.BaseModel.getTransactionPool(creds);
 
 		await pool.query("DROP TABLE IF EXISTS test_table;");

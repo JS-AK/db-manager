@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { PG } from "../../index.js";
 
-import * as TestTable from "./test-table-pg-02/domain.js";
+import * as TestTable from "./test-table-pg-02/index.js";
 
 const creds = {
 	database: "postgres",
@@ -14,13 +14,13 @@ const creds = {
 };
 
 export default async () => {
-	const testTable = new TestTable.default(creds);
+	const testTable = new TestTable.Domain(creds);
 
 	return test("PG-02", async (testContext) => {
 		await testContext.test(
 			"create table",
 			async () => {
-				const pool = PG.BaseModel.getStandartPool(creds);
+				const pool = PG.BaseModel.getStandardPool(creds);
 
 				await pool.query(`
 					DROP TABLE IF EXISTS ${testTable.tableName};
@@ -116,7 +116,7 @@ export default async () => {
 		await testContext.test(
 			"dropTable",
 			async () => {
-				const pool = PG.BaseModel.getStandartPool(creds);
+				const pool = PG.BaseModel.getStandardPool(creds);
 
 				await pool.query(`DROP TABLE IF EXISTS ${testTable.tableName};`);
 			},
@@ -125,7 +125,7 @@ export default async () => {
 		await testContext.test(
 			"remove pools",
 			async () => {
-				await PG.BaseModel.removeStandartPool(creds);
+				await PG.BaseModel.removeStandardPool(creds);
 				await PG.BaseModel.removeTransactionPool(creds);
 			},
 		);
