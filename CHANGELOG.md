@@ -1,3 +1,10 @@
+# [3.0.0-next.3](https://github.com/JS-AK/db-manager/compare/v3.0.0-next.2...v3.0.0-next.3) (2023-09-24)
+
+
+### Bug Fixes
+
+* updated PG TSearchParams ([b25d17a](https://github.com/JS-AK/db-manager/commit/b25d17ac1db6a8a223225da7aaf259f2a97e1a29))
+
 # [3.0.0-next.2](https://github.com/JS-AK/db-manager/compare/v3.0.0-next.1...v3.0.0-next.2) (2023-09-23)
 
 
