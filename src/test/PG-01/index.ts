@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { PG } from "../../index.js";
 
-import * as TestTable from "./test-table-pg-01/index.js";
+import * as TestTable from "./test-table-01/index.js";
 import { isHasFields } from "../../shared-helpers/index.js";
 
 const creds = {
