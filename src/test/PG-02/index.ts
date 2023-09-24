@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { PG } from "../../index.js";
 
-import * as TestTable from "./test-table-pg-02/index.js";
+import * as TestTable from "./test-table-01/index.js";
 
 const creds = {
 	database: "postgres",
