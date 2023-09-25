@@ -1,3 +1,19 @@
+# [3.0.0](https://github.com/JS-AK/db-manager/compare/v2.1.3...v3.0.0) (2023-09-25)
+
+
+### Bug Fixes
+
+* updated gh workflows ([a93fdaf](https://github.com/JS-AK/db-manager/commit/a93fdaf0f60b93e4c92c9d9b91514ae1c39554f3))
+* updated PG TSearchParams ([50709cf](https://github.com/JS-AK/db-manager/commit/50709cf8f34e12fe88b43f100f69a6d92bcd47c9))
+
+
+* feat!: updated PG and MYSQL typing ([f2f6ad2](https://github.com/JS-AK/db-manager/commit/f2f6ad24ad95884a2ff445068721b758fb0e6996))
+
+
+### BREAKING CHANGES
+
+* -updated pass jenerics to Domain PG and MYSQL
+
 ## [2.1.3](https://github.com/JS-AK/db-manager/compare/v2.1.2...v2.1.3) (2023-09-23)
 
 
