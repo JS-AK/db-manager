@@ -1,9 +1,7 @@
-// ----- Dependiences ----------------------------
+// ----- Dependencies ----------------------------
 import { PG } from "../../../../index.js";
-import { TableKeys } from "./types.js";
 
-// ----- Reexport types ------------------------
-export * as Types from "./types.js";
+import { TableKeys } from "./types.js";
 
 // ----- Class ------------------------------
 export class Model extends PG.BaseModel {
@@ -21,8 +19,8 @@ export class Model extends PG.BaseModel {
 	}
 }
 
-// ----- Table propertires ----------------------
-const tableName = "test_table_pg_02"; // table from DB
+// ----- Table properties ----------------------
+const tableName = "test_table_01"; // table from DB
 const primaryKey = null; // primaryId from table
 const createField = null; // created field
 const updateField = null; // updated field

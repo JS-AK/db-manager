@@ -25,7 +25,7 @@ export class BaseModel {
 		options?: Types.TDBOptions,
 	) {
 		this.createField = tableData.createField;
-		this.pool = connection.getStandartPool(dbCreds);
+		this.pool = connection.getStandardPool(dbCreds);
 		this.primaryKey = tableData.primaryKey;
 		this.tableName = tableData.tableName;
 		this.tableFields = tableData.tableFields;
@@ -101,6 +101,8 @@ export class BaseModel {
 				}
 			}
 		}
+
+		if (!selected.length) selected.push("*");
 
 		const {
 			fields,
@@ -217,6 +219,8 @@ export class BaseModel {
 		},
 		selected = ["*"],
 	) {
+		if (!selected.length) selected.push("*");
+
 		const {
 			fields,
 			fieldsOr,
@@ -261,8 +265,8 @@ export class BaseModel {
 	}
 
 	async save(params = {}) {
-		const prms = SharedHelpers.clearUndefinedFields(params);
-		const fields = Object.keys(prms);
+		const clearedParams = SharedHelpers.clearUndefinedFields(params);
+		const fields = Object.keys(clearedParams);
 		const onConflict = this.#insertOptions?.isOnConflictDoNothing
 			? "ON CONFLICT DO NOTHING"
 			: "";
@@ -271,7 +275,7 @@ export class BaseModel {
 
 		const res = (await this.pool.query(
 			queries.save(this.tableName, fields, this.createField, onConflict),
-			Object.values(prms),
+			Object.values(clearedParams),
 		)).rows;
 
 		return res[0];
@@ -298,8 +302,8 @@ export class BaseModel {
 			{ fields, fieldsOr, nullFields },
 		);
 
-		const prms = SharedHelpers.clearUndefinedFields(params);
-		const fieldsToUpdate = Object.keys(prms);
+		const clearedParams = SharedHelpers.clearUndefinedFields(params);
+		const fieldsToUpdate = Object.keys(clearedParams);
 
 		if (!fields.length) throw new Error("No one params incoming to update");
 
@@ -311,7 +315,7 @@ export class BaseModel {
 				this.updateField,
 				orderNumber + 1,
 			),
-			[...values, ...Object.values(prms)],
+			[...values, ...Object.values(clearedParams)],
 		)).rows;
 
 		return res;
@@ -325,26 +329,26 @@ export class BaseModel {
 			throw new Error("Primary key not specified");
 		}
 
-		const prms = SharedHelpers.clearUndefinedFields(params);
-		const fields = Object.keys(prms);
+		const clearedParams = SharedHelpers.clearUndefinedFields(params);
+		const fields = Object.keys(clearedParams);
 
 		if (!fields.length) throw new Error("No one params incoming to update");
 
 		const res = (await this.pool.query(
 			queries.updateByPk(this.tableName, fields, this.primaryKey, this.updateField),
-			[...Object.values(prms), pk],
+			[...Object.values(clearedParams), pk],
 		)).rows;
 
 		return res[0];
 	}
 
 	// STATIC METHODS
-	static getStandartPool(creds: Types.TDBCreds, poolName?: string): pg.Pool {
-		return connection.getStandartPool(creds, poolName);
+	static getStandardPool(creds: Types.TDBCreds, poolName?: string): pg.Pool {
+		return connection.getStandardPool(creds, poolName);
 	}
 
-	static async removeStandartPool(creds: Types.TDBCreds, poolName?: string): Promise<void> {
-		return connection.removeStandartPool(creds, poolName);
+	static async removeStandardPool(creds: Types.TDBCreds, poolName?: string): Promise<void> {
+		return connection.removeStandardPool(creds, poolName);
 	}
 
 	static getTransactionPool(creds: Types.TDBCreds, poolName?: string): pg.Pool {

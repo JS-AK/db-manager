@@ -13,10 +13,4 @@ export class Domain extends MYSQL.BaseDomain<{
 	constructor(creds: MYSQL.ModelTypes.TDBCreds) {
 		super({ model: new Model(creds) });
 	}
-
-	async test(): Promise<boolean> {
-		const res = await this.model.test();
-
-		return !!res?.test;
-	}
 }

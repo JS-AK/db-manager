@@ -1,8 +1,8 @@
-import { MYSQL } from "../../../index.js";
+import { PG } from "../../../index.js";
 
 import { Model, Types } from "./model/index.js";
 
-export class Domain extends MYSQL.BaseDomain<{
+export class Domain extends PG.BaseDomain<{
 	Model: Model;
 	CreateFields: Types.CreateFields;
 	SearchFields: Types.SearchFields;
@@ -10,13 +10,7 @@ export class Domain extends MYSQL.BaseDomain<{
 	UpdateFields: Types.UpdateFields;
 }> {
 
-	constructor(creds: MYSQL.ModelTypes.TDBCreds) {
+	constructor(creds: PG.ModelTypes.TDBCreds) {
 		super({ model: new Model(creds) });
-	}
-
-	async test(): Promise<boolean> {
-		const res = await this.model.test();
-
-		return !!res?.test;
 	}
 }

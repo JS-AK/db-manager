@@ -3,11 +3,11 @@
 import * as User from "./User/index.js";
 
 const creds = {
-	database: "postgres",
+	database: "mysql",
 	host: "localhost",
 	password: "admin",
-	port: 5432,
-	user: "postgres",
+	port: 3306,
+	user: "mysql",
 };
 
 const UserDomain = new User.Domain(creds);
@@ -28,8 +28,13 @@ console.log(user);
 	if (userFounded) {
 		console.log(userFounded);
 
-		const userUpdated = await UserDomain.updateOneByPk(userFounded.id, {
+		await UserDomain.updateOneByPk(userFounded.id, {
 			firstName: "user firstName updated",
+		});
+
+		const userUpdated = await UserDomain.getGuaranteedOneByParams({
+			params: { id: userFounded.id },
+			selected: ["id"],
 		});
 
 		console.log(userUpdated);

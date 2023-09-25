@@ -1,9 +1,7 @@
-// ----- Dependiences --------------------------
+// ----- Dependencies --------------------------
 import { PG } from "../../../../index.js";
-import { TableKeys } from "./types.js";
 
-// ----- Reexport types ------------------------
-export * as Types from "./types.js";
+import { TableKeys } from "./types.js";
 
 // ----- Class ------------------------------
 export class Model extends PG.BaseModel {
@@ -22,12 +20,12 @@ export class Model extends PG.BaseModel {
 	}
 
 	async test() {
-		return (await this.pool.query(queries.test())).rows[0];
+		return (await this.pool.query<{ test: boolean; }>(queries.test())).rows[0];
 	}
 }
 
-// ----- Table propertires ----------------------
-const tableName = "test_table_pg_01"; // table from DB
+// ----- Table properties ----------------------
+const tableName = "test_table_01"; // table from DB
 const primaryKey = "id"; // primaryId from table
 const createField = "created_at"; // created field
 const updateField = "updated_at"; // updated field
