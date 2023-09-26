@@ -24,10 +24,10 @@ export class Model extends MYSQL.BaseModel {
 }
 
 // ----- Table properties ----------------------
-const tableName = "test_table"; // table from DB
+const tableName = "test_table_1"; // table from DB
 const primaryKey = "id"; // primaryId from table
-const createField = "created_at"; // created field
-const updateField = "updated_at"; // updated field
+const createField = { title: "created_at", type: "timestamp" } as const;
+const updateField = { title: "updated_at", type: "timestamp" } as const;
 const tableFields: TableKeys[] = [
 	"created_at", // -> create date
 	"id", // -> id

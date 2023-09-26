@@ -35,10 +35,10 @@ export type TSearchParams = {
 	| undefined;
 };
 export type TTable = {
-	createField?: string;
+	createField: { title: string; type: "unix_timestamp" | "timestamp"; } | null;
 	isPKAutoIncremented?: boolean;
 	primaryKey: string | string[];
 	tableFields: string[];
 	tableName: string;
-	updateField?: string;
+	updateField: { title: string; type: "unix_timestamp" | "timestamp"; } | null;
 };

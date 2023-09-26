@@ -22,8 +22,8 @@ export class Model extends PG.BaseModel {
 // ----- Table properties ----------------------
 const tableName = "test_table_01"; // table from DB
 const primaryKey = null; // primaryId from table
-const createField = null; // created field
-const updateField = null; // updated field
+const createField = null;
+const updateField = null;
 const tableFields: TableKeys[] = [
 	"title", // -> title
 ];

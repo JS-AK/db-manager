@@ -42,9 +42,9 @@ export type TSearchParamsWithOperator = {
 	$nlike?: string;
 };
 export type TTable = {
-	createField: string | null;
+	createField: { title: string; type: "unix_timestamp" | "timestamp"; } | null;
 	primaryKey: string | null;
 	tableFields: string[];
 	tableName: string;
-	updateField: string | null;
+	updateField: { title: string; type: "unix_timestamp" | "timestamp"; } | null;
 };

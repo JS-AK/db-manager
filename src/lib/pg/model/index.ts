@@ -400,7 +400,7 @@ export class BaseModel {
 		primaryKey: { field: F; value: string | number; };
 		returning?: F[];
 		tableName: string;
-		updateField?: F;
+		updateField?: { title: F; type: "unix_timestamp" | "timestamp"; } | null;
 	}) {
 		const {
 			params: paramsRaw,
@@ -416,7 +416,19 @@ export class BaseModel {
 
 		let updateFields = k.map((e: string, idx: number) => `${e} = $${idx + 2}`).join(",");
 
-		if (updateField) updateFields += `, ${updateField} = NOW()`;
+		if (updateField) {
+			switch (updateField.type) {
+				case "timestamp":
+					updateFields += `, ${updateField.title} = NOW()`;
+					break;
+				case "unix_timestamp":
+					updateFields += `, ${updateField.title} = (EXTRACT(EPOCH FROM NOW()) * (1000)::NUMERIC)`;
+					break;
+
+				default:
+					throw new Error("Invalid type: " + updateField.type);
+			}
+		}
 
 		const returningSQL = returning?.length
 			? `RETURNING ${returning.join(",")}`

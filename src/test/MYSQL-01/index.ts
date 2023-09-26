@@ -3,7 +3,8 @@ import test from "node:test";
 
 import { MYSQL } from "../../index.js";
 
-import * as TestTable from "./test-table/index.js";
+import * as TestTable1 from "./test-table-1/index.js";
+import * as TestTable2 from "./test-table-2/index.js";
 
 const creds = {
 	database: "test-base",
@@ -13,40 +14,93 @@ const creds = {
 	user: "test-user",
 };
 
-const testTable = new TestTable.Domain(creds);
+const testTable1 = new TestTable1.Domain(creds);
+const testTable2 = new TestTable2.Domain(creds);
 
 test("top level test MYSQL", async (t) => {
 	await t.test("createTable", async () => {
 		const pool = MYSQL.BaseModel.getStandardPool(creds);
 
-		await pool.query("DROP TABLE IF EXISTS test_table;");
-
+		await pool.query(`DROP TABLE IF EXISTS ${testTable1.tableName};`);
 		await pool.query(`
-			CREATE TABLE test_table(
+			CREATE TABLE ${testTable1.tableName}(
 			  id                              INT NOT NULL AUTO_INCREMENT,
 
 			  description                     varchar(255),
 			  title                           varchar(255) NOT NULL,
 
-			  created_at                      DATETIME DEFAULT CURRENT_TIMESTAMP,
+			  created_at                      DATETIME DEFAULT (UTC_TIMESTAMP),
 			  updated_at                      DATETIME,
+			  PRIMARY KEY (id)
+			);
+		`);
+
+		await pool.query(`DROP TABLE IF EXISTS ${testTable2.tableName};`);
+		await pool.query(`
+			CREATE TABLE ${testTable2.tableName}(
+			  id                              INT NOT NULL AUTO_INCREMENT,
+
+			  description                     varchar(255),
+			  title                           varchar(255) NOT NULL,
+
+			  created_at                      BIGINT DEFAULT (ROUND(UNIX_TIMESTAMP(CURTIME(4)) * 1000)),
+			  updated_at                      BIGINT,
 			  PRIMARY KEY (id)
 			);
 		`);
 	});
 
 	await t.test("createOne", async () => {
-		const example1Id = await testTable.createOne({ title: "test 1" });
-		const example2Id = await testTable.createOne({ title: "test 2" });
-		const example3Id = await testTable.createOne({ description: "test 3", title: "test 3" });
-		const example4Id = await testTable.createOne({ title: "test 4" });
-		const example5Id = await testTable.createOne({ title: "test 5" });
+		const example1Id = await testTable1.createOne({ title: "test 1" });
+		const example2Id = await testTable1.createOne({ title: "test 2" });
+		const example3Id = await testTable1.createOne({ description: "test 3", title: "test 3" });
+		const example4Id = await testTable1.createOne({ title: "test 4" });
+		const example5Id = await testTable1.createOne({ title: "test 5" });
 
 		assert.equal(example1Id, 1);
 		assert.equal(example2Id, 2);
 		assert.equal(example3Id, 3);
 		assert.equal(example4Id, 4);
 		assert.equal(example5Id, 5);
+	});
+
+	await t.test("CRUD table 2", async () => {
+		const example1Id = await testTable2.createOne({ title: "title" });
+
+		assert.equal(typeof example1Id, "number");
+
+		const example1 = await testTable2.getGuaranteedOneByParams({
+			params: { id: example1Id.toString() },
+		});
+
+		assert.equal(typeof example1.created_at, "number");
+		assert.equal(example1.description, null);
+		assert.equal(typeof example1.id, "number");
+		assert.equal(example1.title, "title");
+		assert.equal(example1.updated_at, null);
+
+		await testTable2.updateOneByPk(example1Id, {
+			description: "description",
+			title: "title updated",
+		});
+
+		const example1Updated = await testTable2.getGuaranteedOneByParams({
+			params: { id: example1Id.toString() },
+		});
+
+		assert.equal(typeof example1Updated.created_at, "number");
+		assert.equal(example1Updated.description, "description");
+		assert.equal(typeof example1Updated.id, "number");
+		assert.equal(example1Updated.title, "title updated");
+		assert.equal(typeof example1Updated.updated_at, "number");
+
+		await testTable2.deleteOneByPk(example1Id);
+
+		const example1Deleted = await testTable2.getGuaranteedOneByParams({
+			params: { id: example1Id.toString() },
+		});
+
+		assert.equal(example1Deleted, undefined);
 	});
 
 	await t.test("transaction 1", async () => {
@@ -58,7 +112,7 @@ test("top level test MYSQL", async (t) => {
 
 			await connection.query(`
 				DELETE
-				FROM test_table
+				FROM ${testTable1.tableName}
 				WHERE title = ?
 			`, ["test 5"]);
 
@@ -80,7 +134,7 @@ test("top level test MYSQL", async (t) => {
 
 			await connection.query(`
 				DELETE
-				FROM test_table
+				FROM ${testTable1.tableName}
 				WHERE title = ?
 			`, ["test 4"]);
 
@@ -108,16 +162,16 @@ test("top level test MYSQL", async (t) => {
 
 				const { query, values } = MYSQL
 					.BaseModel
-					.getInsertFields<TestTable.Types.CreateFields>({
+					.getInsertFields<TestTable1.Types.CreateFields>({
 						params: { description, title },
-						tableName: testTable.tableName,
+						tableName: testTable1.tableName,
 					});
 
 				const [inserted] = (await connection.query<MYSQL.ModelTypes.ResultSetHeader>(query, values));
 
-				const [entities] = (await connection.query<(MYSQL.ModelTypes.RowDataPacket & TestTable.Types.TableFields)[]>(`
+				const [entities] = (await connection.query<(MYSQL.ModelTypes.RowDataPacket & TestTable1.Types.TableFields)[]>(`
 					SELECT *
-					FROM test_table
+					FROM ${testTable1.tableName}
 					WHERE id = ?
 				`, [inserted?.insertId]));
 
@@ -133,18 +187,18 @@ test("top level test MYSQL", async (t) => {
 
 				const { query, values } = MYSQL
 					.BaseModel
-					.getUpdateFields<TestTable.Types.UpdateFields, TestTable.Types.TableKeys>({
+					.getUpdateFields<TestTable1.Types.UpdateFields, TestTable1.Types.TableKeys>({
 						params: { description, title },
 						primaryKey: { field: "id", value: id },
-						tableName: testTable.tableName,
-						updateField: testTable.updateField,
+						tableName: testTable1.tableName,
+						updateField: testTable1.updateField,
 					});
 
 				await connection.query(query, values);
 
-				const [entities] = (await connection.query<(MYSQL.ModelTypes.RowDataPacket & TestTable.Types.TableFields)[]>(`
+				const [entities] = (await connection.query<(MYSQL.ModelTypes.RowDataPacket & TestTable1.Types.TableFields)[]>(`
 					SELECT *
-					FROM test_table
+					FROM ${testTable1.tableName}
 					WHERE id = ?
 				`, [id]));
 
@@ -154,13 +208,13 @@ test("top level test MYSQL", async (t) => {
 
 			await connection.query(`
 				DELETE
-				FROM test_table
+				FROM ${testTable1.tableName}
 				WHERE id = ?
 			`, [id]);
 
-			const [entities] = (await connection.query<(MYSQL.ModelTypes.RowDataPacket & TestTable.Types.TableFields)[]>(`
+			const [entities] = (await connection.query<(MYSQL.ModelTypes.RowDataPacket & TestTable1.Types.TableFields)[]>(`
 				SELECT *
-				FROM test_table
+				FROM ${testTable1.tableName}
 				WHERE id = ?
 			`, [id]));
 
@@ -178,7 +232,7 @@ test("top level test MYSQL", async (t) => {
 	await t.test("getOneByPk found", async () => {
 		const id = 1;
 
-		const { one: exampleFound } = await testTable.getOneByPk(id);
+		const { one: exampleFound } = await testTable1.getOneByPk(id);
 
 		if (exampleFound) {
 			assert.equal(exampleFound.id, id);
@@ -186,7 +240,7 @@ test("top level test MYSQL", async (t) => {
 	});
 
 	await t.test("getArrByParams", async () => {
-		const res = await testTable.getArrByParams({
+		const res = await testTable1.getArrByParams({
 			params: {},
 		});
 
@@ -195,7 +249,7 @@ test("top level test MYSQL", async (t) => {
 
 	await t.test("getArrByParams with ordering", async () => {
 		{
-			const res = await testTable.getArrByParams({
+			const res = await testTable1.getArrByParams({
 				order: [{ orderBy: "title", ordering: "DESC" }],
 				params: {},
 			});
@@ -203,7 +257,7 @@ test("top level test MYSQL", async (t) => {
 			assert.equal(res[0]?.title, "test 3");
 		}
 		{
-			const res = await testTable.getArrByParams({
+			const res = await testTable1.getArrByParams({
 				order: [{ orderBy: "title", ordering: "ASC" }],
 				params: {},
 			});
@@ -213,7 +267,7 @@ test("top level test MYSQL", async (t) => {
 	});
 
 	await t.test("getArrByParams with params: {title: 'test 1'}", async () => {
-		const res = await testTable.getArrByParams({
+		const res = await testTable1.getArrByParams({
 			params: { title: "test 1" },
 		});
 
@@ -221,7 +275,7 @@ test("top level test MYSQL", async (t) => {
 	});
 
 	await t.test("getArrByParams description: null", async () => {
-		const res = await testTable.getArrByParams({
+		const res = await testTable1.getArrByParams({
 			params: { description: null },
 		});
 
@@ -231,7 +285,7 @@ test("top level test MYSQL", async (t) => {
 	await t.test("getGuaranteedOneByParams found", async () => {
 		const title = "test 1";
 
-		const exampleFound = await testTable.getGuaranteedOneByParams({
+		const exampleFound = await testTable1.getGuaranteedOneByParams({
 			params: { title },
 		});
 
@@ -244,7 +298,7 @@ test("top level test MYSQL", async (t) => {
 	await t.test("getOneByParams found", async () => {
 		const title = "test 1";
 
-		const { one: exampleFound } = await testTable.getOneByParams({
+		const { one: exampleFound } = await testTable1.getOneByParams({
 			params: { title },
 		});
 
@@ -257,7 +311,7 @@ test("top level test MYSQL", async (t) => {
 	});
 
 	await t.test("getArrByParams found", async () => {
-		const res = await testTable.getArrByParams({
+		const res = await testTable1.getArrByParams({
 			params: {
 				description: {
 					$like: "%test%",
@@ -288,7 +342,7 @@ test("top level test MYSQL", async (t) => {
 	});
 
 	await t.test("getArrByParams found { $custom: { sign: \"LIKE\", value: \"%test 3%\" }", async () => {
-		const res = await testTable.getArrByParams({
+		const res = await testTable1.getArrByParams({
 			params: {
 				description: { $custom: { sign: "LIKE", value: "%test 3%" } },
 			},
@@ -300,7 +354,7 @@ test("top level test MYSQL", async (t) => {
 	await t.test("getOneByParams not found", async () => {
 		const title = "test 0";
 
-		const { one: exampleNotFound } = await testTable.getOneByParams({
+		const { one: exampleNotFound } = await testTable1.getOneByParams({
 			params: { title },
 		});
 
@@ -310,18 +364,18 @@ test("top level test MYSQL", async (t) => {
 	await t.test("updateOneByPk", async () => {
 		const title = "test 1";
 
-		const exampleFound = await testTable.getGuaranteedOneByParams({
+		const exampleFound = await testTable1.getGuaranteedOneByParams({
 			params: { title },
 		});
 
 		const titleUpdated = "test 1 updated";
 
-		await testTable.updateOneByPk(
+		await testTable1.updateOneByPk(
 			exampleFound.id,
 			{ title: titleUpdated },
 		);
 
-		const exampleUpdatedFound = await testTable.getGuaranteedOneByParams({
+		const exampleUpdatedFound = await testTable1.getGuaranteedOneByParams({
 			params: { title: titleUpdated },
 		});
 
@@ -334,13 +388,13 @@ test("top level test MYSQL", async (t) => {
 	await t.test("deleteOneByPk", async () => {
 		const title = "test 1 updated";
 
-		const exampleFound = await testTable.getGuaranteedOneByParams({
+		const exampleFound = await testTable1.getGuaranteedOneByParams({
 			params: { title },
 		});
 
-		await testTable.deleteOneByPk(exampleFound.id);
+		await testTable1.deleteOneByPk(exampleFound.id);
 
-		const exampleUpdatedFound = await testTable.getGuaranteedOneByParams({
+		const exampleUpdatedFound = await testTable1.getGuaranteedOneByParams({
 			params: { id: exampleFound.id },
 		});
 
@@ -348,9 +402,9 @@ test("top level test MYSQL", async (t) => {
 	});
 
 	await t.test("deleteAll", async () => {
-		await testTable.deleteAll();
+		await testTable1.deleteAll();
 
-		const rowsCount = await testTable.getCountByParams({
+		const rowsCount = await testTable1.getCountByParams({
 			params: {},
 		});
 
@@ -358,7 +412,7 @@ test("top level test MYSQL", async (t) => {
 	});
 
 	await t.test("custom function test()", async () => {
-		const isNotTestFailed = await testTable.test();
+		const isNotTestFailed = await testTable1.test();
 
 		assert.equal(isNotTestFailed, true);
 	});
@@ -367,7 +421,8 @@ test("top level test MYSQL", async (t) => {
 		const pool = MYSQL.BaseModel.getStandardPool(creds);
 		const transactionPool = MYSQL.BaseModel.getTransactionPool(creds);
 
-		await pool.query("DROP TABLE IF EXISTS test_table;");
+		await pool.query(`DROP TABLE IF EXISTS ${testTable1.tableName};`);
+		await pool.query(`DROP TABLE IF EXISTS ${testTable2.tableName};`);
 
 		pool.end();
 		transactionPool.end();

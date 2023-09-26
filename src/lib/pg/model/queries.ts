@@ -86,7 +86,7 @@ export default {
 	save(
 		tableName: string,
 		fields: string[],
-		createField: string | null,
+		createField: { title: string; type: "unix_timestamp" | "timestamp"; } | null,
 		onConflict: "ON CONFLICT DO NOTHING" | "",
 	) {
 		const intoFields = [];
@@ -98,8 +98,19 @@ export default {
 		}
 
 		if (createField) {
-			intoFields.push(createField);
-			valuesFields.push("NOW()");
+			intoFields.push(createField.title);
+
+			switch (createField.type) {
+				case "timestamp":
+					valuesFields.push("NOW()");
+					break;
+				case "unix_timestamp":
+					valuesFields.push("(EXTRACT(EPOCH FROM NOW()) * (1000)::NUMERIC)");
+					break;
+
+				default:
+					throw new Error("Invalid type: " + createField.type);
+			}
 		}
 
 		return `
@@ -114,13 +125,25 @@ export default {
 		tableName: string,
 		fields: string[],
 		searchFields: string,
-		updateField: string | null,
+		updateField: { title: string; type: "unix_timestamp" | "timestamp"; } | null,
 		startOrderNumber: number,
 	) {
 		let idx = startOrderNumber;
 		let updateFields = fields.map((e: string) => `${e} = $${idx++}`).join(",");
 
-		if (updateField) updateFields += `, ${updateField} = NOW()`;
+		if (updateField) {
+			switch (updateField.type) {
+				case "timestamp":
+					updateFields += `, ${updateField.title} = NOW()`;
+					break;
+				case "unix_timestamp":
+					updateFields += `, ${updateField.title} = (EXTRACT(EPOCH FROM NOW()) * (1000)::NUMERIC)`;
+					break;
+
+				default:
+					throw new Error("Invalid type: " + updateField.type);
+			}
+		}
 
 		return `
 			UPDATE ${tableName}
@@ -134,12 +157,24 @@ export default {
 		tableName: string,
 		fields: string[],
 		primaryKeyField: string,
-		updateField: string | null,
+		updateField: { title: string; type: "unix_timestamp" | "timestamp"; } | null,
 	) {
 		let idx = 1;
 		let updateFields = fields.map((e: string) => `${e} = $${idx++}`).join(",");
 
-		if (updateField) updateFields += `, ${updateField} = NOW()`;
+		if (updateField) {
+			switch (updateField.type) {
+				case "timestamp":
+					updateFields += `, ${updateField.title} = NOW()`;
+					break;
+				case "unix_timestamp":
+					updateFields += `, ${updateField.title} = (EXTRACT(EPOCH FROM NOW()) * (1000)::NUMERIC)`;
+					break;
+
+				default:
+					throw new Error("Invalid type: " + updateField.type);
+			}
+		}
 
 		return `
 			UPDATE ${tableName}

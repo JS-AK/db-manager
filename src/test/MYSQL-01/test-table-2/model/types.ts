@@ -1,5 +1,19 @@
 export type CreateFields = Pick<TableFields,
 	| "title"
+> & Partial<Pick<TableFields,
+	| "description"
+>>;
+
+export type EntityFull = Pick<TableFields,
+	| "created_at"
+	| "id"
+	| "title"
+	| "updated_at"
+>;
+
+export type EntityListed = Pick<TableFields,
+	| "id"
+	| "title"
 >;
 
 export type SearchFields = Partial<Omit<TableFields,
@@ -12,13 +26,15 @@ export type SearchFields = Partial<Omit<TableFields,
 
 export type TableFields = {
 	created_at: string;
+	description: string | null;
 	id: string;
 	title: string;
-	updated_at: string | null;
+	updated_at: string;
 };
 
 export type TableKeys = keyof TableFields;
 
 export type UpdateFields = Partial<Pick<TableFields,
+	| "description"
 	| "title"
 >>;

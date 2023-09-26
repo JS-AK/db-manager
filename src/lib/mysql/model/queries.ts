@@ -87,7 +87,11 @@ export default {
 		`;
 	},
 
-	save(tableName: string, fields: string[], createField?: string) {
+	save(
+		tableName: string,
+		fields: string[],
+		createField: { title: string; type: "unix_timestamp" | "timestamp"; } | null,
+	) {
 		const intoFields = [];
 		const valuesFields = [];
 
@@ -95,9 +99,21 @@ export default {
 			intoFields.push(field);
 			valuesFields.push("?");
 		}
+
 		if (createField) {
-			intoFields.push(createField);
-			valuesFields.push("NOW()");
+			intoFields.push(createField.title);
+
+			switch (createField.type) {
+				case "timestamp":
+					valuesFields.push("UTC_TIMESTAMP()");
+					break;
+				case "unix_timestamp":
+					valuesFields.push("ROUND(UNIX_TIMESTAMP(CURTIME(4)) * 1000)");
+					break;
+
+				default:
+					throw new Error("Invalid type: " + createField.type);
+			}
 		}
 
 		return `
@@ -110,11 +126,23 @@ export default {
 		tableName: string,
 		fields: string[],
 		primaryKeyField: SharedTypes.TPrimaryKeyField,
-		updateField?: string,
+		updateField: { title: string; type: "unix_timestamp" | "timestamp"; } | null,
 	) {
 		let updateFields = fields.map((e: string) => `${e} = ?`).join(",");
 
-		if (updateField) updateFields += `, ${updateField} = NOW()`;
+		if (updateField) {
+			switch (updateField.type) {
+				case "timestamp":
+					updateFields += `, ${updateField.title} = UTC_TIMESTAMP()`;
+					break;
+				case "unix_timestamp":
+					updateFields += `, ${updateField.title} = ROUND(UNIX_TIMESTAMP(CURTIME(4)) * 1000)`;
+					break;
+
+				default:
+					throw new Error("Invalid type: " + updateField.type);
+			}
+		}
 
 		if (Array.isArray(primaryKeyField)) {
 			const query = primaryKeyField.map((e) => `${e} = ?`);

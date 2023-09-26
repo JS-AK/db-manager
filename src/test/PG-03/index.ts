@@ -43,8 +43,8 @@ export default async () => {
 					    is_deleted                      BOOLEAN NOT NULL DEFAULT FALSE,
 					    first_name                      TEXT,
 					    last_name                       TEXT,
-					    created_at                      TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-					    updated_at                      TIMESTAMP WITH TIME ZONE,
+					    created_at                      BIGINT DEFAULT (EXTRACT(EPOCH FROM NOW()) * (1000)::NUMERIC),
+					    updated_at                      BIGINT,
 
 					    CONSTRAINT users_user_roles_id_user_role_fk
 					        FOREIGN KEY(id_user_role)

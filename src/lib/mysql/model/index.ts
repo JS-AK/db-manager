@@ -246,7 +246,7 @@ export class BaseModel {
 		params: P;
 		primaryKey: { field: F; value: string | number; };
 		tableName: string;
-		updateField?: F;
+		updateField?: { title: F; type: "unix_timestamp" | "timestamp"; } | null;
 	}) {
 		const {
 			params: paramsRaw,
@@ -261,7 +261,19 @@ export class BaseModel {
 
 		let updateFields = k.map((e: string) => `${e} = ?`).join(",");
 
-		if (updateField) updateFields += `, ${updateField} = NOW()`;
+		if (updateField) {
+			switch (updateField.type) {
+				case "timestamp":
+					updateFields += `, ${updateField.title} = UTC_TIMESTAMP()`;
+					break;
+				case "unix_timestamp":
+					updateFields += `, ${updateField.title} = ROUND(UNIX_TIMESTAMP(CURTIME(4)) * 1000)`;
+					break;
+
+				default:
+					throw new Error("Invalid type: " + updateField.type);
+			}
+		}
 
 		const query = `
 		UPDATE ${tableName}

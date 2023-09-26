@@ -35,7 +35,7 @@ export class BaseDomain<TC extends {
 	}
 
 	get createField() {
-		return this.#createField;
+		return this.#createField as { title: keyof TC["TableFields"]; type: "unix_timestamp" | "timestamp"; } | null;
 	}
 
 	get primaryKey() {
@@ -51,7 +51,7 @@ export class BaseDomain<TC extends {
 	}
 
 	get updateField() {
-		return this.#updateField as keyof TC["TableFields"];
+		return this.#updateField as { title: keyof TC["TableFields"]; type: "unix_timestamp" | "timestamp"; } | null;
 	}
 
 	async createOne(createFields: TC["CreateFields"]): Promise<TC["TableFields"]> {
