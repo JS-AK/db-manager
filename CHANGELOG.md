@@ -1,3 +1,10 @@
+# [3.1.0](https://github.com/JS-AK/db-manager/compare/v3.0.0...v3.1.0) (2023-09-26)
+
+
+### Features
+
+* updated mysql and pg core ([e98a8d7](https://github.com/JS-AK/db-manager/commit/e98a8d79766cf8992eaa4747cc0ee241bb5ffe95))
+
 # [3.0.0](https://github.com/JS-AK/db-manager/compare/v2.1.3...v3.0.0) (2023-09-25)
 
 
