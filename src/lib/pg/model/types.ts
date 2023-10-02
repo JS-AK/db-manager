@@ -15,7 +15,7 @@ export type TField = {
 	sign?: string;
 	operator: TOperator;
 };
-export type TOperator = "=" | "<>" | ">" | ">=" | "<" | "<=" | "$custom" | "$between" | "$in" | "$like" | "$nbetween" | "$nlike" | "$nin";
+export type TOperator = "=" | "<>" | ">" | ">=" | "<" | "<=" | "$custom" | "$between" | "$in" | "$like" | "$ilike" | "$nbetween" | "$nlike" | "$nilike" | "$nin";
 export type TSearchParams = {
 	[key: string]:
 	| TSearchParamsWithOperator
@@ -34,12 +34,14 @@ export type TSearchParamsWithOperator = {
 	$json?: object;
 	$jsonb?: object;
 	$like?: string;
+	$ilike?: string;
 	$lt?: number | string | boolean;
 	$lte?: number | string | boolean;
 	$nbetween?: [number | string, number | string];
 	$ne?: number | string | boolean | null;
 	$nin?: string[] | number[] | boolean[];
 	$nlike?: string;
+	$nilike?: string;
 };
 export type TTable = {
 	createField: { title: string; type: "unix_timestamp" | "timestamp"; } | null;

@@ -18,7 +18,9 @@ export type TSearchParams<T> = {
 				| { $lt: NonNullable<T[key]>; }
 				| { $lte: NonNullable<T[key]>; }
 				| { $like: string; }
+				| { $ilike: string; }
 				| { $nlike: string; }
+				| { $nilike: string; }
 				| { $in: NonNullable<T[key]>[]; }
 				| { $nin: NonNullable<T[key]>[]; }
 				| { $custom: { sign: string; value: string | number; }; }
@@ -38,7 +40,9 @@ export type TSearchParams<T> = {
 				| { $lt: NonNullable<T[key]>; }
 				| { $lte: NonNullable<T[key]>; }
 				| { $like: string; }
+				| { $ilike: string; }
 				| { $nlike: string; }
+				| { $nilike: string; }
 				| { $in: NonNullable<T[key]>[]; }
 				| { $nin: NonNullable<T[key]>[]; }
 				| { $custom: { sign: string; value: string | number; }; }

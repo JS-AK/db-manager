@@ -67,6 +67,15 @@ const processMappings = new Map<keyof Types.TSearchParams, (key: string, value: 
 			},
 		],
 		[
+			"$ilike",
+			(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], fields: Types.TField[], nullFields: string[], values: unknown[]) => {
+				const v = value as { $ilike: string; };
+
+				fields.push({ key, operator: "$ilike" });
+				values.push(v.$ilike);
+			},
+		],
+		[
 			"$lt",
 			(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], fields: Types.TField[], nullFields: string[], values: unknown[]) => {
 				const v = value as { $lt: number | string | boolean; };
@@ -134,6 +143,14 @@ const processMappings = new Map<keyof Types.TSearchParams, (key: string, value: 
 				fields.push({ key, operator: "$nlike" });
 				values.push(v.$nlike);
 			}],
+		[
+			"$nilike",
+			(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], fields: Types.TField[], nullFields: string[], values: unknown[]) => {
+				const v = value as { $nilike: string; };
+
+				fields.push({ key, operator: "$nilike" });
+				values.push(v.$nilike);
+			}],
 	]);
 
 const operatorMappings: Map<
@@ -157,6 +174,10 @@ const operatorMappings: Map<
 		(el: Types.TField, orderNumber: number) => [`${el.key} LIKE $${orderNumber + 1}`, orderNumber + 1],
 	],
 	[
+		"$ilike",
+		(el: Types.TField, orderNumber: number) => [`${el.key} ILIKE $${orderNumber + 1}`, orderNumber + 1],
+	],
+	[
 		"$nin",
 		(el: Types.TField, orderNumber: number) => [`NOT (${el.key} = ANY ($${orderNumber + 1}))`, orderNumber + 1],
 	],
@@ -167,6 +188,10 @@ const operatorMappings: Map<
 	[
 		"$nlike",
 		(el: Types.TField, orderNumber: number) => [`${el.key} NOT LIKE $${orderNumber + 1}`, orderNumber + 1],
+	],
+	[
+		"$nilike",
+		(el: Types.TField, orderNumber: number) => [`${el.key} NOT ILIKE $${orderNumber + 1}`, orderNumber + 1],
 	],
 ]);
 

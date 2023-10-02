@@ -402,6 +402,21 @@ export default async () => {
 
 				{
 					const params = {
+						params: { description: { $ilike: "%DESCRIPTION%" } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const res = await testTable.getArrByParams(params);
+
+							assert.equal(res.length, 5);
+						},
+					);
+				}
+
+				{
+					const params = {
 						params: { number_key: { $lt: 5 } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
 					};
 
@@ -493,6 +508,21 @@ export default async () => {
 				{
 					const params = {
 						params: { description: { $nlike: "%description%" } },
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const res = await testTable.getArrByParams(params);
+
+							assert.equal(res.length, 0);
+						},
+					);
+				}
+
+				{
+					const params = {
+						params: { description: { $nilike: "%DESCRIPTION%" } },
 					};
 
 					await testContext.test(
