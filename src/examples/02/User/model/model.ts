@@ -3,7 +3,7 @@ import { MYSQL } from "../../../../index.js";
 
 import { TableKeys } from "./types.js";
 
-// ----- Сам класс ------------------------------
+// ----- Class ------------------------------
 export class Model extends MYSQL.BaseModel {
 	constructor(creds: MYSQL.ModelTypes.TDBCreds) {
 		super(

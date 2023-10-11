@@ -3,7 +3,7 @@ import { PG } from "../../../../index.js";
 
 import { TableKeys } from "./types.js";
 
-// ----- Сам класс ------------------------------
+// ----- Class ------------------------------
 export class Model extends PG.BaseModel {
 	constructor(creds: PG.ModelTypes.TDBCreds) {
 		super(
