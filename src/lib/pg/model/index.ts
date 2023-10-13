@@ -377,6 +377,8 @@ export class BaseModel {
 		const k = Object.keys(params);
 		const v = Object.values(params);
 
+		if (!k.length) throw new Error(`Invalid params, all fields are undefined - ${Object.keys(paramsRaw).join(", ")}`);
+
 		const returningSQL = returning?.length
 			? `RETURNING ${returning.join(",")}`
 			: "";
@@ -413,6 +415,8 @@ export class BaseModel {
 		const params = SharedHelpers.clearUndefinedFields(paramsRaw);
 		const k = Object.keys(params);
 		const v = Object.values(params);
+
+		if (!k.length) throw new Error(`Invalid params, all fields are undefined - ${Object.keys(paramsRaw).join(", ")}`);
 
 		let updateFields = k.map((e: string, idx: number) => `${e} = $${idx + 2}`).join(",");
 

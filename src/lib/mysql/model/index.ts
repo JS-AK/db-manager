@@ -229,6 +229,8 @@ export class BaseModel {
 		const k = Object.keys(params);
 		const v = Object.values(params);
 
+		if (!k.length) throw new Error(`Invalid params, all fields are undefined - ${Object.keys(paramsRaw).join(", ")}`);
+
 		const query = `
 		INSERT INTO ${tableName}(
 			${k.join(",")}
@@ -258,6 +260,8 @@ export class BaseModel {
 		const params = SharedHelpers.clearUndefinedFields(paramsRaw);
 		const k = Object.keys(params);
 		const v = Object.values(params);
+
+		if (!k.length) throw new Error(`Invalid params, all fields are undefined - ${Object.keys(paramsRaw).join(", ")}`);
 
 		let updateFields = k.map((e: string) => `${e} = ?`).join(",");
 
