@@ -422,7 +422,7 @@ export class BaseModel {
 					updateFields += `, ${updateField.title} = NOW()`;
 					break;
 				case "unix_timestamp":
-					updateFields += `, ${updateField.title} = (EXTRACT(EPOCH FROM NOW()) * (1000)::NUMERIC)`;
+					updateFields += `, ${updateField.title} = ROUND((EXTRACT(EPOCH FROM NOW()) * (1000)::NUMERIC))`;
 					break;
 
 				default:

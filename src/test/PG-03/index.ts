@@ -43,7 +43,7 @@ export default async () => {
 					    is_deleted                      BOOLEAN NOT NULL DEFAULT FALSE,
 					    first_name                      TEXT,
 					    last_name                       TEXT,
-					    created_at                      BIGINT DEFAULT (EXTRACT(EPOCH FROM NOW()) * (1000)::NUMERIC),
+					    created_at                      BIGINT DEFAULT ROUND((EXTRACT(EPOCH FROM NOW()) * (1000)::NUMERIC)),
 					    updated_at                      BIGINT,
 
 					    CONSTRAINT users_user_roles_id_user_role_fk
@@ -198,6 +198,30 @@ export default async () => {
 								assert.equal(userUpdated?.id, userInitial.id);
 								assert.equal(userUpdated?.first_name, userInitial.first_name);
 								assert.equal(userUpdated?.last_name, "Brown");
+							},
+						);
+					}
+
+					{
+						await testContext.test(
+							"queryBuilder",
+							async () => {
+								await User
+									.queryBuilder()
+									.select([
+										"users.id AS id",
+										"user_roles.title AS ur_title",
+									])
+									.rightJoin({
+										initialField: "id_user_role",
+										targetField: "id",
+										targetTableName: "user_roles",
+									})
+									.where([{ key: "user_roles.title", operator: "$in" }], [["head"]])
+									.orderBy([{ column: "user_roles.title", sorting: "ASC" }])
+									.groupBy(["users.id ", "user_roles.title"])
+									.having([{ key: "user_roles.title", operator: "=" }], ["head"])
+									.execute();
 							},
 						);
 					}

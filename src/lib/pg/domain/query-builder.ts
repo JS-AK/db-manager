@@ -1,6 +1,7 @@
 import pg from "pg";
 
 import * as SharedTypes from "../../../shared-types/index.js";
+import * as Types from "./types.js";
 
 type Operator = "=" | "<>" | ">" | ">=" | "<" | "<=" | "$between" | "$in" | "$like" | "$ilike" | "$nbetween" | "$nlike" | "$nilike" | "$nin" | "$isNull" | "$isNotNull";
 
@@ -68,6 +69,21 @@ export class QueryBuilder {
 		this.#valuesOrder = 0;
 
 		this.#pool = pool;
+	}
+
+	#compareSql() {
+		if (this.#mainWhere) this.#mainWhere += "\r\n";
+		if (this.#mainHaving) this.#mainHaving += "\r\n";
+
+		const join = this.#join.length
+			? this.#join.join("\r\n") + "\r\n"
+			: "";
+
+		return `${this.#mainSelect}${this.#mainFrom}${join}${this.#mainWhere}${this.#groupBy}${this.#mainHaving}${this.#orderBy}${this.#pagination}`;
+	}
+
+	getSql() {
+		return this.#compareSql();
 	}
 
 	select(arr: string[]) {
@@ -151,7 +167,7 @@ export class QueryBuilder {
 		return this;
 	}
 
-	whereOr(arrWithOr: { key: string; operator: Operator; }[][], values: unknown[]) {
+	whereOr(arrWithOr: Types.TArray2OrMore<{ key: string; operator: Operator; }[]>, values: unknown[]) {
 		if (!this.#mainWhere) this.#mainWhere += "WHERE ";
 		else this.#mainWhere += " AND (";
 
@@ -201,8 +217,8 @@ export class QueryBuilder {
 		return this;
 	}
 
-	orderBy(data: { orderBy: string; ordering: SharedTypes.TOrdering; }[]) {
-		this.#orderBy += `ORDER BY ${data.map((o) => `${o.orderBy} ${o.ordering}`).join(", ")}\r\n`;
+	orderBy(data: { column: string; sorting: SharedTypes.TOrdering; }[]) {
+		this.#orderBy += `ORDER BY ${data.map((o) => `${o.column} ${o.sorting}`).join(", ")}\r\n`;
 
 		return this;
 	}
@@ -244,7 +260,7 @@ export class QueryBuilder {
 		return this;
 	}
 
-	havingOr(arrWithOr: { key: string; operator: Operator; }[][], values: unknown[]) {
+	havingOr(arrWithOr: Types.TArray2OrMore<{ key: string; operator: Operator; }[]>, values: unknown[]) {
 		if (!this.#mainHaving) this.#mainHaving += "HAVING ";
 		else this.#mainHaving += " AND (";
 
@@ -288,24 +304,9 @@ export class QueryBuilder {
 		return this;
 	}
 
-	#compareSql() {
-		if (this.#mainWhere) this.#mainWhere += "\r\n";
-		if (this.#mainHaving) this.#mainHaving += "\r\n";
-
-		const join = this.#join.length
-			? this.#join.join("\r\n") + "\r\n"
-			: "";
-
-		return `${this.#mainSelect}${this.#mainFrom}${join}${this.#mainWhere}${this.#groupBy}${this.#mainHaving}${this.#orderBy}${this.#pagination}`;
-	}
-
 	async execute<T extends pg.QueryResultRow>() {
 		const sql = this.#compareSql();
 
 		return (await this.#pool.query<T>(sql, this.#values)).rows;
-	}
-
-	getSql() {
-		return this.#compareSql();
 	}
 }
