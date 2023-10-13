@@ -1,3 +1,10 @@
+## [3.3.2](https://github.com/JS-AK/db-manager/compare/v3.3.1...v3.3.2) (2023-10-13)
+
+
+### Bug Fixes
+
+* added errors in getInsertFields getUpdateFields ([5bdccca](https://github.com/JS-AK/db-manager/commit/5bdcccaa50540d0e0ab7c6ea2af09e05b3ca6f4c))
+
 ## [3.3.1](https://github.com/JS-AK/db-manager/compare/v3.3.0...v3.3.1) (2023-10-13)
 
 
