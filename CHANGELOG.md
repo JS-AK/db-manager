@@ -1,3 +1,10 @@
+## [3.3.3](https://github.com/JS-AK/db-manager/compare/v3.3.2...v3.3.3) (2023-10-14)
+
+
+### Bug Fixes
+
+* updated query-builder for pg (as experimental) ([8880d24](https://github.com/JS-AK/db-manager/commit/8880d241411f99ec446b7c843512cd45f854a3e6))
+
 ## [3.3.2](https://github.com/JS-AK/db-manager/compare/v3.3.1...v3.3.2) (2023-10-13)
 
 
