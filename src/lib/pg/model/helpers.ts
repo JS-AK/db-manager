@@ -301,8 +301,7 @@ export const getFieldsToSearch = (
 	}
 
 	if (nullFields.length) {
-		if (searchFields) searchFields += ` AND ${nullFields.join(" AND ")}`;
-		else searchFields = nullFields.join(",");
+		searchFields += ` AND ${nullFields.join(" AND ")}`;
 	}
 
 	res.searchFields += searchFields;
@@ -332,7 +331,7 @@ export const getFieldsToSearch = (
 
 			if (nullFields.length) {
 				if (comparedFields) comparedFields += ` AND ${nullFields.join(" AND ")}`;
-				else comparedFields = nullFields.join(",");
+				else comparedFields = nullFields.join(" AND ");
 			}
 
 			comparedFieldsOr.push(`(${comparedFields})`);

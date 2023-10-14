@@ -1,50 +1,49 @@
 import pg from "pg";
 
+import * as Helpers from "../model/helpers.js";
+import * as ModelTypes from "../model/types.js";
 import * as SharedTypes from "../../../shared-types/index.js";
 import * as Types from "./types.js";
 
-type Operator = "=" | "<>" | ">" | ">=" | "<" | "<=" | "$between" | "$in" | "$like" | "$ilike" | "$nbetween" | "$nlike" | "$nilike" | "$nin" | "$isNull" | "$isNotNull";
-
-const operatorMappings: Map<Operator, (el: string, orderNumber: number) => [string, number]> = new Map([
+const operatorMappings: Map<
+	string,
+	(el: ModelTypes.TField, orderNumber: number) => [string, number]
+> = new Map([
+	[
+		"$custom",
+		(el: ModelTypes.TField, orderNumber: number) => [`${el.key} ${el.sign} $${orderNumber + 1}`, orderNumber + 1],
+	],
 	[
 		"$between",
-		(el: string, orderNumber: number) => [`(${el} BETWEEN $${orderNumber + 1} AND $${orderNumber + 2})`, orderNumber + 2],
+		(el: ModelTypes.TField, orderNumber: number) => [`${el.key} BETWEEN $${orderNumber + 1} AND $${orderNumber + 2}`, orderNumber + 2],
 	],
 	[
 		"$in",
-		(el: string, orderNumber: number) => [`(${el} = ANY ($${orderNumber + 1}))`, orderNumber + 1],
+		(el: ModelTypes.TField, orderNumber: number) => [`${el.key} = ANY ($${orderNumber + 1})`, orderNumber + 1],
 	],
 	[
 		"$like",
-		(el: string, orderNumber: number) => [`(${el} LIKE $${orderNumber + 1})`, orderNumber + 1],
+		(el: ModelTypes.TField, orderNumber: number) => [`${el.key} LIKE $${orderNumber + 1}`, orderNumber + 1],
 	],
 	[
 		"$ilike",
-		(el: string, orderNumber: number) => [`(${el} ILIKE $${orderNumber + 1})`, orderNumber + 1],
+		(el: ModelTypes.TField, orderNumber: number) => [`${el.key} ILIKE $${orderNumber + 1}`, orderNumber + 1],
 	],
 	[
 		"$nin",
-		(el: string, orderNumber: number) => [`(NOT (${el} = ANY ($${orderNumber + 1})))`, orderNumber + 1],
+		(el: ModelTypes.TField, orderNumber: number) => [`NOT (${el.key} = ANY ($${orderNumber + 1}))`, orderNumber + 1],
 	],
 	[
 		"$nbetween",
-		(el: string, orderNumber: number) => [`(${el} NOT BETWEEN $${orderNumber + 1} AND $${orderNumber + 2})`, orderNumber + 2],
+		(el: ModelTypes.TField, orderNumber: number) => [`${el.key} NOT BETWEEN $${orderNumber + 1} AND $${orderNumber + 2}`, orderNumber + 2],
 	],
 	[
 		"$nlike",
-		(el: string, orderNumber: number) => [`(${el} NOT LIKE $${orderNumber + 1})`, orderNumber + 1],
+		(el: ModelTypes.TField, orderNumber: number) => [`${el.key} NOT LIKE $${orderNumber + 1}`, orderNumber + 1],
 	],
 	[
 		"$nilike",
-		(el: string, orderNumber: number) => [`(${el} NOT ILIKE $${orderNumber + 1})`, orderNumber + 1],
-	],
-	[
-		"$isNull",
-		(el: string, orderNumber: number) => [`(${el} IS NULL)`, orderNumber],
-	],
-	[
-		"$isNotNull",
-		(el: string, orderNumber: number) => [`(${el} IS NOT NULL)`, orderNumber],
+		(el: ModelTypes.TField, orderNumber: number) => [`${el.key} NOT ILIKE $${orderNumber + 1}`, orderNumber + 1],
 	],
 ]);
 
@@ -64,7 +63,7 @@ export class QueryBuilder {
 	#pool;
 
 	constructor(tableName: string, pool: pg.Pool) {
-		this.#mainFrom = `FROM ${tableName}\r\n`;
+		this.#mainFrom = `FROM ${tableName}`;
 		this.#tableName = tableName;
 		this.#valuesOrder = 0;
 
@@ -72,14 +71,16 @@ export class QueryBuilder {
 	}
 
 	#compareSql() {
-		if (this.#mainWhere) this.#mainWhere += "\r\n";
-		if (this.#mainHaving) this.#mainHaving += "\r\n";
+		let sql = this.#mainSelect + this.#mainFrom;
 
-		const join = this.#join.length
-			? this.#join.join("\r\n") + "\r\n"
-			: "";
+		if (this.#join.length) sql += "\r\n" + this.#join.join("\r\n");
+		if (this.#mainWhere) sql += "\r\n" + this.#mainWhere;
+		if (this.#groupBy) sql += "\r\n" + this.#groupBy;
+		if (this.#mainHaving) sql += "\r\n" + this.#mainHaving;
+		if (this.#orderBy) sql += "\r\n" + this.#orderBy;
+		if (this.#pagination) sql += "\r\n" + this.#pagination;
 
-		return `${this.#mainSelect}${this.#mainFrom}${join}${this.#mainWhere}${this.#groupBy}${this.#mainHaving}${this.#orderBy}${this.#pagination}`;
+		return sql + ";";
 	}
 
 	getSql() {
@@ -136,75 +137,84 @@ export class QueryBuilder {
 		return this;
 	}
 
-	where(arr: { key: string; operator: Operator; }[], values: unknown[]) {
-		if (!this.#mainWhere) this.#mainWhere += "WHERE ";
-		else this.#mainWhere += " AND ";
+	where(data: {
+		params?: ModelTypes.TSearchParams;
+		paramsOr?: Types.TArray2OrMore<ModelTypes.TSearchParams>;
+	}) {
+		const {
+			fields,
+			fieldsOr,
+			nullFields,
+			values,
+		} = Helpers.compareFields(data.params, data.paramsOr);
 
-		let end = 0;
-
-		for (const e of arr) {
-			const operatorFunction = operatorMappings.get(e.operator);
-
-			if (operatorFunction) {
-				const [text, orderNumber] = operatorFunction(e.key, this.#valuesOrder);
-
-				this.#valuesOrder = orderNumber;
-				this.#mainWhere += text;
-			} else {
-				this.#valuesOrder += 1;
-				this.#mainWhere += `${e.key} ${e.operator} $${this.#valuesOrder}`;
-			}
-
-			end += 1;
-
-			if (end !== arr.length) {
-				this.#mainWhere += " AND ";
-			}
-		}
-
-		this.#values.push(...values);
-
-		return this;
-	}
-
-	whereOr(arrWithOr: Types.TArray2OrMore<{ key: string; operator: Operator; }[]>, values: unknown[]) {
-		if (!this.#mainWhere) this.#mainWhere += "WHERE ";
-		else this.#mainWhere += " AND (";
-
-		let endWithOr = 0;
-
-		for (const arr of arrWithOr) {
-			let end = 0;
-
-			this.#mainWhere += "(";
-
-			for (const el of arr) {
-				const operatorFunction = operatorMappings.get(el.operator);
+		if (fields.length) {
+			this.#mainWhere += "WHERE ";
+			this.#mainWhere += fields.map((e: ModelTypes.TField) => {
+				const operatorFunction = operatorMappings.get(e.operator);
 
 				if (operatorFunction) {
-					const [text, orderNumber] = operatorFunction(el.key, this.#valuesOrder);
+					const [text, orderNumber] = operatorFunction(e, this.#valuesOrder);
 
 					this.#valuesOrder = orderNumber;
-					this.#mainWhere += text;
+
+					return text;
 				} else {
 					this.#valuesOrder += 1;
-					this.#mainWhere += `${el.key} ${el.operator} $${this.#valuesOrder}`;
-				}
 
-				end += 1;
-				if (end !== arr.length) {
-					this.#mainWhere += " AND ";
-				}
-			}
+					const text = `${e.key} ${e.operator} $${this.#valuesOrder}`;
 
-			endWithOr += 1;
-			if (endWithOr !== arrWithOr.length) {
-				this.#mainWhere += ") OR ";
+					return text;
+				}
+			}).join(" AND ");
+		}
+
+		if (nullFields.length) {
+			if (this.#mainWhere) {
+				this.#mainWhere += ` AND ${nullFields.join(" AND ")}`;
 			} else {
-				this.#mainWhere += ")";
+				this.#mainWhere += "WHERE ";
+				this.#mainWhere += nullFields.join(" AND ");
 			}
 		}
-		this.#mainWhere += ")";
+
+		if (fieldsOr?.length) {
+			const comparedFieldsOr = [];
+
+			for (const row of fieldsOr) {
+				const { fields, nullFields } = row;
+				let comparedFields = fields.map((e: ModelTypes.TField) => {
+					const operatorFunction = operatorMappings.get(e.operator);
+
+					if (operatorFunction) {
+						const [text, orderNumber] = operatorFunction(e, this.#valuesOrder);
+
+						this.#valuesOrder = orderNumber;
+
+						return text;
+					} else {
+						this.#valuesOrder += 1;
+
+						const text = `${e.key} ${e.operator} $${this.#valuesOrder}`;
+
+						return text;
+					}
+				}).join(" AND ");
+
+				if (nullFields.length) {
+					if (comparedFields) comparedFields += ` AND ${nullFields.join(" AND ")}`;
+					else comparedFields = nullFields.join(" AND ");
+				}
+
+				comparedFieldsOr.push(`(${comparedFields})`);
+			}
+
+			if (!this.#mainWhere) {
+				this.#mainWhere += `WHERE (${comparedFieldsOr.join(" OR ")})`;
+			} else {
+				this.#mainWhere += ` AND (${comparedFieldsOr.join(" OR ")})`;
+			}
+		}
 
 		this.#values.push(...values);
 
@@ -212,92 +222,105 @@ export class QueryBuilder {
 	}
 
 	pagination(data: { limit: number; offset: number; }) {
+		if (typeof data.limit !== "number" || typeof data.offset !== "number") {
+			throw new Error("Invalid pagination");
+		}
+
 		this.#pagination += `LIMIT ${data.limit} OFFSET ${data.offset}`;
 
 		return this;
 	}
 
 	orderBy(data: { column: string; sorting: SharedTypes.TOrdering; }[]) {
-		this.#orderBy += `ORDER BY ${data.map((o) => `${o.column} ${o.sorting}`).join(", ")}\r\n`;
+		this.#orderBy += `ORDER BY ${data.map((o) => `${o.column} ${o.sorting}`).join(", ")}`;
 
 		return this;
 	}
 
 	groupBy(data: string[]) {
-		this.#groupBy += `GROUP BY ${data.join(", ")}\r\n`;
+		this.#groupBy += `GROUP BY ${data.join(", ")}`;
 
 		return this;
 	}
 
-	having(arr: { key: string; operator: Operator; }[], values: unknown[]) {
-		if (!this.#mainHaving) this.#mainHaving += "HAVING ";
-		else this.#mainHaving += " AND ";
+	having(data: {
+		params?: ModelTypes.TSearchParams;
+		paramsOr?: Types.TArray2OrMore<ModelTypes.TSearchParams>;
+	}) {
+		const {
+			fields,
+			fieldsOr,
+			nullFields,
+			values,
+		} = Helpers.compareFields(data.params, data.paramsOr);
 
-		let end = 0;
-
-		for (const e of arr) {
-			const operatorFunction = operatorMappings.get(e.operator);
-
-			if (operatorFunction) {
-				const [text, orderNumber] = operatorFunction(e.key, this.#valuesOrder);
-
-				this.#valuesOrder = orderNumber;
-				this.#mainHaving += text;
-			} else {
-				this.#valuesOrder += 1;
-				this.#mainHaving += `${e.key} ${e.operator} $${this.#valuesOrder}`;
-			}
-
-			end += 1;
-
-			if (end !== arr.length) {
-				this.#mainHaving += " AND ";
-			}
-		}
-
-		this.#values.push(...values);
-
-		return this;
-	}
-
-	havingOr(arrWithOr: Types.TArray2OrMore<{ key: string; operator: Operator; }[]>, values: unknown[]) {
-		if (!this.#mainHaving) this.#mainHaving += "HAVING ";
-		else this.#mainHaving += " AND (";
-
-		let endWithOr = 0;
-
-		for (const arr of arrWithOr) {
-			let end = 0;
-
-			this.#mainHaving += "(";
-
-			for (const el of arr) {
-				const operatorFunction = operatorMappings.get(el.operator);
+		if (fields.length) {
+			this.#mainHaving += "HAVING ";
+			this.#mainHaving += fields.map((e: ModelTypes.TField) => {
+				const operatorFunction = operatorMappings.get(e.operator);
 
 				if (operatorFunction) {
-					const [text, orderNumber] = operatorFunction(el.key, this.#valuesOrder);
+					const [text, orderNumber] = operatorFunction(e, this.#valuesOrder);
 
 					this.#valuesOrder = orderNumber;
-					this.#mainHaving += text;
+
+					return text;
 				} else {
 					this.#valuesOrder += 1;
-					this.#mainHaving += `${el.key} ${el.operator} $${this.#valuesOrder}`;
-				}
 
-				end += 1;
-				if (end !== arr.length) {
-					this.#mainHaving += " AND ";
-				}
-			}
+					const text = `${e.key} ${e.operator} $${this.#valuesOrder}`;
 
-			endWithOr += 1;
-			if (endWithOr !== arrWithOr.length) {
-				this.#mainHaving += ") OR ";
+					return text;
+				}
+			}).join(" AND ");
+		}
+
+		if (nullFields.length) {
+			if (this.#mainHaving) {
+				this.#mainHaving += ` AND ${nullFields.join(" AND ")}`;
 			} else {
-				this.#mainHaving += ")";
+				this.#mainHaving += "HAVING ";
+				this.#mainHaving += nullFields.join(" AND ");
 			}
 		}
-		this.#mainHaving += ")";
+
+		if (fieldsOr?.length) {
+			const comparedFieldsOr = [];
+
+			for (const row of fieldsOr) {
+				const { fields, nullFields } = row;
+				let comparedFields = fields.map((e: ModelTypes.TField) => {
+					const operatorFunction = operatorMappings.get(e.operator);
+
+					if (operatorFunction) {
+						const [text, orderNumber] = operatorFunction(e, this.#valuesOrder);
+
+						this.#valuesOrder = orderNumber;
+
+						return text;
+					} else {
+						this.#valuesOrder += 1;
+
+						const text = `${e.key} ${e.operator} $${this.#valuesOrder}`;
+
+						return text;
+					}
+				}).join(" AND ");
+
+				if (nullFields.length) {
+					if (comparedFields) comparedFields += ` AND ${nullFields.join(" AND ")}`;
+					else comparedFields = nullFields.join(" AND ");
+				}
+
+				comparedFieldsOr.push(`(${comparedFields})`);
+			}
+
+			if (!this.#mainHaving) {
+				this.#mainHaving += `HAVING (${comparedFieldsOr.join(" OR ")})`;
+			} else {
+				this.#mainHaving += ` AND (${comparedFieldsOr.join(" OR ")})`;
+			}
+		}
 
 		this.#values.push(...values);
 

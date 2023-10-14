@@ -54,12 +54,10 @@ export class BaseModel {
 		return res?.[this.primaryKey] || null;
 	}
 
-	async deleteByParams(
-		{ $and = {}, $or }: {
-			$and: Types.TSearchParams;
-			$or?: Types.TSearchParams[];
-		},
-	): Promise<null> {
+	async deleteByParams({ $and = {}, $or }: {
+		$and: Types.TSearchParams;
+		$or?: Types.TSearchParams[];
+	}): Promise<null> {
 		const {
 			fields,
 			fieldsOr,

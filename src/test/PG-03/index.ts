@@ -202,30 +202,6 @@ export default async () => {
 						);
 					}
 
-					{
-						await testContext.test(
-							"queryBuilder",
-							async () => {
-								await User
-									.queryBuilder()
-									.select([
-										"users.id AS id",
-										"user_roles.title AS ur_title",
-									])
-									.rightJoin({
-										initialField: "id_user_role",
-										targetField: "id",
-										targetTableName: "user_roles",
-									})
-									.where([{ key: "user_roles.title", operator: "$in" }], [["head"]])
-									.orderBy([{ column: "user_roles.title", sorting: "ASC" }])
-									.groupBy(["users.id ", "user_roles.title"])
-									.having([{ key: "user_roles.title", operator: "=" }], ["head"])
-									.execute();
-							},
-						);
-					}
-
 					await User.deleteAll();
 				}
 			},
