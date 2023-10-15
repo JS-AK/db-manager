@@ -1,11 +1,7 @@
 import * as SharedTypes from "../../../shared-types/index.js";
 import * as Types from "./types.js";
 import { BaseModel } from "../model/index.js";
-import { QueryBuilder } from "./query-builder.js";
 
-export type DomainOptions = {
-	model: BaseModel;
-};
 export class BaseDomain<TC extends {
 	Model: BaseModel;
 	CreateFields: SharedTypes.TRawParams;
@@ -173,10 +169,4 @@ export class BaseDomain<TC extends {
 		return this.model.updateOneByPk(pk, params);
 	}
 
-	/**
-	 * @experimental
-	 */
-	queryBuilder() {
-		return new QueryBuilder(this.model.tableName, this.model.pool);
-	}
 }

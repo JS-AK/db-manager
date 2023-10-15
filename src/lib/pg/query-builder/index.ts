@@ -1,9 +1,9 @@
 import pg from "pg";
 
+import * as DomainTypes from "../domain/types.js";
 import * as Helpers from "../model/helpers.js";
 import * as ModelTypes from "../model/types.js";
 import * as SharedTypes from "../../../shared-types/index.js";
-import * as Types from "./types.js";
 
 const operatorMappings: Map<
 	string,
@@ -57,7 +57,7 @@ export class QueryBuilder {
 	#valuesOrder: number;
 	#join: string[] = [];
 	#pagination = "";
-	#tableName: string;
+	#tableName;
 	#values: unknown[] = [];
 
 	#pool;
@@ -139,14 +139,14 @@ export class QueryBuilder {
 
 	where(data: {
 		params?: ModelTypes.TSearchParams;
-		paramsOr?: Types.TArray2OrMore<ModelTypes.TSearchParams>;
+		paramsOr?: DomainTypes.TArray2OrMore<ModelTypes.TSearchParams>;
 	}) {
 		const {
 			fields,
 			fieldsOr,
 			nullFields,
 			values,
-		} = Helpers.compareFields(data.params, data.paramsOr);
+		} = Helpers.compareFields(data.params as ModelTypes.TSearchParams, data.paramsOr);
 
 		if (fields.length) {
 			this.#mainWhere += "WHERE ";
@@ -231,7 +231,10 @@ export class QueryBuilder {
 		return this;
 	}
 
-	orderBy(data: { column: string; sorting: SharedTypes.TOrdering; }[]) {
+	orderBy(data: {
+		column: string;
+		sorting: SharedTypes.TOrdering;
+	}[]) {
 		this.#orderBy += `ORDER BY ${data.map((o) => `${o.column} ${o.sorting}`).join(", ")}`;
 
 		return this;
@@ -245,14 +248,14 @@ export class QueryBuilder {
 
 	having(data: {
 		params?: ModelTypes.TSearchParams;
-		paramsOr?: Types.TArray2OrMore<ModelTypes.TSearchParams>;
+		paramsOr?: DomainTypes.TArray2OrMore<ModelTypes.TSearchParams>;
 	}) {
 		const {
 			fields,
 			fieldsOr,
 			nullFields,
 			values,
-		} = Helpers.compareFields(data.params, data.paramsOr);
+		} = Helpers.compareFields(data.params as ModelTypes.TSearchParams, data.paramsOr);
 
 		if (fields.length) {
 			this.#mainHaving += "HAVING ";

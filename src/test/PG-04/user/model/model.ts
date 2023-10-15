@@ -18,43 +18,6 @@ export class Model extends PG.BaseModel {
 			options,
 		);
 	}
-
-	async getList({ order, pagination, params = {} }: {
-		order?: { orderBy: string; ordering: Types.TOrdering; }[];
-		pagination?: { limit: number; offset: number; };
-		params?: PG.ModelTypes.TSearchParams;
-		paramsOr?: PG.ModelTypes.TSearchParams[];
-	}) {
-		const { fields, nullFields, values } = this.compareFields(params);
-		const selected = [
-			"u.first_name AS first_name",
-			"u.last_name  AS last_name",
-			"u.id         AS id",
-			"u.is_deleted AS is_deleted",
-			"ur.id        AS ur_id",
-			"ur.title     AS ur_title",
-		];
-
-		const {
-			orderByFields,
-			paginationFields,
-			searchFields,
-			selectedFields,
-		} = this.getFieldsToSearch(
-			{ fields, nullFields },
-			selected,
-			pagination,
-			order,
-		);
-
-		return (await this.pool.query(queries.getList(
-			orderByFields,
-			paginationFields,
-			searchFields,
-			selectedFields,
-		), values)).rows;
-	}
-
 }
 
 // ----- Table properties ----------------------
@@ -73,20 +36,6 @@ const tableFields: TableKeys[] = [
 ];
 
 // ----- queries -----------------------
-const queries = {
-	getList(
-		orderByFields: string,
-		paginationFields: string,
-		searchFields: string,
-		selectedFields: string,
-	) {
-		return `
-			SELECT ${selectedFields}
-			FROM ${tableName} u
-			JOIN user_roles ur ON ur.id = u.id_user_role
-			${searchFields}
-			${orderByFields}
-			${paginationFields}
-		`;
-	},
-};
+// const queries = {
+
+// };

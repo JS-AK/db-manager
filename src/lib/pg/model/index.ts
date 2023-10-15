@@ -5,6 +5,7 @@ import * as SharedHelpers from "../../../shared-helpers/index.js";
 import * as SharedTypes from "../../../shared-types/index.js";
 import * as Types from "./types.js";
 import * as connection from "../connection.js";
+import { QueryBuilder } from "../query-builder/index.js";
 import queries from "./queries.js";
 
 export class BaseModel {
@@ -338,6 +339,13 @@ export class BaseModel {
 		)).rows;
 
 		return res[0];
+	}
+
+	/**
+	 * @experimental
+	 */
+	queryBuilder() {
+		return new QueryBuilder(this.tableName, this.pool);
 	}
 
 	// STATIC METHODS

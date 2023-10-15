@@ -17,14 +17,101 @@ export class Domain extends DbManager.PG.BaseDomain<{
 		super({ model: new Model(creds) });
 	}
 
-	async getList(
-		data: {
-			order?: { orderBy: "u.first_name"; ordering: DbManager.Types.TOrdering; }[];
-			pagination?: DbManager.Types.TPagination;
-			params: SearchFieldsList;
-			paramsOr?: SearchFieldsListOr;
-		},
-	): Promise<Types.ListedEntity[]> {
-		return this.model.getList(data);
+	async getAll() {
+		return this.model
+			.queryBuilder()
+			.select(["*"])
+			.execute<Types.TableFields>();
+	}
+
+	async getAllNotDeletedWithRole() {
+		return this.model
+			.queryBuilder()
+			.select(["*"])
+			.where({
+				params: {
+					id_user_role: { $ne: null },
+					is_deleted: false,
+				},
+			})
+			.execute<Types.TableFields>();
+	}
+
+	async getAllWithTitleUser() {
+		return this.model
+			.queryBuilder()
+			.select([
+				"users.first_name AS first_name",
+				"users.id AS id",
+				"users.last_name AS last_name",
+				"user_roles.id AS ur_id",
+				"user_roles.title AS ur_title",
+			])
+			.rightJoin({
+				initialField: "id_user_role",
+				targetField: "id",
+				targetTableName: "user_roles",
+			})
+			.where({ params: { "user_roles.title": "user" } })
+			.orderBy([{ column: "users.first_name", sorting: "ASC" }])
+			.execute<Types.ListedEntity>();
+	}
+
+	async getAllWithTitleUserWithPagination() {
+		return this.model
+			.queryBuilder()
+			.select([
+				"users.first_name AS first_name",
+				"users.id AS id",
+				"users.last_name AS last_name",
+				"user_roles.id AS ur_id",
+				"user_roles.title AS ur_title",
+			])
+			.rightJoin({
+				initialField: "id_user_role",
+				targetField: "id",
+				targetTableName: "user_roles",
+			})
+			.where({ params: { "user_roles.title": "user" } })
+			.orderBy([{ column: "users.first_name", sorting: "ASC" }])
+			.pagination({ limit: 3, offset: 1 })
+			.execute<Types.ListedEntity>();
+	}
+
+	async getCountByUserRolesTitle() {
+		return this.model
+			.queryBuilder()
+			.select([
+				"COUNT(users.id) AS users_count",
+				"user_roles.title AS title",
+			])
+			.rightJoin({
+				initialField: "id_user_role",
+				targetField: "id",
+				targetTableName: "user_roles",
+			})
+			.where({ params: { "users.is_deleted": false } })
+			.orderBy([{ column: "user_roles.title", sorting: "ASC" }])
+			.groupBy(["user_roles.title"])
+			.execute<Types.UsersByUserRoleTitle>();
+	}
+
+	async getCountByUserRolesTitleWithCountGte5() {
+		return this.model
+			.queryBuilder()
+			.select([
+				"COUNT(users.id) AS users_count",
+				"user_roles.title AS title",
+			])
+			.rightJoin({
+				initialField: "id_user_role",
+				targetField: "id",
+				targetTableName: "user_roles",
+			})
+			.where({ params: { "users.is_deleted": false } })
+			.orderBy([{ column: "user_roles.title", sorting: "ASC" }])
+			.groupBy(["user_roles.title"])
+			.having({ params: { "COUNT(users.id)": { $gte: 5 } } })
+			.execute<Types.UsersByUserRoleTitle>();
 	}
 }

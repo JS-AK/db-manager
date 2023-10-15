@@ -110,10 +110,7 @@ export default async () => {
 						await testContext.test(
 							"select",
 							async () => {
-								const users = await User
-									.queryBuilder()
-									.select(["*"])
-									.execute<UserTable.Types.TableFields>();
+								const users = await User.getAll();
 								const firstUser = users.at(0);
 
 								assert.equal(users.length, 7);
@@ -132,16 +129,7 @@ export default async () => {
 						await testContext.test(
 							"select + where",
 							async () => {
-								const users = await User
-									.queryBuilder()
-									.select(["*"])
-									.where({
-										params: {
-											id_user_role: { $ne: null },
-											is_deleted: false,
-										},
-									})
-									.execute<UserTable.Types.TableFields>();
+								const users = await User.getAllNotDeletedWithRole();
 								const firstUser = users.at(0);
 
 								assert.equal(users.length, 7);
@@ -160,23 +148,7 @@ export default async () => {
 						await testContext.test(
 							"select + rightJoin + where + orderBy",
 							async () => {
-								const users = await User
-									.queryBuilder()
-									.select([
-										"users.first_name AS first_name",
-										"users.id AS id",
-										"users.last_name AS last_name",
-										"user_roles.id AS ur_id",
-										"user_roles.title AS ur_title",
-									])
-									.rightJoin({
-										initialField: "id_user_role",
-										targetField: "id",
-										targetTableName: "user_roles",
-									})
-									.where({ params: { "user_roles.title": "user" } })
-									.orderBy([{ column: "users.first_name", sorting: "ASC" }])
-									.execute<UserTable.Types.ListedEntity>();
+								const users = await User.getAllWithTitleUser();
 
 								assert.equal(users.length, 5);
 
@@ -197,24 +169,7 @@ export default async () => {
 						await testContext.test(
 							"select + rightJoin + where + orderBy + pagination",
 							async () => {
-								const users = await User
-									.queryBuilder()
-									.select([
-										"users.first_name AS first_name",
-										"users.id AS id",
-										"users.last_name AS last_name",
-										"user_roles.id AS ur_id",
-										"user_roles.title AS ur_title",
-									])
-									.rightJoin({
-										initialField: "id_user_role",
-										targetField: "id",
-										targetTableName: "user_roles",
-									})
-									.where({ params: { "user_roles.title": "user" } })
-									.orderBy([{ column: "users.first_name", sorting: "ASC" }])
-									.pagination({ limit: 3, offset: 1 })
-									.execute<UserTable.Types.ListedEntity>();
+								const users = await User.getAllWithTitleUserWithPagination();
 
 								assert.equal(users.length, 3);
 
@@ -235,21 +190,7 @@ export default async () => {
 						await testContext.test(
 							"select + rightJoin + where + orderBy + groupBy",
 							async () => {
-								const stat = await User
-									.queryBuilder()
-									.select([
-										"COUNT(users.id) AS users_count",
-										"user_roles.title AS title",
-									])
-									.rightJoin({
-										initialField: "id_user_role",
-										targetField: "id",
-										targetTableName: "user_roles",
-									})
-									.where({ params: { "users.is_deleted": false } })
-									.orderBy([{ column: "user_roles.title", sorting: "ASC" }])
-									.groupBy(["user_roles.title"])
-									.execute<UserTable.Types.UsersByUserRoleTitle>();
+								const stat = await User.getCountByUserRolesTitle();
 
 								assert.equal(stat.length, 3);
 
@@ -275,22 +216,7 @@ export default async () => {
 						await testContext.test(
 							"select + rightJoin + where + orderBy + groupBy + having",
 							async () => {
-								const stat = await User
-									.queryBuilder()
-									.select([
-										"COUNT(users.id) AS users_count",
-										"user_roles.title AS title",
-									])
-									.rightJoin({
-										initialField: "id_user_role",
-										targetField: "id",
-										targetTableName: "user_roles",
-									})
-									.where({ params: { "users.is_deleted": false } })
-									.orderBy([{ column: "user_roles.title", sorting: "ASC" }])
-									.groupBy(["user_roles.title"])
-									.having({ params: { "COUNT(users.id)": { $gte: 5 } } })
-									.execute();
+								const stat = await User.getCountByUserRolesTitleWithCountGte5();
 
 								assert.equal(stat.length, 1);
 
