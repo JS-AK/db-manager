@@ -15,10 +15,29 @@ export type TField = {
 	sign?: string;
 	operator: TOperator;
 };
-export type TOperator = "=" | "<>" | ">" | ">=" | "<" | "<=" | "$custom" | "$between" | "$in" | "$like" | "$ilike" | "$nbetween" | "$nlike" | "$nilike" | "$nin";
+export type TOperator =
+	| "="
+	| "<>"
+	| ">"
+	| ">="
+	| "<"
+	| "<="
+	| "@>"
+	| "<@"
+	| "&&"
+	| "$custom"
+	| "$between"
+	| "$in"
+	| "$like"
+	| "$ilike"
+	| "$nbetween"
+	| "$nlike"
+	| "$nilike"
+	| "$nin";
 export type TSearchParams = {
 	[key: string]:
 	| TSearchParamsWithOperator
+	| TSearchParamsWithOperator[]
 	| boolean
 	| null
 	| number
@@ -31,6 +50,9 @@ export type TSearchParamsWithOperator = {
 	$gt?: number | string | boolean;
 	$gte?: number | string | boolean;
 	$in?: string[] | number[] | boolean[];
+	"$@>"?: string[] | number[];
+	"$<@"?: string[] | number[];
+	"$&&"?: string[] | number[];
 	$json?: object;
 	$jsonb?: object;
 	$like?: string;

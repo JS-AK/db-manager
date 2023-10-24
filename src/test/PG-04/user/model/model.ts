@@ -1,5 +1,5 @@
 // ----- Dependencies --------------------------
-import { PG, Types } from "../../../../index.js";
+import { PG } from "../../../../index.js";
 
 import { TableKeys } from "./types.js";
 

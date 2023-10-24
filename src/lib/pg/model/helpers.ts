@@ -40,6 +40,33 @@ const processMappings = new Map<keyof Types.TSearchParams, (key: string, value: 
 			},
 		],
 		[
+			"$@>",
+			(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], fields: Types.TField[], nullFields: string[], values: unknown[]) => {
+				const v = value as { "$@>": object; };
+
+				fields.push({ key, operator: "@>" });
+				values.push(v["$@>"]);
+			},
+		],
+		[
+			"$<@",
+			(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], fields: Types.TField[], nullFields: string[], values: unknown[]) => {
+				const v = value as { "$<@": object; };
+
+				fields.push({ key, operator: "<@" });
+				values.push(v["$<@"]);
+			},
+		],
+		[
+			"$&&",
+			(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], fields: Types.TField[], nullFields: string[], values: unknown[]) => {
+				const v = value as { "$&&": object; };
+
+				fields.push({ key, operator: "&&" });
+				values.push(v["$&&"]);
+			},
+		],
+		[
 			"$json",
 			(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], fields: Types.TField[], nullFields: string[], values: unknown[]) => {
 				const v = value as { $json: object; };
@@ -208,14 +235,28 @@ export const compareFields = (
 		if (value === null) {
 			nullFields.push(`${key} IS NULL`);
 		} else if (typeof value === "object") {
-			for (const k of Object.keys(value)) {
-				const processFunction = processMappings.get(k);
+			if (Array.isArray(value)) {
+				for (const v of value) {
+					for (const k of Object.keys(v)) {
+						const processFunction = processMappings.get(k);
 
-				if (!processFunction) {
-					throw new Error(`Invalid value.key ${k}, Available values: ${Array.from(processMappings.keys())}`);
+						if (!processFunction) {
+							throw new Error(`Invalid value.key ${k}, Available values: ${Array.from(processMappings.keys())}`);
+						}
+
+						processFunction(key, v, fields, nullFields, values);
+					}
 				}
+			} else {
+				for (const k of Object.keys(value)) {
+					const processFunction = processMappings.get(k);
 
-				processFunction(key, value, fields, nullFields, values);
+					if (!processFunction) {
+						throw new Error(`Invalid value.key ${k}, Available values: ${Array.from(processMappings.keys())}`);
+					}
+
+					processFunction(key, value, fields, nullFields, values);
+				}
 			}
 		} else if (value !== undefined) {
 			fields.push({ key, operator: "=" });
@@ -234,14 +275,28 @@ export const compareFields = (
 				if (value === null) {
 					nullFieldsOrLocal.push(`${key} IS NULL`);
 				} else if (typeof value === "object") {
-					for (const k of Object.keys(value)) {
-						const processFunction = processMappings.get(k);
+					if (Array.isArray(value)) {
+						for (const v of value) {
+							for (const k of Object.keys(v)) {
+								const processFunction = processMappings.get(k);
 
-						if (!processFunction) {
-							throw new Error(`Invalid value.key ${k}, Available values: ${Array.from(processMappings.keys())}`);
+								if (!processFunction) {
+									throw new Error(`Invalid value.key ${k}, Available values: ${Array.from(processMappings.keys())}`);
+								}
+
+								processFunction(key, v, fieldsOrLocal, nullFieldsOrLocal, values);
+							}
 						}
+					} else {
+						for (const k of Object.keys(value)) {
+							const processFunction = processMappings.get(k);
 
-						processFunction(key, value, fieldsOrLocal, nullFieldsOrLocal, values);
+							if (!processFunction) {
+								throw new Error(`Invalid value.key ${k}, Available values: ${Array.from(processMappings.keys())}`);
+							}
+
+							processFunction(key, value, fieldsOrLocal, nullFieldsOrLocal, values);
+						}
 					}
 				} else if (value !== undefined) {
 					fieldsOrLocal.push({ key, operator: "=" });

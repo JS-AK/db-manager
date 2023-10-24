@@ -3,6 +3,7 @@ export type CreateFields = Pick<TableFields,
 	| "number_key"
 	| "title"
 > & Partial<Pick<TableFields,
+	| "books"
 	| "description"
 	| "number_range"
 >>;
@@ -28,13 +29,16 @@ export type SearchFields = Partial<Omit<TableFields,
 };
 
 export type TableFields = {
-	created_at: Date;
-	description: string | null;
 	id: string;
+
+	books: string[];
+	description: string | null;
 	meta: { firstName: string; lastName: string; };
 	number_key: number;
 	number_range: string | null;
 	title: string;
+
+	created_at: Date;
 	updated_at: Date | null;
 };
 

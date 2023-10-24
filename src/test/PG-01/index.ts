@@ -29,10 +29,11 @@ export default async () => {
 					CREATE TABLE ${testTable.tableName}(
 					  id                              BIGSERIAL PRIMARY KEY,
 
+					  books                           TEXT[],
 					  description                     TEXT,
+					  meta                            JSONB NOT NULL,
 					  number_key                      INT NOT NULL,
 					  number_range                    INT8RANGE,
-					  meta                            JSONB NOT NULL,
 					  title                           TEXT NOT NULL,
 
 					  created_at                      TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -287,7 +288,7 @@ export default async () => {
 							const res = await testTable.getArrByParams(params);
 
 							assert.equal(res.length, 5);
-							assert.equal(isHasFields(res[0] as TestTable.Types.TableFields, ["created_at", "description", "id", "meta", "number_key", "number_range", "title", "updated_at"]), true);
+							assert.equal(isHasFields(res[0] as TestTable.Types.TableFields, ["books", "created_at", "description", "id", "meta", "number_key", "number_range", "title", "updated_at"]), true);
 						},
 					);
 				}
@@ -305,7 +306,7 @@ export default async () => {
 
 							assert.equal(res.length, 5);
 							assert.equal(isHasFields(res[0] as TestTable.Types.TableFields, ["number_key"]), true);
-							assert.equal(isHasFields(res[0] as TestTable.Types.TableFields, ["created_at", "description", "id", "meta", "number_range", "title", "updated_at"]), false);
+							assert.equal(isHasFields(res[0] as TestTable.Types.TableFields, ["books", "created_at", "description", "id", "meta", "number_range", "title", "updated_at"]), false);
 						},
 					);
 				}
@@ -600,7 +601,7 @@ export default async () => {
 							});
 
 							assert.equal(res.number_key, 1);
-							assert.equal(isHasFields(res, ["created_at", "description", "id", "meta", "number_key", "number_range", "title", "updated_at"]), true);
+							assert.equal(isHasFields(res, ["books", "created_at", "description", "id", "meta", "number_key", "number_range", "title", "updated_at"]), true);
 						},
 					);
 				}
@@ -621,7 +622,7 @@ export default async () => {
 
 							assert.equal(res.number_key, 1);
 							assert.equal(isHasFields(res as TestTable.Types.TableFields, ["number_key"]), true);
-							assert.equal(isHasFields(res as TestTable.Types.TableFields, ["created_at", "description", "id", "meta", "number_range", "title", "updated_at"]), false);
+							assert.equal(isHasFields(res as TestTable.Types.TableFields, ["books", "created_at", "description", "id", "meta", "number_range", "title", "updated_at"]), false);
 						},
 					);
 				}
@@ -681,6 +682,7 @@ export default async () => {
 			async (testContext) => {
 				await Promise.all([1, 2, 3, 4, 5].map((e) => {
 					const params = {
+						books: ["book 1"],
 						description: `description ${e}`,
 						meta: { firstName: `firstName ${e}`, lastName: `lastName ${e}` },
 						number_key: e,
@@ -704,7 +706,7 @@ export default async () => {
 							});
 
 							assert.equal(res.one?.number_key, 1);
-							assert.equal(isHasFields(res.one as TestTable.Types.TableFields, ["created_at", "description", "id", "meta", "number_key", "number_range", "title", "updated_at"]), true);
+							assert.equal(isHasFields(res.one as TestTable.Types.TableFields, ["books", "created_at", "description", "id", "meta", "number_key", "number_range", "title", "updated_at"]), true);
 						},
 					);
 				}
@@ -725,7 +727,7 @@ export default async () => {
 
 							assert.equal(res.one?.number_key, 1);
 							assert.equal(isHasFields(res.one as TestTable.Types.TableFields, ["number_key"]), true);
-							assert.equal(isHasFields(res.one as TestTable.Types.TableFields, ["created_at", "description", "id", "meta", "number_range", "title", "updated_at"]), false);
+							assert.equal(isHasFields(res.one as TestTable.Types.TableFields, ["books", "created_at", "description", "id", "meta", "number_range", "title", "updated_at"]), false);
 						},
 					);
 				}
@@ -734,6 +736,30 @@ export default async () => {
 					const likeText = "description 5";
 					const params = {
 						params: { description: { $like: `%${likeText}%` } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const res = await testTable.getOneByParams(params);
+
+							assert.equal(res.one?.description, likeText);
+						},
+					);
+				}
+
+				{
+					const likeText = "description 5";
+					const params = {
+						params: {
+							books: { "$&&": ["book 1"] },
+							description: [
+								{ $like: `%${likeText}%` },
+								{ $like: likeText },
+								{ $nlike: "ABC" },
+								{ $ne: null },
+							],
+						} as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
 					};
 
 					await testContext.test(

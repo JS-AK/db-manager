@@ -24,9 +24,30 @@ export type TSearchParams<T> = {
 				| { $in: NonNullable<T[key]>[]; }
 				| { $nin: NonNullable<T[key]>[]; }
 				| { $custom: { sign: string; value: string | number; }; }
-			: T[key]
-				| { $json: NonNullable<T[key]>; }
-				| { $jsonb: NonNullable<T[key]>; }
+				| Array<
+					| { $ne: NonNullable<T[key]> | null; } | { $between: [NonNullable<T[key]>, NonNullable<T[key]>]; }
+					| { $nbetween: [NonNullable<T[key]>, NonNullable<T[key]>]; }
+					| { $gt: NonNullable<T[key]>; $lt: NonNullable<T[key]>; }
+					| { $gte: NonNullable<T[key]>; $lt: NonNullable<T[key]>; }
+					| { $gt: NonNullable<T[key]>; $lte: NonNullable<T[key]>; }
+					| { $gt: NonNullable<T[key]>; }
+					| { $gte: NonNullable<T[key]>; }
+					| { $lt: NonNullable<T[key]>; }
+					| { $lte: NonNullable<T[key]>; }
+					| { $like: string; }
+					| { $ilike: string; }
+					| { $nlike: string; }
+					| { $nilike: string; }
+					| { $in: NonNullable<T[key]>[]; }
+					| { $nin: NonNullable<T[key]>[]; }
+					| { $custom: { sign: string; value: string | number; }; }
+				>
+			: NonNullable<T[key]> extends Array<unknown>
+				? | { ["$@>"]: NonNullable<T[key]>; }
+					| { ["$<@"]: NonNullable<T[key]>; }
+					| { ["$&&"]: NonNullable<T[key]>; }
+				: | { $json: NonNullable<T[key]>; }
+					| { $jsonb: NonNullable<T[key]>; }
 		: NonNullable<T[key]> extends string | number
 			? T[key]
 				| { $ne: NonNullable<T[key]> | null; }
@@ -46,6 +67,24 @@ export type TSearchParams<T> = {
 				| { $in: NonNullable<T[key]>[]; }
 				| { $nin: NonNullable<T[key]>[]; }
 				| { $custom: { sign: string; value: string | number; }; }
+				| Array<
+					|{ $ne: NonNullable<T[key]> | null; } | { $between: [NonNullable<T[key]>, NonNullable<T[key]>]; }
+					| { $nbetween: [NonNullable<T[key]>, NonNullable<T[key]>]; }
+					| { $gt: NonNullable<T[key]>; $lt: NonNullable<T[key]>; }
+					| { $gte: NonNullable<T[key]>; $lt: NonNullable<T[key]>; }
+					| { $gt: NonNullable<T[key]>; $lte: NonNullable<T[key]>; }
+					| { $gt: NonNullable<T[key]>; }
+					| { $gte: NonNullable<T[key]>; }
+					| { $lt: NonNullable<T[key]>; }
+					| { $lte: NonNullable<T[key]>; }
+					| { $like: string; }
+					| { $ilike: string; }
+					| { $nlike: string; }
+					| { $nilike: string; }
+					| { $in: NonNullable<T[key]>[]; }
+					| { $nin: NonNullable<T[key]>[]; }
+					| { $custom: { sign: string; value: string | number; }; }
+				>
 			: T[key]
 				| { $ne: NonNullable<T[key]> | null; }
 				| { $custom: { sign: string; value: string | number; }; }
