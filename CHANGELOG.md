@@ -1,3 +1,10 @@
+# [3.4.0](https://github.com/JS-AK/db-manager/compare/v3.3.4...v3.4.0) (2023-10-24)
+
+
+### Features
+
+* updated pg core to work with arrays ([4820c07](https://github.com/JS-AK/db-manager/commit/4820c0787e898de6943140fa06af21dcc6fa877e))
+
 ## [3.3.4](https://github.com/JS-AK/db-manager/compare/v3.3.3...v3.3.4) (2023-10-15)
 
 
