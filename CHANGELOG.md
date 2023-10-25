@@ -1,3 +1,10 @@
+# [3.5.0](https://github.com/JS-AK/db-manager/compare/v3.4.0...v3.5.0) (2023-10-25)
+
+
+### Features
+
+* added pg migration-system as experimental ([d46ae50](https://github.com/JS-AK/db-manager/commit/d46ae50b54b5c9adb60ac9160cdee9411476ccff))
+
 # [3.4.0](https://github.com/JS-AK/db-manager/compare/v3.3.4...v3.4.0) (2023-10-24)
 
 
