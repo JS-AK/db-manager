@@ -20,7 +20,7 @@ export default async () => {
 
 	return test("PG-04", async (testContext) => {
 		await testContext.test(
-			"create table",
+			"create tables",
 			async () => {
 				const pool = PG.BaseModel.getStandardPool(creds);
 

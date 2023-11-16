@@ -67,6 +67,33 @@ const processMappings = new Map<keyof Types.TSearchParams, (key: string, value: 
 			},
 		],
 		[
+			"$@",
+			(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], fields: Types.TField[], nullFields: string[], values: unknown[]) => {
+				const v = value as { "$@": string; };
+
+				fields.push({ key, operator: "@" });
+				values.push(v["$@"]);
+			},
+		],
+		[
+			"$~",
+			(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], fields: Types.TField[], nullFields: string[], values: unknown[]) => {
+				const v = value as { "$~": string; };
+
+				fields.push({ key, operator: "~" });
+				values.push(v["$~"]);
+			},
+		],
+		[
+			"$?",
+			(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], fields: Types.TField[], nullFields: string[], values: unknown[]) => {
+				const v = value as { "$?": string; };
+
+				fields.push({ key, operator: "?" });
+				values.push(v["$?"]);
+			},
+		],
+		[
 			"$json",
 			(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], fields: Types.TField[], nullFields: string[], values: unknown[]) => {
 				const v = value as { $json: object; };

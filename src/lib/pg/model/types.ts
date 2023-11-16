@@ -25,6 +25,9 @@ export type TOperator =
 	| "@>"
 	| "<@"
 	| "&&"
+	| "@"
+	| "~"
+	| "?"
 	| "$custom"
 	| "$between"
 	| "$in"
@@ -50,9 +53,12 @@ export type TSearchParamsWithOperator = {
 	$gt?: number | string | boolean;
 	$gte?: number | string | boolean;
 	$in?: string[] | number[] | boolean[];
-	"$@>"?: string[] | number[];
-	"$<@"?: string[] | number[];
+	"$@>"?: string | string[] | number[];
+	"$<@"?: string | string[] | number[];
 	"$&&"?: string[] | number[];
+	"$@"?: string;
+	"$~"?: string;
+	"$?"?: string;
 	$json?: object;
 	$jsonb?: object;
 	$like?: string;
