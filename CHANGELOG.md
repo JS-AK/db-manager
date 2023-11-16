@@ -1,3 +1,10 @@
+# [3.6.0](https://github.com/JS-AK/db-manager/compare/v3.5.0...v3.6.0) (2023-11-16)
+
+
+### Features
+
+* added support ltree search operators ([3079d20](https://github.com/JS-AK/db-manager/commit/3079d200cb66eef11a2250b039e684a1e88afe9b))
+
 # [3.5.0](https://github.com/JS-AK/db-manager/compare/v3.4.0...v3.5.0) (2023-10-25)
 
 
