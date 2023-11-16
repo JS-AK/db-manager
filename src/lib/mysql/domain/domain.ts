@@ -86,6 +86,9 @@ export class BaseDomain<TC extends {
 		return this.model.getCountByParams(options.params);
 	}
 
+	/**
+	 * @deprecated Use getOneByParams
+	 */
 	async getGuaranteedOneByParams<T extends keyof TC["TableFields"]>(options: {
 		params: Types.TSearchParams<TC["SearchFields"]>;
 		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<TC["SearchFields"]>>;
