@@ -1,3 +1,10 @@
+## [3.6.1](https://github.com/JS-AK/db-manager/compare/v3.6.0...v3.6.1) (2024-02-02)
+
+
+### Bug Fixes
+
+* updated types ([46c1507](https://github.com/JS-AK/db-manager/commit/46c1507aebd3b9859457a9c86ee9df37f38db884))
+
 # [3.6.0](https://github.com/JS-AK/db-manager/compare/v3.5.0...v3.6.0) (2023-11-16)
 
 
