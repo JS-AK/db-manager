@@ -53,8 +53,8 @@ export type TSearchParamsWithOperator = {
 	$gt?: number | string | boolean;
 	$gte?: number | string | boolean;
 	$in?: string[] | number[] | boolean[];
-	"$@>"?: string | string[] | number[];
-	"$<@"?: string | string[] | number[];
+	"$@>"?: number | string | number[] | string[];
+	"$<@"?: number | string | number[] | string[];
 	"$&&"?: string[] | number[];
 	"$@"?: string;
 	"$~"?: string;
