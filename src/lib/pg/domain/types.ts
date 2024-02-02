@@ -52,9 +52,9 @@ export type TSearchParams<T> = {
 			? T[key]
 				| { ["$@>"]: NonNullable<T[key]>; }
 				| { ["$<@"]: NonNullable<T[key]>; }
-				| { ["$~"]: NonNullable<T[key]>; }
-				| { ["$@"]: NonNullable<T[key]>; }
-				| { ["$?"]: NonNullable<T[key]>; }
+				| { ["$~"]: string; }
+				| { ["$@"]: string; }
+				| { ["$?"]: string; }
 				| { $ne: NonNullable<T[key]> | null; }
 				| { $between: [NonNullable<T[key]>, NonNullable<T[key]>]; }
 				| { $nbetween: [NonNullable<T[key]>, NonNullable<T[key]>]; }
@@ -75,9 +75,9 @@ export type TSearchParams<T> = {
 				| Array<
 					| { ["$@>"]: NonNullable<T[key]>; }
 					| { ["$<@"]: NonNullable<T[key]>; }
-					| { ["$~"]: NonNullable<T[key]>; }
-					| { ["$@"]: NonNullable<T[key]>; }
-					| { ["$?"]: NonNullable<T[key]>; }
+					| { ["$~"]: string; }
+					| { ["$@"]: string; }
+					| { ["$?"]: string; }
 					| { $ne: NonNullable<T[key]> | null; }
 					| { $between: [NonNullable<T[key]>, NonNullable<T[key]>]; }
 					| { $nbetween: [NonNullable<T[key]>, NonNullable<T[key]>]; }
