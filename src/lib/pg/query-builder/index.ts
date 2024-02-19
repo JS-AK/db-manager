@@ -93,6 +93,12 @@ export class QueryBuilder {
 		return this;
 	}
 
+	rawJoin(rawText: string) {
+		this.#join.push(rawText);
+
+		return this;
+	}
+
 	rightJoin(data: {
 		targetTableName: string;
 		targetField: string;
