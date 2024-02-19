@@ -1,3 +1,10 @@
+# [3.7.0](https://github.com/JS-AK/db-manager/compare/v3.6.1...v3.7.0) (2024-02-19)
+
+
+### Features
+
+* added rawJoin to pg query builder ([7b96047](https://github.com/JS-AK/db-manager/commit/7b9604717a27439047e8ecbb8c4ec2d223ddae4e))
+
 ## [3.6.1](https://github.com/JS-AK/db-manager/compare/v3.6.0...v3.6.1) (2024-02-02)
 
 
