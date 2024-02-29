@@ -10,7 +10,11 @@ import { walk } from "./helpers.js";
  */
 export async function start(
 	pool: Types.Pool,
-	settings: { pathToSQL: string; },
+	settings: {
+		migrationsTableName: string;
+		isNeedCleanupAll?: boolean;
+		pathToSQL: string;
+	},
 ) {
 	try {
 		const sqlFiles = await walk(settings.pathToSQL);
@@ -29,7 +33,9 @@ export async function start(
 
 			if (tables) {
 				for (const table of tables) {
-					const t = table.trim().split("(")[0];
+					const t = table.trim().split("(")[0]?.trim();
+
+					if (!t) continue;
 
 					await pool.query(`DROP TABLE IF EXISTS ${t} CASCADE`);
 					console.log(`DROP TABLE ${t} done!`);
@@ -47,22 +53,47 @@ export async function start(
 
 			if (types) {
 				for (const type of types) {
-					const t = type.trim().split("(")[0] || "";
-					const v = t.trim().split(" as ");
+					const t = type.trim().split("(")[0]?.trim();
+
+					if (!t) continue;
+
+					const v = t.split(" as ");
 
 					if (v.length > 1) {
 						console.log(`DROP TYPE ${v[0]} done!`);
-						await pool.query(`DROP TYPE IF EXISTS ${v[0]}`);
+						await pool.query(`DROP TYPE IF EXISTS ${v[0]} CASCADE`);
 					} else {
 						console.log(`DROP TYPE ${t[0]} done!`);
-						await pool.query(`DROP TYPE IF EXISTS ${t[0]}`);
+						await pool.query(`DROP TYPE IF EXISTS ${t[0]} CASCADE`);
 					}
+				}
+			}
+
+			const sequences = sql
+				.toLowerCase()
+				.replace(/[^a-z0-9,()_; ]/g, " ")
+				.replace(/  +/g, " ")
+				.trim()
+				.split("create sequence");
+
+			sequences.shift();
+
+			if (sequences) {
+				for (const sequence of sequences) {
+					const s = sequence.trim().split(" ")[0]?.trim();
+
+					if (!s) continue;
+
+					await pool.query(`DROP SEQUENCE IF EXISTS ${s} CASCADE`);
+					console.log(`DROP SEQUENCE ${s} done!`);
 				}
 			}
 		}
 
-		{
-			// FINALLY DROP ALL LEFTOVER TRASH
+		await pool.query(`DROP TABLE IF EXISTS ${settings.migrationsTableName} CASCADE`);
+		console.log(`DROP TABLE ${settings.migrationsTableName} done!`);
+
+		if (settings.isNeedCleanupAll) {
 			const tables = (await pool.query(`
 			  SELECT tablename
 			  FROM pg_tables
@@ -73,6 +104,19 @@ export async function start(
 				for (const table of tables) {
 					await pool.query(`DROP TABLE IF EXISTS ${table.tablename} CASCADE`);
 					console.log(`DROP TABLE ${table.tablename} done!`);
+				}
+			}
+
+			const sequences = (await pool.query(`
+			  SELECT sequencename
+			  FROM pg_sequences
+			  WHERE schemaname = 'public'
+			`)).rows;
+
+			if (sequences.length) {
+				for (const sequence of sequences) {
+					await pool.query(`DROP SEQUENCE IF EXISTS ${sequence.sequencename} CASCADE`);
+					console.log(`DROP SEQUENCE ${sequence.sequencename} done!`);
 				}
 			}
 		}

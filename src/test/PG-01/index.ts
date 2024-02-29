@@ -17,7 +17,7 @@ const creds = {
 export default async () => {
 	const testTable = new TestTable.Domain(creds);
 
-	return test("PG-02", async (testContext) => {
+	return test("PG-01", async (testContext) => {
 		await testContext.test(
 			"create table",
 			async () => {

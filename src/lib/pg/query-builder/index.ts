@@ -155,7 +155,8 @@ export class QueryBuilder {
 		} = Helpers.compareFields(data.params as ModelTypes.TSearchParams, data.paramsOr);
 
 		if (fields.length) {
-			this.#mainWhere += "WHERE ";
+			if (!this.#mainWhere) this.#mainWhere += "WHERE ";
+
 			this.#mainWhere += fields.map((e: ModelTypes.TField) => {
 				const operatorFunction = operatorMappings.get(e.operator);
 
@@ -223,6 +224,16 @@ export class QueryBuilder {
 		}
 
 		this.#values.push(...values);
+
+		return this;
+	}
+
+	rawWhere(rawText: string) {
+		if (!rawText) return this;
+
+		if (!this.#mainWhere) this.#mainWhere += "WHERE ";
+
+		this.#mainWhere += rawText;
 
 		return this;
 	}
