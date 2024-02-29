@@ -1,3 +1,16 @@
+# [3.8.0](https://github.com/JS-AK/db-manager/compare/v3.7.0...v3.8.0) (2024-02-29)
+
+
+### Bug Fixes
+
+* updated missmatch test name ([0370bf0](https://github.com/JS-AK/db-manager/commit/0370bf047a543a04d7f1a05a119fc081c284894c))
+
+
+### Features
+
+* updated pg migration-system down ([926569e](https://github.com/JS-AK/db-manager/commit/926569e63d2db850bc997dce454ef7d04214f985))
+* updated pg qb ([fa4fb61](https://github.com/JS-AK/db-manager/commit/fa4fb6102d4382896579b2f01697fec957f8254d))
+
 # [3.7.0](https://github.com/JS-AK/db-manager/compare/v3.6.1...v3.7.0) (2024-02-19)
 
 
