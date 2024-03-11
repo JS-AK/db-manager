@@ -1,3 +1,15 @@
+# [3.9.0](https://github.com/JS-AK/db-manager/compare/v3.8.0...v3.9.0) (2024-03-11)
+
+
+### Bug Fixes
+
+* updated gha ([536212b](https://github.com/JS-AK/db-manager/commit/536212b2e1a76ad33eb33d4c32b69f6e909be601))
+
+
+### Features
+
+* updated deps ([38ad8a0](https://github.com/JS-AK/db-manager/commit/38ad8a08924a665c35449fd67da5ddbfc9b4789e))
+
 # [3.8.0](https://github.com/JS-AK/db-manager/compare/v3.7.0...v3.8.0) (2024-02-29)
 
 
