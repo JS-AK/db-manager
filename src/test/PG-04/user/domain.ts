@@ -44,15 +44,16 @@ export class Domain extends DbManager.PG.BaseDomain<{
 				"users.first_name AS first_name",
 				"users.id AS id",
 				"users.last_name AS last_name",
-				"user_roles.id AS ur_id",
-				"user_roles.title AS ur_title",
+				"ur.id AS ur_id",
+				"ur.title AS ur_title",
 			])
 			.rightJoin({
 				initialField: "id_user_role",
 				targetField: "id",
 				targetTableName: "user_roles",
+				targetTableNameAs: "ur",
 			})
-			.where({ params: { "user_roles.title": "user" } })
+			.where({ params: { "ur.title": "user" } })
 			.orderBy([{ column: "users.first_name", sorting: "ASC" }])
 			.execute<Types.ListedEntity>();
 	}

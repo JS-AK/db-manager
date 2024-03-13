@@ -83,8 +83,8 @@ export class QueryBuilder {
 		return sql + ";";
 	}
 
-	getSql() {
-		return this.#compareSql();
+	getSql(): { sql: string; values: unknown[]; } {
+		return { sql: this.#compareSql(), values: this.#values };
 	}
 
 	select(arr: string[]) {
@@ -101,44 +101,56 @@ export class QueryBuilder {
 
 	rightJoin(data: {
 		targetTableName: string;
+		targetTableNameAs?: string;
 		targetField: string;
 		initialTableName?: string;
 		initialField: string;
 	}) {
-		this.#join.push(`RIGHT JOIN ${data.targetTableName} ON ${data.targetTableName}.${data.targetField} = ${data.initialTableName || this.#tableName}.${data.initialField}`);
+		const targetTableName = data.targetTableName + (data.targetTableNameAs ? ` AS ${data.targetTableNameAs}` : "");
+
+		this.#join.push(`RIGHT JOIN ${targetTableName} ON ${data.targetTableNameAs || data.targetTableName}.${data.targetField} = ${data.initialTableName || this.#tableName}.${data.initialField}`);
 
 		return this;
 	}
 
 	leftJoin(data: {
 		targetTableName: string;
+		targetTableNameAs?: string;
 		targetField: string;
 		initialTableName?: string;
 		initialField: string;
 	}) {
-		this.#join.push(`LEFT JOIN ${data.targetTableName} ON ${data.targetTableName}.${data.targetField} = ${data.initialTableName || this.#tableName}.${data.initialField}`);
+		const targetTableName = data.targetTableName + (data.targetTableNameAs ? ` AS ${data.targetTableNameAs}` : "");
+
+		this.#join.push(`LEFT JOIN ${targetTableName} ON ${data.targetTableNameAs || data.targetTableName}.${data.targetField} = ${data.initialTableName || this.#tableName}.${data.initialField}`);
 
 		return this;
 	}
 
 	innerJoin(data: {
 		targetTableName: string;
+		targetTableNameAs?: string;
 		targetField: string;
 		initialTableName?: string;
 		initialField: string;
 	}) {
-		this.#join.push(`INNER JOIN ${data.targetTableName} ON ${data.targetTableName}.${data.targetField} = ${data.initialTableName || this.#tableName}.${data.initialField}`);
+		const targetTableName = data.targetTableName + (data.targetTableNameAs ? ` AS ${data.targetTableNameAs}` : "");
+
+		this.#join.push(`INNER JOIN ${targetTableName} ON ${data.targetTableNameAs || data.targetTableName}.${data.targetField} = ${data.initialTableName || this.#tableName}.${data.initialField}`);
 
 		return this;
 	}
 
 	fullOuterJoin(data: {
 		targetTableName: string;
+		targetTableNameAs?: string;
 		targetField: string;
 		initialTableName?: string;
 		initialField: string;
 	}) {
-		this.#join.push(`FULL OUTER JOIN ${data.targetTableName} ON ${data.targetTableName}.${data.targetField} = ${data.initialTableName || this.#tableName}.${data.initialField}`);
+		const targetTableName = data.targetTableName + (data.targetTableNameAs ? ` AS ${data.targetTableNameAs}` : "");
+
+		this.#join.push(`FULL OUTER JOIN ${targetTableName} ON ${data.targetTableNameAs || data.targetTableName}.${data.targetField} = ${data.initialTableName || this.#tableName}.${data.initialField}`);
 
 		return this;
 	}
