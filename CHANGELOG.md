@@ -1,3 +1,10 @@
+# [3.10.0](https://github.com/JS-AK/db-manager/compare/v3.9.0...v3.10.0) (2024-03-13)
+
+
+### Features
+
+* updated query builder ([5c98d9e](https://github.com/JS-AK/db-manager/commit/5c98d9e60e384f27c8b1b6efcf6bbe69f0e40285))
+
 # [3.9.0](https://github.com/JS-AK/db-manager/compare/v3.8.0...v3.9.0) (2024-03-11)
 
 
