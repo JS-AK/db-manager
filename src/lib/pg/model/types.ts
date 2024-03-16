@@ -1,5 +1,9 @@
 import pg from "pg";
 
+export type SND = string | number | Date;
+export type SNDArray = string[] | number[] | Date[];
+export type SNDB = SND | boolean;
+export type SNDBArray = SNDArray | boolean[];
 export type TDBCreds = pg.PoolConfig & {
 	database: string;
 	host: string;
@@ -7,9 +11,7 @@ export type TDBCreds = pg.PoolConfig & {
 	port: number;
 	user: string;
 };
-export type TDBOptions = {
-	insertOptions?: { isOnConflictDoNothing: boolean; };
-};
+export type TDBOptions = { insertOptions?: { isOnConflictDoNothing: boolean; }; };
 export type TField = {
 	key: string;
 	sign?: string;
@@ -48,14 +50,14 @@ export type TSearchParams = {
 	| undefined;
 };
 export type TSearchParamsWithOperator = {
-	$custom?: { sign: string; value: string | number; };
-	$between?: [number | string, number | string];
-	$gt?: number | string | boolean;
-	$gte?: number | string | boolean;
-	$in?: string[] | number[] | boolean[];
-	"$@>"?: number | string | number[] | string[];
-	"$<@"?: number | string | number[] | string[];
-	"$&&"?: string[] | number[];
+	$custom?: { sign: string; value: SND; };
+	$between?: [SND, SND];
+	$gt?: SND;
+	$gte?: SND;
+	$in?: SNDBArray;
+	"$@>"?: SND | SNDArray;
+	"$<@"?: SND | SNDArray;
+	"$&&"?: SNDArray;
 	"$@"?: string;
 	"$~"?: string;
 	"$?"?: string;
@@ -63,11 +65,11 @@ export type TSearchParamsWithOperator = {
 	$jsonb?: object;
 	$like?: string;
 	$ilike?: string;
-	$lt?: number | string | boolean;
-	$lte?: number | string | boolean;
-	$nbetween?: [number | string, number | string];
-	$ne?: number | string | boolean | null;
-	$nin?: string[] | number[] | boolean[];
+	$lt?: SND;
+	$lte?: SND;
+	$nbetween?: [SND, SND];
+	$ne?: SNDB | null;
+	$nin?: SNDBArray;
 	$nlike?: string;
 	$nilike?: string;
 };
