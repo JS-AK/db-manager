@@ -28,12 +28,7 @@ export class Domain extends DbManager.PG.BaseDomain<{
 		return this.model
 			.queryBuilder()
 			.select(["*"])
-			.where({
-				params: {
-					id_user_role: { $ne: null },
-					is_deleted: false,
-				},
-			})
+			.where({ params: { id_user_role: { $ne: null }, is_deleted: false } })
 			.execute<Types.TableFields>();
 	}
 
@@ -114,5 +109,40 @@ export class Domain extends DbManager.PG.BaseDomain<{
 			.groupBy(["user_roles.title"])
 			.having({ params: { "COUNT(users.id)": { $gte: 5 } } })
 			.execute<Types.UsersByUserRoleTitle>();
+	}
+
+	async getList(data: {
+		order: { column: Types.ListOrderBy; sorting: DbManager.Types.TOrdering; }[];
+		pagination: DbManager.Types.TPagination;
+		params: {
+			ids?: string[];
+			userRoleTitle?: string;
+		};
+	}) {
+		const params: SearchFieldsList = {
+			"u.id": data.params.ids ? { $in: data.params.ids } : undefined,
+			"u.is_deleted": false,
+			"ur.title": data.params.userRoleTitle,
+		};
+
+		return this.model
+			.queryBuilder("users AS u")
+			.select([
+				"u.id         AS id",
+				"u.first_name AS first_name",
+				"u.last_name  AS last_name",
+				"ur.id        AS ur_id",
+				"ur.title     AS ur_title",
+			])
+			.rightJoin({
+				initialField: "id_user_role",
+				targetField: "id",
+				targetTableName: "user_roles",
+				targetTableNameAs: "ur",
+			})
+			.where({ params })
+			.orderBy(data.order)
+			.pagination(data.pagination)
+			.execute<Types.ListedEntity>();
 	}
 }

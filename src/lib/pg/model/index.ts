@@ -344,8 +344,8 @@ export class BaseModel {
 	/**
 	 * @experimental
 	 */
-	queryBuilder() {
-		return new QueryBuilder(this.tableName, this.pool);
+	queryBuilder(tableName?: string) {
+		return new QueryBuilder(tableName || this.tableName, this.pool);
 	}
 
 	// STATIC METHODS

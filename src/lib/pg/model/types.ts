@@ -43,10 +43,8 @@ export type TSearchParams = {
 	[key: string]:
 	| TSearchParamsWithOperator
 	| TSearchParamsWithOperator[]
-	| boolean
+	| SNDB
 	| null
-	| number
-	| string
 	| undefined;
 };
 export type TSearchParamsWithOperator = {

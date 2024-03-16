@@ -64,7 +64,13 @@ export class QueryBuilder {
 
 	constructor(tableName: string, pool: pg.Pool) {
 		this.#mainFrom = `FROM ${tableName}`;
-		this.#tableName = tableName;
+		const as = tableName.toLowerCase().split(" as ")[1]?.trim();
+
+		if (as) {
+			this.#tableName = as;
+		} else {
+			this.#tableName = tableName;
+		}
 		this.#valuesOrder = 0;
 
 		this.#pool = pool;
