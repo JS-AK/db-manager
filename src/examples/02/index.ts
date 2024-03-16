@@ -32,7 +32,7 @@ console.log(user);
 			firstName: "user firstName updated",
 		});
 
-		const userUpdated = await UserDomain.getGuaranteedOneByParams({
+		const { one: userUpdated } = await UserDomain.getOneByParams({
 			params: { id: userFounded.id },
 			selected: ["id"],
 		});

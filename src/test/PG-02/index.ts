@@ -62,17 +62,6 @@ export default async () => {
 
 				{
 					await testContext.test(
-						"read getGuaranteedOneByParams",
-						async () => {
-							const entity = await testTable.getGuaranteedOneByParams({ params: initialParams });
-
-							assert.equal(entity.title, initialParams.title);
-						},
-					);
-				}
-
-				{
-					await testContext.test(
 						"update updateByParams",
 						async () => {
 							const res = await testTable.updateByParams(
@@ -87,11 +76,11 @@ export default async () => {
 
 				{
 					await testContext.test(
-						"read getGuaranteedOneByParams",
+						"read getOneByParams",
 						async () => {
-							const entity = await testTable.getGuaranteedOneByParams({ params: updatedParams });
+							const { one: entity } = await testTable.getOneByParams({ params: updatedParams });
 
-							assert.equal(entity.title, updatedParams.title);
+							assert.equal(entity?.title, updatedParams.title);
 						},
 					);
 				}

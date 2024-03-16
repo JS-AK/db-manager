@@ -64,9 +64,9 @@ export async function start(
 		try {
 			migrations
 				.push(
-					...(await pool.query(`SELECT * FROM ${settings.migrationsTableName}`))
+					...(await pool.query<{ title: string; }>(`SELECT * FROM ${settings.migrationsTableName}`))
 						.rows
-						.map((e: { title: string; }) => e.title),
+						.map((e) => e.title),
 				);
 		} catch (err) {
 			error = true;

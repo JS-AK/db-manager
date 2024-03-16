@@ -574,110 +574,6 @@ export default async () => {
 		);
 
 		await testContext.test(
-			"getGuaranteedOneByParams",
-			async (testContext) => {
-				await Promise.all([1, 2, 3, 4, 5].map((e) => {
-					const params = {
-						description: `description ${e}`,
-						meta: { firstName: `firstName ${e}`, lastName: `lastName ${e}` },
-						number_key: e,
-						number_range: `[${e}00,${++e}01)`,
-						title: `title ${e}`,
-					};
-
-					return testTable.createOne(params);
-				}));
-
-				{
-					const params = {
-						params: { number_key: 1 } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
-					};
-
-					await testContext.test(
-						JSON.stringify(params),
-						async () => {
-							const res = await testTable.getGuaranteedOneByParams({
-								params: { number_key: 1 },
-							});
-
-							assert.equal(res.number_key, 1);
-							assert.equal(isHasFields(res, ["books", "created_at", "description", "id", "meta", "number_key", "number_range", "title", "updated_at"]), true);
-						},
-					);
-				}
-
-				{
-					const params = {
-						params: { number_key: 1 } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
-						selected: ["number_key"] as ["number_key"],
-					};
-
-					await testContext.test(
-						JSON.stringify(params),
-						async () => {
-							const res = await testTable.getGuaranteedOneByParams({
-								params: params.params,
-								selected: params.selected,
-							});
-
-							assert.equal(res.number_key, 1);
-							assert.equal(isHasFields(res as TestTable.Types.TableFields, ["number_key"]), true);
-							assert.equal(isHasFields(res as TestTable.Types.TableFields, ["books", "created_at", "description", "id", "meta", "number_range", "title", "updated_at"]), false);
-						},
-					);
-				}
-
-				{
-					const likeText = "description 5";
-					const params = {
-						params: { description: { $like: `%${likeText}%` } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
-					};
-
-					await testContext.test(
-						JSON.stringify(params),
-						async () => {
-							const res = await testTable.getGuaranteedOneByParams(params);
-
-							assert.equal(res.description, likeText);
-						},
-					);
-				}
-
-				{
-					const params = {
-						params: { number_key: { $lt: 2 } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
-					};
-
-					await testContext.test(
-						JSON.stringify(params),
-						async () => {
-							const res = await testTable.getGuaranteedOneByParams(params);
-
-							assert.equal(res.number_key, 1);
-						},
-					);
-				}
-
-				{
-					const params = {
-						params: { number_key: { $lte: 1 } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
-					};
-
-					await testContext.test(
-						JSON.stringify(params),
-						async () => {
-							const res = await testTable.getGuaranteedOneByParams(params);
-
-							assert.equal(res.number_key, 1);
-						},
-					);
-				}
-
-				await testTable.deleteAll();
-			},
-		);
-
-		await testContext.test(
 			"getOneByParams",
 			async (testContext) => {
 				await Promise.all([1, 2, 3, 4, 5].map((e) => {
@@ -877,22 +773,6 @@ export default async () => {
 
 				{
 					await testContext.test(
-						"read getGuaranteedOneByParams",
-						async () => {
-							const entity = await testTable.getGuaranteedOneByParams({ params: { id } });
-
-							assert.equal(entity.description, initialParams.description);
-							assert.equal(entity.meta.firstName, initialParams.meta.firstName);
-							assert.equal(entity.meta.lastName, initialParams.meta.lastName);
-							assert.equal(entity.number_key, initialParams.number_key);
-							assert.equal(entity.number_range, initialParams.number_range);
-							assert.equal(entity.title, initialParams.title);
-						},
-					);
-				}
-
-				{
-					await testContext.test(
 						"update updateOneByPk",
 						async () => {
 							const entity = await testTable.updateOneByPk(id, updatedParams);
@@ -909,16 +789,16 @@ export default async () => {
 
 				{
 					await testContext.test(
-						"read getGuaranteedOneByParams",
+						"read getOneByParams",
 						async () => {
-							const entity = await testTable.getGuaranteedOneByParams({ params: { id } });
+							const { one: entity } = await testTable.getOneByParams({ params: { id } });
 
-							assert.equal(entity.description, updatedParams.description);
-							assert.equal(entity.meta.firstName, updatedParams.meta.firstName);
-							assert.equal(entity.meta.lastName, updatedParams.meta.lastName);
-							assert.equal(entity.number_key, updatedParams.number_key);
-							assert.equal(entity.number_range, updatedParams.number_range);
-							assert.equal(entity.title, updatedParams.title);
+							assert.equal(entity?.description, updatedParams.description);
+							assert.equal(entity?.meta.firstName, updatedParams.meta.firstName);
+							assert.equal(entity?.meta.lastName, updatedParams.meta.lastName);
+							assert.equal(entity?.number_key, updatedParams.number_key);
+							assert.equal(entity?.number_range, updatedParams.number_range);
+							assert.equal(entity?.title, updatedParams.title);
 						},
 					);
 				}

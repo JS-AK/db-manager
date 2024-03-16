@@ -61,10 +61,12 @@ export default async () => {
 					await testContext.test(
 						"create admin",
 						async () => {
-							const userRole = await UserRole.getGuaranteedOneByParams({
+							const { one: userRole } = await UserRole.getOneByParams({
 								params: { title: "admin" },
 								selected: ["id"],
 							});
+
+							if (!userRole) throw new Error("User role not found");
 
 							await Promise.all(
 								["Robin"].map((e) =>
@@ -77,10 +79,12 @@ export default async () => {
 					await testContext.test(
 						"create head",
 						async () => {
-							const userRole = await UserRole.getGuaranteedOneByParams({
+							const { one: userRole } = await UserRole.getOneByParams({
 								params: { title: "head" },
 								selected: ["id"],
 							});
+
+							if (!userRole) throw new Error("User role not found");
 
 							await Promise.all(
 								["Bob"].map((e) =>
@@ -93,10 +97,12 @@ export default async () => {
 					await testContext.test(
 						"create users",
 						async () => {
-							const userRole = await UserRole.getGuaranteedOneByParams({
+							const { one: userRole } = await UserRole.getOneByParams({
 								params: { title: "user" },
 								selected: ["id"],
 							});
+
+							if (!userRole) throw new Error("User role not found");
 
 							await Promise.all(
 								["John", "Mary", "Peter", "Max", "Ann"].map((e) =>
@@ -172,15 +178,19 @@ export default async () => {
 						await testContext.test(
 							"update",
 							async () => {
-								const userRole = await UserRole.getGuaranteedOneByParams({
+								const { one: userRole } = await UserRole.getOneByParams({
 									params: { title: "admin" },
 									selected: ["id"],
 								});
 
-								const userInitial = await User.getGuaranteedOneByParams({
+								if (!userRole) throw new Error("User role not found");
+
+								const { one: userInitial } = await User.getOneByParams({
 									params: { id_user_role: userRole.id },
 									selected: ["first_name", "id"],
 								});
+
+								if (!userInitial) throw new Error("User not found");
 
 								const res = await User.updateOneByPk(userInitial.id, {
 									last_name: "Brown",
@@ -190,7 +200,7 @@ export default async () => {
 								assert.equal(res?.first_name, userInitial.first_name);
 								assert.equal(res?.last_name, "Brown");
 
-								const userUpdated = await User.getGuaranteedOneByParams({
+								const { one: userUpdated } = await User.getOneByParams({
 									params: { id_user_role: userRole.id },
 									selected: ["first_name", "id", "last_name"],
 								});

@@ -69,36 +69,32 @@ test("top level test MYSQL", async (t) => {
 
 		assert.equal(typeof example1Id, "number");
 
-		const example1 = await testTable2.getGuaranteedOneByParams({
-			params: { id: example1Id.toString() },
-		});
+		{
+			const { one: example1 } = await testTable2.getOneByParams({ params: { id: example1Id } });
 
-		assert.equal(typeof example1.created_at, "number");
-		assert.equal(example1.description, null);
-		assert.equal(typeof example1.id, "number");
-		assert.equal(example1.title, "title");
-		assert.equal(example1.updated_at, null);
+			assert.equal(typeof example1?.created_at, "number");
+			assert.equal(example1?.description, null);
+			assert.equal(typeof example1?.id, "number");
+			assert.equal(example1?.title, "title");
+			assert.equal(example1?.updated_at, null);
+		}
 
 		await testTable2.updateOneByPk(example1Id, {
 			description: "description",
 			title: "title updated",
 		});
 
-		const example1Updated = await testTable2.getGuaranteedOneByParams({
-			params: { id: example1Id.toString() },
-		});
+		const { one: example1 } = await testTable2.getOneByParams({ params: { id: example1Id } });
 
-		assert.equal(typeof example1Updated.created_at, "number");
-		assert.equal(example1Updated.description, "description");
-		assert.equal(typeof example1Updated.id, "number");
-		assert.equal(example1Updated.title, "title updated");
-		assert.equal(typeof example1Updated.updated_at, "number");
+		assert.equal(typeof example1?.created_at, "number");
+		assert.equal(example1?.description, "description");
+		assert.equal(typeof example1?.id, "number");
+		assert.equal(example1?.title, "title updated");
+		assert.equal(typeof example1?.updated_at, "number");
 
 		await testTable2.deleteOneByPk(example1Id);
 
-		const example1Deleted = await testTable2.getGuaranteedOneByParams({
-			params: { id: example1Id.toString() },
-		});
+		const { one: example1Deleted } = await testTable2.getOneByParams({ params: { id: example1Id } });
 
 		assert.equal(example1Deleted, undefined);
 	});
@@ -154,7 +150,7 @@ test("top level test MYSQL", async (t) => {
 		try {
 			await connection.beginTransaction();
 
-			let id = "";
+			let id = -1;
 
 			{
 				const description = "description transaction 1";
@@ -169,16 +165,18 @@ test("top level test MYSQL", async (t) => {
 
 				const [inserted] = (await connection.query<MYSQL.ModelTypes.ResultSetHeader>(query, values));
 
-				const [entities] = (await connection.query<(MYSQL.ModelTypes.RowDataPacket & TestTable1.Types.TableFields)[]>(`
+				const [[entity]] = (await connection.query<(MYSQL.ModelTypes.RowDataPacket & TestTable1.Types.TableFields)[]>(`
 					SELECT *
 					FROM ${testTable1.tableName}
 					WHERE id = ?
-				`, [inserted?.insertId]));
+				`, [inserted.insertId]));
 
-				assert.equal(entities[0]?.title, title);
-				assert.equal(entities[0]?.description, description);
+				if (!entity) throw new Error("Entity not found");
 
-				id = entities[0]?.id as string;
+				assert.equal(entity.title, title);
+				assert.equal(entity.description, description);
+
+				id = entity.id;
 			}
 
 			{
@@ -232,11 +230,9 @@ test("top level test MYSQL", async (t) => {
 	await t.test("getOneByPk found", async () => {
 		const id = 1;
 
-		const { one: exampleFound } = await testTable1.getOneByPk(id);
+		const { one: example } = await testTable1.getOneByPk(id);
 
-		if (exampleFound) {
-			assert.equal(exampleFound.id, id);
-		}
+		assert.equal(example?.id, id);
 	});
 
 	await t.test("getArrByParams", async () => {
@@ -282,32 +278,15 @@ test("top level test MYSQL", async (t) => {
 		assert.equal(res.length, 2);
 	});
 
-	await t.test("getGuaranteedOneByParams found", async () => {
-		const title = "test 1";
-
-		const exampleFound = await testTable1.getGuaranteedOneByParams({
-			params: { title },
-		});
-
-		assert.equal(!!exampleFound.id, true);
-		assert.equal(!!exampleFound.created_at, true);
-		assert.equal(!!exampleFound.updated_at, false);
-		assert.equal(exampleFound.title, title);
-	});
-
 	await t.test("getOneByParams found", async () => {
 		const title = "test 1";
 
-		const { one: exampleFound } = await testTable1.getOneByParams({
-			params: { title },
-		});
+		const { one: example } = await testTable1.getOneByParams({ params: { title } });
 
-		if (exampleFound) {
-			assert.equal(!!exampleFound.id, true);
-			assert.equal(!!exampleFound.created_at, true);
-			assert.equal(!!exampleFound.updated_at, false);
-			assert.equal(exampleFound.title, title);
-		}
+		assert.equal(!!example?.id, true);
+		assert.equal(!!example?.created_at, true);
+		assert.equal(!!example?.updated_at, false);
+		assert.equal(example?.title, title);
 	});
 
 	await t.test("getArrByParams found", async () => {
@@ -318,11 +297,11 @@ test("top level test MYSQL", async (t) => {
 					$nlike: "%12345%",
 				},
 				id: {
-					$gte: "3",
-					$in: ["2", "3"],
-					$lte: "3",
+					$gte: 3,
+					$in: [2, 3],
+					$lte: 3,
 					$ne: null,
-					$nin: ["1", "4"],
+					$nin: [1, 4],
 				},
 			},
 			paramsOr: [
@@ -364,41 +343,43 @@ test("top level test MYSQL", async (t) => {
 	await t.test("updateOneByPk", async () => {
 		const title = "test 1";
 
-		const exampleFound = await testTable1.getGuaranteedOneByParams({
-			params: { title },
-		});
+		const { one: example } = await testTable1.getOneByParams({ params: { title } });
+
+		if (!example) throw new Error("example not found");
 
 		const titleUpdated = "test 1 updated";
 
-		await testTable1.updateOneByPk(
-			exampleFound.id,
-			{ title: titleUpdated },
-		);
+		await testTable1.updateOneByPk(example.id, { title: titleUpdated });
 
-		const exampleUpdatedFound = await testTable1.getGuaranteedOneByParams({
-			params: { title: titleUpdated },
-		});
+		{
+			const { one: example } = await testTable1.getOneByParams({ params: { title: titleUpdated } });
 
-		assert.equal(!!exampleUpdatedFound.id, true);
-		assert.equal(!!exampleUpdatedFound.created_at, true);
-		assert.equal(!!exampleUpdatedFound.updated_at, true);
-		assert.equal(exampleUpdatedFound.title, titleUpdated);
+			assert.equal(!!example?.id, true);
+			assert.equal(!!example?.created_at, true);
+			assert.equal(!!example?.updated_at, true);
+			assert.equal(example?.title, titleUpdated);
+		}
 	});
 
 	await t.test("deleteOneByPk", async () => {
 		const title = "test 1 updated";
+		let exampleId = -1;
 
-		const exampleFound = await testTable1.getGuaranteedOneByParams({
-			params: { title },
-		});
+		{
+			const { one: example } = await testTable1.getOneByParams({ params: { title } });
 
-		await testTable1.deleteOneByPk(exampleFound.id);
+			if (!example) throw new Error("example not found");
 
-		const exampleUpdatedFound = await testTable1.getGuaranteedOneByParams({
-			params: { id: exampleFound.id },
-		});
+			await testTable1.deleteOneByPk(example.id);
 
-		assert.equal(!!exampleUpdatedFound, false);
+			exampleId = example.id;
+		}
+
+		{
+			const { one: example } = await testTable1.getOneByParams({ params: { id: exampleId } });
+
+			assert.equal(!!example, false);
+		}
 	});
 
 	await t.test("deleteAll", async () => {

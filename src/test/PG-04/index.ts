@@ -61,10 +61,12 @@ export default async () => {
 					await testContext.test(
 						"create admin",
 						async () => {
-							const userRole = await UserRole.getGuaranteedOneByParams({
+							const { one: userRole } = await UserRole.getOneByParams({
 								params: { title: "admin" },
 								selected: ["id"],
 							});
+
+							if (!userRole) throw new Error("User role not found");
 
 							await Promise.all(
 								["Robin"].map((e) =>
@@ -77,10 +79,12 @@ export default async () => {
 					await testContext.test(
 						"create head",
 						async () => {
-							const userRole = await UserRole.getGuaranteedOneByParams({
+							const { one: userRole } = await UserRole.getOneByParams({
 								params: { title: "head" },
 								selected: ["id"],
 							});
+
+							if (!userRole) throw new Error("User role not found");
 
 							await Promise.all(
 								["Bob"].map((e) =>
@@ -93,10 +97,12 @@ export default async () => {
 					await testContext.test(
 						"create users",
 						async () => {
-							const userRole = await UserRole.getGuaranteedOneByParams({
+							const { one: userRole } = await UserRole.getOneByParams({
 								params: { title: "user" },
 								selected: ["id"],
 							});
+
+							if (!userRole) throw new Error("User role not found");
 
 							await Promise.all(
 								["John", "Mary", "Peter", "Max", "Ann"].map((e) =>
