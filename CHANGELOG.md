@@ -1,3 +1,18 @@
+# [3.11.0](https://github.com/JS-AK/db-manager/compare/v3.10.0...v3.11.0) (2024-03-17)
+
+
+### Bug Fixes
+
+* removed getGuaranteedOneByParams from tests ([da1fe6d](https://github.com/JS-AK/db-manager/commit/da1fe6da3a9b1cbc5731dd5a8879e1c95b0c5616))
+* updated pg model types ([bfd1895](https://github.com/JS-AK/db-manager/commit/bfd18959c179643bf86668a7f19b465fecb5e1ef))
+* updated pg query builder ([b0675f2](https://github.com/JS-AK/db-manager/commit/b0675f21a7eba537610b5041966aebfaf532e235))
+
+
+### Features
+
+* added mysql migratin control system ([91a43a7](https://github.com/JS-AK/db-manager/commit/91a43a724f2be453c8baafcef187431895547884))
+* updated pg query builder ([63f6be8](https://github.com/JS-AK/db-manager/commit/63f6be88b09c22797fdf254cbea4bf544e772c00))
+
 # [3.10.0](https://github.com/JS-AK/db-manager/compare/v3.9.0...v3.10.0) (2024-03-13)
 
 
