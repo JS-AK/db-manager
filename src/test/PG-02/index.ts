@@ -64,10 +64,7 @@ export default async () => {
 					await testContext.test(
 						"update updateByParams",
 						async () => {
-							const res = await testTable.updateByParams(
-								{ params: initialParams },
-								updatedParams,
-							);
+							const res = await testTable.updateByParams({ params: initialParams }, updatedParams);
 
 							assert.equal(res[0]?.title, updatedParams.title);
 						},

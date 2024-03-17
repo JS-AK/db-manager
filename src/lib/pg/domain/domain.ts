@@ -51,6 +51,52 @@ export class BaseDomain<TC extends {
 		return this.#updateField as { title: keyof TC["TableFields"]; type: "unix_timestamp" | "timestamp"; } | null;
 	}
 
+	compareQuery = {
+		createOne: (createFields: TC["CreateFields"]) => this.model.compareQuery.save(createFields),
+		deleteAll: () => this.model.compareQuery.deleteAll(),
+		deleteByParams: (options: {
+			params: Types.TSearchParams<TC["SearchFields"]>;
+			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<TC["SearchFields"]>>;
+		}) => this.model.compareQuery.deleteByParams({ $and: options.params, $or: options.paramsOr }),
+		deleteOneByPk: <T = string | number>(pk: T) => this.model.compareQuery.deleteOneByPk(pk),
+		getArrByParams: <T extends keyof TC["TableFields"]>(options: {
+			params: Types.TSearchParams<TC["SearchFields"]>;
+			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<TC["SearchFields"]>>;
+			selected?: [T, ...T[]];
+			pagination?: SharedTypes.TPagination;
+			order?: { orderBy: Extract<keyof TC["TableFields"], string>; ordering: SharedTypes.TOrdering; }[];
+		}) => this.model.compareQuery.getArrByParams({ $and: options.params, $or: options.paramsOr }, options.selected as string[], options.pagination, options.order),
+		getCountByParams: (options: {
+			params: Types.TSearchParams<TC["SearchFields"]>;
+			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<TC["SearchFields"]>>;
+		}) => this.model.compareQuery.getCountByParams({ $and: options.params, $or: options.paramsOr }),
+		getCountByPks: <T = string | number>(pks: T[]) => this.model.compareQuery.getCountByPks(pks),
+		getCountByPksAndParams: <T = string | number>(
+			pks: T[],
+			options: {
+				params: Types.TSearchParams<TC["SearchFields"]>;
+				paramsOr?: Types.TArray2OrMore<Types.TSearchParams<TC["SearchFields"]>>;
+			},
+		) => this.model.compareQuery.getCountByPksAndParams(pks, { $and: options.params, $or: options.paramsOr }),
+		getOneByParams: <T extends keyof TC["TableFields"]>(options: {
+			params: Types.TSearchParams<TC["SearchFields"]>;
+			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<TC["SearchFields"]>>;
+			selected?: [T, ...T[]];
+		}) => this.model.compareQuery.getOneByParams({ $and: options.params, $or: options.paramsOr }, options.selected as string[]),
+		getOneByPk: <T = string | number>(pk: T) => this.model.compareQuery.getOneByPk(pk),
+		updateByParams: (
+			options: {
+				params: Types.TSearchParams<TC["SearchFields"]>;
+				paramsOr?: Types.TArray2OrMore<Types.TSearchParams<TC["SearchFields"]>>;
+			},
+			update: TC["UpdateFields"],
+		) => this.model.compareQuery.updateByParams({ $and: options.params, $or: options.paramsOr }, update),
+		updateOneByPk: <T = string | number>(
+			pk: T,
+			update: TC["UpdateFields"],
+		) => this.model.compareQuery.updateOneByPk(pk, update),
+	};
+
 	async createOne(createFields: TC["CreateFields"]): Promise<TC["TableFields"]> {
 		const res = await this.model.save(createFields);
 
@@ -63,10 +109,6 @@ export class BaseDomain<TC extends {
 		return this.model.deleteAll();
 	}
 
-	async deleteOneByPk<T = string | number>(pk: T): Promise<T | null> {
-		return this.model.deleteOneByPk<T>(pk);
-	}
-
 	async deleteByParams(options: {
 		params: Types.TSearchParams<TC["SearchFields"]>;
 		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<TC["SearchFields"]>>;
@@ -74,6 +116,10 @@ export class BaseDomain<TC extends {
 		return this.model.deleteByParams(
 			{ $and: options.params, $or: options.paramsOr },
 		);
+	}
+
+	async deleteOneByPk<T = string | number>(pk: T): Promise<T | null> {
+		return this.model.deleteOneByPk<T>(pk);
 	}
 
 	async getArrByParams<T extends keyof TC["TableFields"]>(options: {
@@ -91,12 +137,12 @@ export class BaseDomain<TC extends {
 		);
 	}
 
-	async getCountByPks(pks: string[]): Promise<number> {
+	async getCountByPks<T = string | number>(pks: T[]): Promise<number> {
 		return this.model.getCountByPks(pks);
 	}
 
-	async getCountByPksAndParams(
-		pks: string[],
+	async getCountByPksAndParams<T = string | number>(
+		pks: T[],
 		options: {
 			params: Types.TSearchParams<TC["SearchFields"]>;
 			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<TC["SearchFields"]>>;
@@ -147,7 +193,7 @@ export class BaseDomain<TC extends {
 		return { one };
 	}
 
-	async getOneByPk(pk: string): Promise<{ message?: string; one?: TC["TableFields"]; }> {
+	async getOneByPk<T = string | number>(pk: T): Promise<{ message?: string; one?: TC["TableFields"]; }> {
 		const one = await this.model.getOneByPk(pk);
 
 		if (!one) return { message: `Not found from ${this.model.tableName}` };
@@ -160,16 +206,15 @@ export class BaseDomain<TC extends {
 			params: Types.TSearchParams<TC["SearchFields"]>;
 			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<TC["SearchFields"]>>;
 		},
-		params: TC["UpdateFields"],
+		update: TC["UpdateFields"],
 	): Promise<TC["TableFields"][]> {
-		return this.model.updateByParams(
-			{ $and: options.params, $or: options.paramsOr },
-			params,
-		);
+		return this.model.updateByParams({ $and: options.params, $or: options.paramsOr }, update);
 	}
 
-	async updateOneByPk(pk: string, params: TC["UpdateFields"]): Promise<TC["TableFields"]> {
-		return this.model.updateOneByPk(pk, params);
+	async updateOneByPk<T = string | number>(
+		pk: T,
+		update: TC["UpdateFields"],
+	): Promise<TC["TableFields"]> {
+		return this.model.updateOneByPk(pk, update);
 	}
-
 }

@@ -4,19 +4,9 @@ export type SND = string | number | Date;
 export type SNDArray = string[] | number[] | Date[];
 export type SNDB = SND | boolean;
 export type SNDBArray = SNDArray | boolean[];
-export type TDBCreds = pg.PoolConfig & {
-	database: string;
-	host: string;
-	password: string;
-	port: number;
-	user: string;
-};
+export type TDBCreds = pg.PoolConfig & { database: string; host: string; password: string; port: number; user: string; };
 export type TDBOptions = { insertOptions?: { isOnConflictDoNothing: boolean; }; };
-export type TField = {
-	key: string;
-	sign?: string;
-	operator: TOperator;
-};
+export type TField = { key: string; sign?: string; operator: TOperator; };
 export type TOperator =
 	| "="
 	| "<>"

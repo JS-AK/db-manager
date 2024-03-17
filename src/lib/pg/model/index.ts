@@ -38,314 +38,273 @@ export class BaseModel {
 
 	compareFields = Helpers.compareFields;
 
+	compareQuery = {
+		deleteAll: (): { query: string; values: unknown[]; } => {
+			return { query: queries.deleteAll(this.tableName), values: [] };
+		},
+		deleteByParams: (
+			{ $and = {}, $or }: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
+		): { query: string; values: unknown[]; } => {
+			const { fields, fieldsOr, nullFields, values } = this.compareFields($and, $or);
+			const { searchFields } = this.getFieldsToSearch({ fields, fieldsOr, nullFields });
+
+			return {
+				query: queries.deleteByParams(this.tableName, searchFields),
+				values,
+			};
+		},
+		deleteOneByPk: <T = string | number>(primaryKey: T): { query: string; values: unknown[]; } => {
+			return {
+				query: queries.deleteByPk(this.tableName, this.primaryKey as string),
+				values: [primaryKey],
+			};
+		},
+		getArrByParams: (
+			{ $and = {}, $or }: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
+			selected = ["*"],
+			pagination?: SharedTypes.TPagination,
+			order?: { orderBy: string; ordering: SharedTypes.TOrdering; }[],
+		): { query: string; values: unknown[]; } => {
+			if (order?.length) {
+				for (const o of order) {
+					if (!this.#tableFieldsSet.has(o.orderBy)) { throw new Error("Invalid orderBy"); }
+					if (!this.#possibleOrderings.has(o.ordering)) { throw new Error("Invalid ordering"); }
+				}
+			}
+
+			if (!selected.length) selected.push("*");
+
+			const { fields, fieldsOr, nullFields, values } = this.compareFields($and, $or);
+			const { orderByFields, paginationFields, searchFields, selectedFields } = this.getFieldsToSearch({ fields, fieldsOr, nullFields }, selected, pagination, order);
+
+			return {
+				query: queries.getByParams(this.tableName, selectedFields, searchFields, orderByFields, paginationFields),
+				values,
+			};
+		},
+		getCountByParams: (
+			{ $and = {}, $or }: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
+		): { query: string; values: unknown[]; } => {
+			const { fields, fieldsOr, nullFields, values } = this.compareFields($and, $or);
+			const { searchFields } = this.getFieldsToSearch({ fields, fieldsOr, nullFields });
+
+			return {
+				query: queries.getCountByParams(this.tableName, searchFields),
+				values,
+			};
+		},
+		getCountByPks: <T = string | number>(pks: T[]): { query: string; values: unknown[]; } => {
+			return {
+				query: queries.getCountByPks(this.primaryKey as string, this.tableName),
+				values: [pks],
+			};
+		},
+		getCountByPksAndParams: <T = string | number>(
+			pks: T[],
+			{ $and = {}, $or }: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
+		): { query: string; values: unknown[]; } => {
+			const { fields, fieldsOr, nullFields, values } = this.compareFields($and, $or);
+			const { orderNumber, searchFields } = this.getFieldsToSearch({ fields, fieldsOr, nullFields });
+
+			return {
+				query: queries.getCountByPksAndParams(this.primaryKey as string, this.tableName, searchFields, orderNumber),
+				values: [...values, pks],
+			};
+		},
+		getOneByParams: (
+			{ $and = {}, $or }: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
+			selected = ["*"],
+		): { query: string; values: unknown[]; } => {
+			if (!selected.length) selected.push("*");
+
+			const { fields, fieldsOr, nullFields, values } = this.compareFields($and, $or);
+			const { orderByFields, paginationFields, searchFields, selectedFields } = this.getFieldsToSearch({ fields, fieldsOr, nullFields }, selected);
+
+			return {
+				query: queries.getByParams(
+					this.tableName,
+					selectedFields,
+					searchFields,
+					orderByFields,
+					paginationFields,
+				),
+				values,
+			};
+		},
+		getOneByPk: <T = string | number>(pk: T): { query: string; values: unknown[]; } => {
+			return {
+				query: queries.getOneByPk(this.tableName, this.primaryKey as string),
+				values: [pk],
+			};
+		},
+		save: (params = {}): { query: string; values: unknown[]; } => {
+			const clearedParams = SharedHelpers.clearUndefinedFields(params);
+			const fields = Object.keys(clearedParams);
+			const onConflict = this.#insertOptions?.isOnConflictDoNothing ? "ON CONFLICT DO NOTHING" : "";
+
+			if (!fields.length) { throw new Error("No one save field arrived"); }
+
+			return {
+				query: queries.save(this.tableName, fields, this.createField, onConflict),
+				values: Object.values(clearedParams),
+			};
+		},
+		updateByParams: (
+			{ $and = {}, $or }: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
+			update: SharedTypes.TRawParams = {},
+		): { query: string; values: unknown[]; } => {
+			const { fields, fieldsOr, nullFields, values } = this.compareFields($and, $or);
+			const { orderNumber, searchFields } = this.getFieldsToSearch({ fields, fieldsOr, nullFields });
+			const clearedUpdate = SharedHelpers.clearUndefinedFields(update);
+			const fieldsToUpdate = Object.keys(clearedUpdate);
+
+			if (!fields.length) throw new Error("No one update field arrived");
+
+			return {
+				query: queries.updateByParams(this.tableName, fieldsToUpdate, searchFields, this.updateField, orderNumber + 1),
+				values: [...values, ...Object.values(clearedUpdate)],
+			};
+		},
+		updateOneByPk: <T = string | number>(
+			pk: T,
+			update: SharedTypes.TRawParams = {},
+		): { query: string; values: unknown[]; } => {
+			const clearedParams = SharedHelpers.clearUndefinedFields(update);
+			const fields = Object.keys(clearedParams);
+
+			if (!fields.length) throw new Error("No one update field arrived");
+
+			return {
+				query: queries.updateByPk(this.tableName, fields, this.primaryKey as string, this.updateField),
+				values: [...Object.values(clearedParams), pk],
+			};
+		},
+	};
+
 	async deleteAll(): Promise<void> {
-		await this.pool.query(queries.deleteAll(this.tableName));
+		const sql = this.compareQuery.deleteAll();
+
+		await this.pool.query(sql.query, sql.values);
+
+		return;
 	}
 
 	async deleteOneByPk<T = string | number>(primaryKey: T): Promise<T | null> {
-		if (!this.primaryKey) {
-			throw new Error("Primary key not specified");
-		}
+		if (!this.primaryKey) { throw new Error("Primary key not specified"); }
 
-		const res = (await this.pool.query(
-			queries.deleteByPk(this.tableName, this.primaryKey),
-			[primaryKey],
-		)).rows[0];
+		const sql = this.compareQuery.deleteOneByPk(primaryKey);
+		const { rows: [entity] } = (await this.pool.query(sql.query, sql.values));
 
-		return res?.[this.primaryKey] || null;
+		return entity?.[this.primaryKey] || null;
 	}
 
-	async deleteByParams({ $and = {}, $or }: {
-		$and: Types.TSearchParams;
-		$or?: Types.TSearchParams[];
-	}): Promise<null> {
-		const {
-			fields,
-			fieldsOr,
-			nullFields,
-			values,
-		} = this.compareFields($and, $or);
+	async deleteByParams(
+		params: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
+	): Promise<null> {
+		const sql = this.compareQuery.deleteByParams(params);
 
-		const {
-			searchFields,
-		} = this.getFieldsToSearch(
-			{ fields, fieldsOr, nullFields },
-		);
-
-		await this.pool.query(
-			queries.deleteByParams(this.tableName, searchFields),
-			values,
-		);
+		await this.pool.query(sql.query, sql.values);
 
 		return null;
 	}
 
 	async getArrByParams(
-		{ $and = {}, $or }: {
-			$and: Types.TSearchParams;
-			$or?: Types.TSearchParams[];
-		},
+		params: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
 		selected = ["*"],
 		pagination?: SharedTypes.TPagination,
 		order?: { orderBy: string; ordering: SharedTypes.TOrdering; }[],
 	) {
-		if (order?.length) {
-			for (const o of order) {
-				if (!this.#tableFieldsSet.has(o.orderBy)) {
-					throw new Error("Invalid orderBy");
-				}
+		const sql = this.compareQuery.getArrByParams(params, selected, pagination, order);
+		const { rows } = await this.pool.query(sql.query, sql.values);
 
-				if (!this.#possibleOrderings.has(o.ordering)) {
-					throw new Error("Invalid ordering");
-				}
-			}
-		}
-
-		if (!selected.length) selected.push("*");
-
-		const {
-			fields,
-			fieldsOr,
-			nullFields,
-			values,
-		} = this.compareFields($and, $or);
-
-		const {
-			orderByFields,
-			paginationFields,
-			searchFields,
-			selectedFields,
-		} = this.getFieldsToSearch(
-			{ fields, fieldsOr, nullFields },
-			selected,
-			pagination,
-			order,
-		);
-
-		const res = (await this.pool.query(
-			queries.getByParams(
-				this.tableName,
-				selectedFields,
-				searchFields,
-				orderByFields,
-				paginationFields,
-			),
-			values,
-		)).rows;
-
-		return res;
+		return rows;
 	}
 
-	async getCountByPks(pks: string[]) {
-		if (!this.primaryKey) {
-			throw new Error("Primary key not specified");
-		}
+	async getCountByPks<T = string | number>(pks: T[]): Promise<number> {
+		if (!this.primaryKey) { throw new Error("Primary key not specified"); }
 
-		const res = (await this.pool.query(
-			queries.getCountByPks(this.primaryKey, this.tableName),
-			[pks],
-		)).rows[0];
+		const sql = this.compareQuery.getCountByPks(pks);
+		const { rows: [entity] } = await this.pool.query<{ count: string; }>(sql.query, sql.values);
 
-		return parseInt(res.count);
+		return Number(entity?.count) || 0;
 	}
 
-	async getCountByPksAndParams(
-		pks: string[],
-		{ $and = {}, $or }: {
-			$and: Types.TSearchParams;
-			$or?: Types.TSearchParams[];
-		},
+	async getCountByPksAndParams<T = string | number>(
+		pks: T[],
+		params: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
 	) {
-		if (!this.primaryKey) {
-			throw new Error("Primary key not specified");
-		}
+		if (!this.primaryKey) { throw new Error("Primary key not specified"); }
 
-		const {
-			fields,
-			fieldsOr,
-			nullFields,
-			values,
-		} = this.compareFields($and, $or);
-		const {
-			orderNumber,
-			searchFields,
-		} = this.getFieldsToSearch({ fields, fieldsOr, nullFields });
+		const sql = this.compareQuery.getCountByPksAndParams(pks, params);
+		const { rows: [entity] } = await this.pool.query<{ count: string; }>(sql.query, sql.values);
 
-		const res = (await this.pool.query(
-			queries.getCountByPksAndParams(
-				this.primaryKey,
-				this.tableName,
-				searchFields,
-				orderNumber,
-			),
-			[...values, pks],
-		)).rows[0];
-
-		return parseInt(res.count, 10);
+		return Number(entity?.count) || 0;
 	}
 
-	async getCountByParams({ $and = {}, $or }: {
-		$and: Types.TSearchParams;
-		$or?: Types.TSearchParams[];
-	}) {
-		const {
-			fields,
-			fieldsOr,
-			nullFields,
-			values,
-		} = this.compareFields($and, $or);
-		const {
-			searchFields,
-		} = this.getFieldsToSearch({ fields, fieldsOr, nullFields });
+	async getCountByParams(params: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; }) {
+		const sql = this.compareQuery.getCountByParams(params);
+		const { rows: [entity] } = await this.pool.query<{ count: string; }>(sql.query, sql.values);
 
-		const res = (await this.pool.query(
-			queries.getCountByParams(
-				this.tableName,
-				searchFields,
-			),
-			values,
-		)).rows[0];
-
-		return parseInt(res.count, 10);
+		return Number(entity?.count) || 0;
 	}
 
 	getFieldsToSearch = Helpers.getFieldsToSearch;
 
 	async getOneByParams(
-		{ $and = {}, $or }: {
-			$and: Types.TSearchParams;
-			$or?: Types.TSearchParams[];
-		},
+		params: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
 		selected = ["*"],
 	) {
-		if (!selected.length) selected.push("*");
+		const sql = this.compareQuery.getOneByParams(params, selected);
+		const { rows: [entity] } = await this.pool.query(sql.query, sql.values);
 
-		const {
-			fields,
-			fieldsOr,
-			nullFields,
-			values,
-		} = this.compareFields($and, $or);
-		const {
-			orderByFields,
-			paginationFields,
-			searchFields,
-			selectedFields,
-		} = this.getFieldsToSearch(
-			{ fields, fieldsOr, nullFields },
-			selected,
-		);
-
-		const res = (await this.pool.query(
-			queries.getByParams(
-				this.tableName,
-				selectedFields,
-				searchFields,
-				orderByFields,
-				paginationFields,
-			),
-			values,
-		)).rows;
-
-		return res[0];
+		return entity;
 	}
 
-	async getOneByPk(pk: string) {
-		if (!this.primaryKey) {
-			throw new Error("Primary key not specified");
-		}
+	async getOneByPk<T = string | number>(pk: T) {
+		if (!this.primaryKey) { throw new Error("Primary key not specified"); }
 
-		const res = (await this.pool.query(
-			queries.getOneByPk(this.tableName, this.primaryKey),
-			[pk],
-		)).rows;
+		const sql = this.compareQuery.getOneByPk(pk);
+		const { rows: [entity] } = await this.pool.query(sql.query, sql.values);
 
-		return res[0];
+		return entity;
 	}
 
 	async save(params = {}) {
-		const clearedParams = SharedHelpers.clearUndefinedFields(params);
-		const fields = Object.keys(clearedParams);
-		const onConflict = this.#insertOptions?.isOnConflictDoNothing
-			? "ON CONFLICT DO NOTHING"
-			: "";
+		const sql = this.compareQuery.save(params);
+		const { rows: [entity] } = await this.pool.query(sql.query, sql.values);
 
-		if (!fields.length) throw new Error("No one params incoming to save");
-
-		const res = (await this.pool.query(
-			queries.save(this.tableName, fields, this.createField, onConflict),
-			Object.values(clearedParams),
-		)).rows;
-
-		return res[0];
+		return entity;
 	}
 
 	async updateByParams(
-		{ $and = {}, $or }: {
-			$and: Types.TSearchParams;
-			$or?: Types.TSearchParams[];
-		},
-		params: SharedTypes.TRawParams = {},
+		params: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
+		update: SharedTypes.TRawParams = {},
 	) {
-		const {
-			fields,
-			fieldsOr,
-			nullFields,
-			values,
-		} = this.compareFields($and, $or);
+		const sql = this.compareQuery.updateByParams(params, update);
+		const { rows } = await this.pool.query(sql.query, sql.values);
 
-		const {
-			orderNumber,
-			searchFields,
-		} = this.getFieldsToSearch(
-			{ fields, fieldsOr, nullFields },
-		);
-
-		const clearedParams = SharedHelpers.clearUndefinedFields(params);
-		const fieldsToUpdate = Object.keys(clearedParams);
-
-		if (!fields.length) throw new Error("No one params incoming to update");
-
-		const res = (await this.pool.query(
-			queries.updateByParams(
-				this.tableName,
-				fieldsToUpdate,
-				searchFields,
-				this.updateField,
-				orderNumber + 1,
-			),
-			[...values, ...Object.values(clearedParams)],
-		)).rows;
-
-		return res;
+		return rows;
 	}
 
-	async updateOneByPk(
-		pk: string,
-		params: SharedTypes.TRawParams = {},
+	async updateOneByPk<T = string | number>(
+		pk: T,
+		update: SharedTypes.TRawParams = {},
 	) {
-		if (!this.primaryKey) {
-			throw new Error("Primary key not specified");
-		}
+		if (!this.primaryKey) { throw new Error("Primary key not specified"); }
 
-		const clearedParams = SharedHelpers.clearUndefinedFields(params);
-		const fields = Object.keys(clearedParams);
+		const sql = this.compareQuery.updateOneByPk(pk, update);
+		const { rows: [entity] } = await this.pool.query(sql.query, sql.values);
 
-		if (!fields.length) throw new Error("No one params incoming to update");
-
-		const res = (await this.pool.query(
-			queries.updateByPk(this.tableName, fields, this.primaryKey, this.updateField),
-			[...Object.values(clearedParams), pk],
-		)).rows;
-
-		return res[0];
+		return entity;
 	}
 
 	/**
 	 * @experimental
 	 */
-	queryBuilder(tableName?: string) {
-		return new QueryBuilder(tableName || this.tableName, this.pool);
+	queryBuilder(options?: { tableName?: string; client?: pg.Pool | pg.PoolClient; }) {
+		const { client, tableName } = options || {};
+
+		return new QueryBuilder(tableName || this.tableName, client || this.pool);
 	}
 
 	// STATIC METHODS
@@ -390,9 +349,7 @@ export class BaseModel {
 			: "";
 
 		const query = `
-			INSERT INTO ${tableName}(
-				${k.join(",")}
-			)
+			INSERT INTO ${tableName}(${k.join(",")})
 			VALUES(${k.map((e, idx) => "$" + ++idx).join(",")})
 			${returningSQL}
 		`;
@@ -428,15 +385,18 @@ export class BaseModel {
 
 		if (updateField) {
 			switch (updateField.type) {
-				case "timestamp":
+				case "timestamp": {
 					updateFields += `, ${updateField.title} = NOW()`;
 					break;
-				case "unix_timestamp":
+				}
+				case "unix_timestamp": {
 					updateFields += `, ${updateField.title} = ROUND((EXTRACT(EPOCH FROM NOW()) * (1000)::NUMERIC))`;
 					break;
+				}
 
-				default:
+				default: {
 					throw new Error("Invalid type: " + updateField.type);
+				}
 			}
 		}
 

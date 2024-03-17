@@ -126,7 +126,7 @@ export class Domain extends DbManager.PG.BaseDomain<{
 		};
 
 		return this.model
-			.queryBuilder("users AS u")
+			.queryBuilder({ tableName: "users AS u" })
 			.select([
 				"u.id         AS id",
 				"u.first_name AS first_name",
