@@ -61,10 +61,12 @@ export default async () => {
 					await testContext.test(
 						"create admin",
 						async () => {
-							const userRole = await UserRole.getGuaranteedOneByParams({
+							const { one: userRole } = await UserRole.getOneByParams({
 								params: { title: "admin" },
 								selected: ["id"],
 							});
+
+							if (!userRole) throw new Error("User role not found");
 
 							await Promise.all(
 								["Robin"].map((e) =>
@@ -77,10 +79,12 @@ export default async () => {
 					await testContext.test(
 						"create head",
 						async () => {
-							const userRole = await UserRole.getGuaranteedOneByParams({
+							const { one: userRole } = await UserRole.getOneByParams({
 								params: { title: "head" },
 								selected: ["id"],
 							});
+
+							if (!userRole) throw new Error("User role not found");
 
 							await Promise.all(
 								["Bob"].map((e) =>
@@ -93,10 +97,12 @@ export default async () => {
 					await testContext.test(
 						"create users",
 						async () => {
-							const userRole = await UserRole.getGuaranteedOneByParams({
+							const { one: userRole } = await UserRole.getOneByParams({
 								params: { title: "user" },
 								selected: ["id"],
 							});
+
+							if (!userRole) throw new Error("User role not found");
 
 							await Promise.all(
 								["John", "Mary", "Peter", "Max", "Ann"].map((e) =>
@@ -140,6 +146,21 @@ export default async () => {
 								assert.equal(firstUser?.last_name, null);
 								assert.equal(typeof firstUser?.created_at, "string");
 								assert.equal(firstUser?.updated_at, null);
+							},
+						);
+					}
+
+					{
+						await testContext.test(
+							"User.getList",
+							async () => {
+								const users = await User.getList({
+									order: [{ column: "u.created_at", sorting: "ASC" }],
+									pagination: { limit: 10, offset: 0 },
+									params: {},
+								});
+
+								assert.equal(users.length, 7);
 							},
 						);
 					}

@@ -64,19 +64,18 @@ export async function start(
 		try {
 			migrations
 				.push(
-					...(await pool.query<{ title: string; }>(`SELECT * FROM ${settings.migrationsTableName}`))
-						.rows
-						.map((e) => e.title),
+					...(await pool.query<Types.RowDataPacket<{ title: string; }>>(`SELECT title FROM ${settings.migrationsTableName}`))[0]
+						.map((e: { title: string; }) => e.title),
 				);
 		} catch (err) {
 			error = true;
 
 			await pool.query(`
 				CREATE TABLE ${settings.migrationsTableName}(
-				  id                              BIGSERIAL PRIMARY KEY,
-				  title                           TEXT NOT NULL UNIQUE,
-				  created_at                      TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
-				  updated_at                      TIMESTAMP WITHOUT TIME ZONE
+				  id                              BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+				  title                           VARCHAR(255) NOT NULL UNIQUE,
+				  created_at                      DATETIME DEFAULT (UTC_TIMESTAMP),
+				  updated_at                      DATETIME
 				)
 			`);
 		}

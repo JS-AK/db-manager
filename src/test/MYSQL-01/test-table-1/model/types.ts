@@ -27,7 +27,7 @@ export type SearchFields = Partial<Omit<TableFields,
 export type TableFields = {
 	created_at: Date;
 	description: string | null;
-	id: string;
+	id: number;
 	title: string;
 	updated_at: Date | null;
 };

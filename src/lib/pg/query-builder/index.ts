@@ -3,6 +3,7 @@ import pg from "pg";
 import * as DomainTypes from "../domain/types.js";
 import * as Helpers from "../model/helpers.js";
 import * as ModelTypes from "../model/types.js";
+import * as SharedHelpers from "../../../shared-helpers/index.js";
 import * as SharedTypes from "../../../shared-types/index.js";
 
 const operatorMappings: Map<
@@ -48,8 +49,7 @@ const operatorMappings: Map<
 ]);
 
 export class QueryBuilder {
-	#mainFrom: string;
-	#mainSelect = "";
+	#mainQuery = "";
 	#mainHaving = "";
 	#mainWhere = "";
 	#groupBy = "";
@@ -57,38 +57,132 @@ export class QueryBuilder {
 	#valuesOrder: number;
 	#join: string[] = [];
 	#pagination = "";
+	#returning = "";
+	#tableNameRaw;
 	#tableName;
 	#values: unknown[] = [];
 
-	#pool;
+	#client;
 
-	constructor(tableName: string, pool: pg.Pool) {
-		this.#mainFrom = `FROM ${tableName}`;
-		this.#tableName = tableName;
+	constructor(tableName: string, client: pg.Pool | pg.PoolClient) {
+		this.#tableNameRaw = tableName;
+
+		const chunks = tableName.toLowerCase().split(" ").filter((e) => e && e !== "as");
+		const as = chunks[1]?.trim();
+
+		if (as) {
+			this.#tableName = as;
+		} else {
+			this.#tableName = tableName;
+		}
 		this.#valuesOrder = 0;
 
-		this.#pool = pool;
+		this.#client = client;
 	}
 
 	#compareSql() {
-		let sql = this.#mainSelect + this.#mainFrom;
+		let sql = "";
 
+		if (this.#mainQuery) sql += this.#mainQuery;
 		if (this.#join.length) sql += "\r\n" + this.#join.join("\r\n");
 		if (this.#mainWhere) sql += "\r\n" + this.#mainWhere;
 		if (this.#groupBy) sql += "\r\n" + this.#groupBy;
 		if (this.#mainHaving) sql += "\r\n" + this.#mainHaving;
 		if (this.#orderBy) sql += "\r\n" + this.#orderBy;
 		if (this.#pagination) sql += "\r\n" + this.#pagination;
+		if (this.#returning) sql += "\r\n" + this.#returning;
 
 		return sql + ";";
 	}
 
-	getSql(): { sql: string; values: unknown[]; } {
-		return { sql: this.#compareSql(), values: this.#values };
+	compareQuery(): { query: string; values: unknown[]; } {
+		return { query: this.#compareSql(), values: this.#values };
+	}
+
+	insert(options: {
+		onConflict?: string;
+		params: SharedTypes.TRawParams;
+		updateColumn?: { title: string; type: "unix_timestamp" | "timestamp"; } | null;
+	}) {
+		const params = SharedHelpers.clearUndefinedFields(options.params);
+		const k = Object.keys(params);
+		const v = Object.values(params);
+
+		if (!k.length) throw new Error(`Invalid params, all fields are undefined - ${Object.keys(options.params).join(", ")}`);
+
+		const valuesOrder = this.#valuesOrder;
+		let updateQuery = k.map((e, idx) => "$" + (idx + 1 + valuesOrder)).join(",");
+
+		if (options.updateColumn) {
+			switch (options.updateColumn.type) {
+				case "timestamp": {
+					updateQuery += `, ${options.updateColumn.title} = NOW()`;
+					break;
+				}
+				case "unix_timestamp": {
+					updateQuery += `, ${options.updateColumn.title} = ROUND((EXTRACT(EPOCH FROM NOW()) * (1000)::NUMERIC))`;
+					break;
+				}
+
+				default: {
+					throw new Error("Invalid type: " + options.updateColumn.type);
+				}
+			}
+		}
+
+		this.#mainQuery = `INSERT INTO ${this.#tableNameRaw}(${k.join(",")}) VALUES(${updateQuery})`;
+
+		if (options.onConflict) this.#mainQuery += ` ${options.onConflict}`;
+
+		this.#values.push(...v);
+		this.#valuesOrder += v.length;
+
+		return this;
+	}
+
+	update(options: {
+		onConflict?: string;
+		params: SharedTypes.TRawParams;
+		updateColumn?: { title: string; type: "unix_timestamp" | "timestamp"; } | null;
+	}) {
+		const params = SharedHelpers.clearUndefinedFields(options.params);
+		const k = Object.keys(params);
+		const v = Object.values(params);
+
+		if (!k.length) throw new Error(`Invalid params, all fields are undefined - ${Object.keys(options.params).join(", ")}`);
+
+		const valuesOrder = this.#valuesOrder;
+		let updateQuery = k.map((e: string, idx: number) => `${e} = $${idx + 1 + valuesOrder}`).join(",");
+
+		if (options.updateColumn) {
+			switch (options.updateColumn.type) {
+				case "timestamp": {
+					updateQuery += `, ${options.updateColumn.title} = NOW()`;
+					break;
+				}
+				case "unix_timestamp": {
+					updateQuery += `, ${options.updateColumn.title} = ROUND((EXTRACT(EPOCH FROM NOW()) * (1000)::NUMERIC))`;
+					break;
+				}
+
+				default: {
+					throw new Error("Invalid type: " + options.updateColumn.type);
+				}
+			}
+		}
+
+		this.#mainQuery = `UPDATE ${this.#tableNameRaw} SET ${updateQuery}`;
+
+		if (options.onConflict) this.#mainQuery += ` ${options.onConflict}`;
+
+		this.#values.push(...v);
+		this.#valuesOrder += v.length;
+
+		return this;
 	}
 
 	select(arr: string[]) {
-		this.#mainSelect = `SELECT ${arr.join(", ")}\r\n`;
+		this.#mainQuery = `SELECT ${arr.join(", ")}\r\n FROM ${this.#tableNameRaw}`;
 
 		return this;
 	}
@@ -159,12 +253,7 @@ export class QueryBuilder {
 		params?: ModelTypes.TSearchParams;
 		paramsOr?: DomainTypes.TArray2OrMore<ModelTypes.TSearchParams>;
 	}) {
-		const {
-			fields,
-			fieldsOr,
-			nullFields,
-			values,
-		} = Helpers.compareFields(data.params as ModelTypes.TSearchParams, data.paramsOr);
+		const { fields, fieldsOr, nullFields, values } = Helpers.compareFields(data.params as ModelTypes.TSearchParams, data.paramsOr);
 
 		if (fields.length) {
 			if (!this.#mainWhere) this.#mainWhere += "WHERE ";
@@ -175,7 +264,7 @@ export class QueryBuilder {
 				if (operatorFunction) {
 					const [text, orderNumber] = operatorFunction(e, this.#valuesOrder);
 
-					this.#valuesOrder = orderNumber;
+					this.#valuesOrder += orderNumber;
 
 					return text;
 				} else {
@@ -208,7 +297,7 @@ export class QueryBuilder {
 					if (operatorFunction) {
 						const [text, orderNumber] = operatorFunction(e, this.#valuesOrder);
 
-						this.#valuesOrder = orderNumber;
+						this.#valuesOrder += orderNumber;
 
 						return text;
 					} else {
@@ -294,7 +383,7 @@ export class QueryBuilder {
 				if (operatorFunction) {
 					const [text, orderNumber] = operatorFunction(e, this.#valuesOrder);
 
-					this.#valuesOrder = orderNumber;
+					this.#valuesOrder += orderNumber;
 
 					return text;
 				} else {
@@ -327,7 +416,7 @@ export class QueryBuilder {
 					if (operatorFunction) {
 						const [text, orderNumber] = operatorFunction(e, this.#valuesOrder);
 
-						this.#valuesOrder = orderNumber;
+						this.#valuesOrder += orderNumber;
 
 						return text;
 					} else {
@@ -359,9 +448,15 @@ export class QueryBuilder {
 		return this;
 	}
 
-	async execute<T extends pg.QueryResultRow>() {
-		const sql = this.#compareSql();
+	returning(data: string[]) {
+		this.#returning += `RETURNING ${data.join(", ")}`;
 
-		return (await this.#pool.query<T>(sql, this.#values)).rows;
+		return this;
+	}
+
+	async execute<T extends pg.QueryResultRow>() {
+		const sql = this.compareQuery();
+
+		return (await this.#client.query<T>(sql.query, sql.values)).rows;
 	}
 }
