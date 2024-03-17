@@ -1,3 +1,10 @@
+# [3.12.0](https://github.com/JS-AK/db-manager/compare/v3.11.0...v3.12.0) (2024-03-17)
+
+
+### Features
+
+* added delete() to pg query builder ([d8308b8](https://github.com/JS-AK/db-manager/commit/d8308b8411641656f313c15e66c3c89ae5162eef))
+
 # [3.11.0](https://github.com/JS-AK/db-manager/compare/v3.10.0...v3.11.0) (2024-03-17)
 
 
