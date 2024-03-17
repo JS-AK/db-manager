@@ -99,6 +99,12 @@ export class QueryBuilder {
 		return { query: this.#compareSql(), values: this.#values };
 	}
 
+	delete() {
+		this.#mainQuery = `DELETE\r\n FROM ${this.#tableNameRaw}`;
+
+		return this;
+	}
+
 	insert(options: {
 		onConflict?: string;
 		params: SharedTypes.TRawParams;
