@@ -1,3 +1,10 @@
+## [3.12.1](https://github.com/JS-AK/db-manager/compare/v3.12.0...v3.12.1) (2024-03-21)
+
+
+### Bug Fixes
+
+* updated pg qb ([c26e327](https://github.com/JS-AK/db-manager/commit/c26e327433a80730f855c4d5e28a49eef39556c6))
+
 # [3.12.0](https://github.com/JS-AK/db-manager/compare/v3.11.0...v3.12.0) (2024-03-17)
 
 
