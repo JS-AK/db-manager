@@ -1,3 +1,10 @@
+# [3.14.0](https://github.com/JS-AK/db-manager/compare/v3.13.0...v3.14.0) (2024-03-21)
+
+
+### Features
+
+* updated deps ([c91b2f9](https://github.com/JS-AK/db-manager/commit/c91b2f95c87aaa6e4c8dd51fb4176cb75d6c0e1c))
+
 # [3.13.0](https://github.com/JS-AK/db-manager/compare/v3.12.1...v3.13.0) (2024-03-21)
 
 
