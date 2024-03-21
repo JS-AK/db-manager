@@ -152,6 +152,50 @@ export default async () => {
 
 					{
 						await testContext.test(
+							"select + where + second",
+							async () => {
+								const users = await User
+									.model
+									.queryBuilder()
+									.select(["id"])
+									.where({ params: {} })
+									.execute<{ id: string; }>();
+
+								{
+									await User
+										.model
+										.queryBuilder()
+										.select(["*"])
+										.where({
+											params: {
+												first_name: { $ilike: "Max" },
+												id: { $in: users.map((e) => e.id) },
+												is_deleted: false,
+											},
+										})
+										.execute();
+								}
+
+								{
+									await User
+										.model
+										.queryBuilder()
+										.select(["*"])
+										.where({
+											params: {
+												first_name: { $ilike: "Max" },
+												id: { $nin: users.map((e) => e.id) },
+												is_deleted: false,
+											},
+										})
+										.execute();
+								}
+							},
+						);
+					}
+
+					{
+						await testContext.test(
 							"User.getList",
 							async () => {
 								const users = await User.getList({

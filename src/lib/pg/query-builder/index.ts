@@ -100,7 +100,7 @@ export class QueryBuilder {
 	}
 
 	delete() {
-		this.#mainQuery = `DELETE\r\n FROM ${this.#tableNameRaw}`;
+		this.#mainQuery = `DELETE\r\nFROM ${this.#tableNameRaw}`;
 
 		return this;
 	}
@@ -188,7 +188,7 @@ export class QueryBuilder {
 	}
 
 	select(arr: string[]) {
-		this.#mainQuery = `SELECT ${arr.join(", ")}\r\n FROM ${this.#tableNameRaw}`;
+		this.#mainQuery = `SELECT ${arr.join(", ")}\r\nFROM ${this.#tableNameRaw}`;
 
 		return this;
 	}
@@ -259,7 +259,10 @@ export class QueryBuilder {
 		params?: ModelTypes.TSearchParams;
 		paramsOr?: DomainTypes.TArray2OrMore<ModelTypes.TSearchParams>;
 	}) {
-		const { fields, fieldsOr, nullFields, values } = Helpers.compareFields(data.params as ModelTypes.TSearchParams, data.paramsOr);
+		const { fields, fieldsOr, nullFields, values } = Helpers.compareFields(
+			data.params as ModelTypes.TSearchParams,
+			data.paramsOr,
+		);
 
 		if (fields.length) {
 			if (!this.#mainWhere) this.#mainWhere += "WHERE ";
@@ -270,7 +273,7 @@ export class QueryBuilder {
 				if (operatorFunction) {
 					const [text, orderNumber] = operatorFunction(e, this.#valuesOrder);
 
-					this.#valuesOrder += orderNumber;
+					this.#valuesOrder = orderNumber;
 
 					return text;
 				} else {
@@ -303,7 +306,7 @@ export class QueryBuilder {
 					if (operatorFunction) {
 						const [text, orderNumber] = operatorFunction(e, this.#valuesOrder);
 
-						this.#valuesOrder += orderNumber;
+						this.#valuesOrder = orderNumber;
 
 						return text;
 					} else {
@@ -374,12 +377,10 @@ export class QueryBuilder {
 		params?: ModelTypes.TSearchParams;
 		paramsOr?: DomainTypes.TArray2OrMore<ModelTypes.TSearchParams>;
 	}) {
-		const {
-			fields,
-			fieldsOr,
-			nullFields,
-			values,
-		} = Helpers.compareFields(data.params as ModelTypes.TSearchParams, data.paramsOr);
+		const { fields, fieldsOr, nullFields, values } = Helpers.compareFields(
+			data.params as ModelTypes.TSearchParams,
+			data.paramsOr,
+		);
 
 		if (fields.length) {
 			this.#mainHaving += "HAVING ";
@@ -389,7 +390,7 @@ export class QueryBuilder {
 				if (operatorFunction) {
 					const [text, orderNumber] = operatorFunction(e, this.#valuesOrder);
 
-					this.#valuesOrder += orderNumber;
+					this.#valuesOrder = orderNumber;
 
 					return text;
 				} else {
@@ -422,7 +423,7 @@ export class QueryBuilder {
 					if (operatorFunction) {
 						const [text, orderNumber] = operatorFunction(e, this.#valuesOrder);
 
-						this.#valuesOrder += orderNumber;
+						this.#valuesOrder = orderNumber;
 
 						return text;
 					} else {
