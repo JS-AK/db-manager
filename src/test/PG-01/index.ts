@@ -99,9 +99,11 @@ export default async () => {
 							tableName: testTable.tableName,
 						});
 
-					const id = (await client.query<{ id: string; }>(query, values)).rows[0]?.id;
+					const { rows: [entity] } = (await client.query<{ id: string; }>(query, values));
 
-					assert.equal(!!id, true);
+					if (!entity) throw new Error("Entity not found");
+
+					assert.equal(!!entity.id, true);
 
 					{
 						const data = (await client.query<{
@@ -113,7 +115,7 @@ export default async () => {
 								FROM ${testTable.tableName}
 								WHERE id = $1
 							`,
-							[id],
+							[entity.id],
 						)).rows[0];
 
 						assert.equal(data?.meta.firstName, params.meta.firstName);
@@ -127,17 +129,15 @@ export default async () => {
 							title: "title updated",
 						};
 
-						const { query, values } = PG
-							.BaseModel
-							.getUpdateFields<
-								TestTable.Types.UpdateFields,
-								TestTable.Types.TableKeys
-							>({
-								params: paramsToUpdate,
-								primaryKey: { field: "id", value: id as string },
-								tableName: testTable.tableName,
-								updateField: testTable.updateField,
-							});
+						const { query, values } = PG.BaseModel.getUpdateFields<
+							TestTable.Types.UpdateFields,
+							TestTable.Types.TableKeys
+						>({
+							params: paramsToUpdate,
+							primaryKey: { field: "id", value: entity.id },
+							tableName: testTable.tableName,
+							updateField: testTable.updateField,
+						});
 
 						await client.query(query, values);
 
@@ -151,7 +151,7 @@ export default async () => {
 									FROM ${testTable.tableName}
 									WHERE id = $1
 								`,
-								[id],
+								[entity.id],
 							)).rows[0];
 
 							assert.equal(data?.meta.firstName, paramsToUpdate.meta.firstName);
@@ -172,7 +172,7 @@ export default async () => {
 								FROM ${testTable.tableName}
 								WHERE id = $1
 							`,
-							[id],
+							[entity.id],
 						)).rows[0];
 
 						assert.equal(data, undefined);
