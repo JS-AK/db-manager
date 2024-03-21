@@ -331,7 +331,7 @@ export class BaseModel {
 		params: P;
 		returning?: F[];
 		tableName: string;
-	}) {
+	}): { query: string; values: unknown[]; } {
 		const {
 			params: paramsRaw,
 			returning,
@@ -366,7 +366,7 @@ export class BaseModel {
 		returning?: F[];
 		tableName: string;
 		updateField?: { title: F; type: "unix_timestamp" | "timestamp"; } | null;
-	}) {
+	}): { query: string; values: unknown[]; } {
 		const {
 			params: paramsRaw,
 			primaryKey,
