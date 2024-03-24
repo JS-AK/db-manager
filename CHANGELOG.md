@@ -1,3 +1,10 @@
+## [3.15.1](https://github.com/JS-AK/db-manager/compare/v3.15.0...v3.15.1) (2024-03-24)
+
+
+### Bug Fixes
+
+* removed tests and examples from result package ([8edffca](https://github.com/JS-AK/db-manager/commit/8edffca8cf5f3966e674fedd2a85c05d25ae6205))
+
 # [3.15.0](https://github.com/JS-AK/db-manager/compare/v3.14.0...v3.15.0) (2024-03-21)
 
 
