@@ -23,8 +23,8 @@ export class Model extends PG.BaseModel {
 // ----- Table properties ----------------------
 const tableName = "users"; // table from DB
 const primaryKey = "id"; // primaryId from table
-const createField = { title: "created_at", type: "unix_timestamp" } as const;
-const updateField = { title: "updated_at", type: "unix_timestamp" } as const;
+const createField = { title: "created_at", type: "timestamp" } as const;
+const updateField = { title: "updated_at", type: "timestamp" } as const;
 const tableFields: TableKeys[] = [
 	"created_at",
 	"first_name",

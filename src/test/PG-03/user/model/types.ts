@@ -13,13 +13,7 @@ export type ListedEntity = {
 	ur_title: "admin" | "head" | "booker";
 };
 
-export type SearchFields = Partial<Omit<TableFields,
-	| "created_at"
-	| "updated_at"
->> & {
-	created_at?: string;
-	updated_at?: string | null;
-};
+export type SearchFields = Partial<TableFields>;
 
 export type SearchListFields = {
 	"u.is_deleted"?: boolean;
@@ -27,13 +21,13 @@ export type SearchListFields = {
 };
 
 export type TableFields = {
-	created_at: Date;
+	created_at: string;
 	first_name: string;
 	id: string;
 	id_user_role: string;
 	is_deleted: boolean;
 	last_name: string;
-	updated_at: Date | null;
+	updated_at: string | null;
 };
 
 export type TableKeys = keyof TableFields;

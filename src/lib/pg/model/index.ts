@@ -328,7 +328,7 @@ export class BaseModel {
 		P extends SharedTypes.TRawParams = SharedTypes.TRawParams,
 		F extends string = string
 	>(data: {
-		params: P;
+		params: P | P[];
 		returning?: F[];
 		tableName: string;
 	}): { query: string; values: unknown[]; } {
@@ -337,6 +337,52 @@ export class BaseModel {
 			returning,
 			tableName,
 		} = data;
+
+		if (Array.isArray(paramsRaw)) {
+			const v = [];
+			const k = [];
+			const headers = new Set();
+
+			const [example] = paramsRaw;
+
+			if (!example) throw new Error("Invalid parameters");
+
+			const params = SharedHelpers.clearUndefinedFields(example);
+
+			Object.keys(params).forEach((e) => headers.add(e));
+
+			for (const pR of paramsRaw) {
+				const params = SharedHelpers.clearUndefinedFields(pR);
+				const keys = Object.keys(params);
+
+				k.push(keys);
+				v.push(...Object.values(params));
+
+				if (!k.length) {
+					throw new Error(`Invalid params, all fields are undefined - ${Object.keys(paramsRaw).join(", ")}`);
+				}
+
+				for (const key of keys) {
+					if (!headers.has(key)) {
+						throw new Error(`Invalid params, all fields are undefined - ${Object.keys(pR).join(", ")}`);
+					}
+				}
+			}
+
+			const returningSQL = returning?.length
+				? `RETURNING ${returning.join(",")}`
+				: "";
+
+			let idx = 0;
+
+			const query = `
+				INSERT INTO ${tableName}(${Array.from(headers).join(",")})
+				VALUES(${k.map((e) => e.map(() => "$" + ++idx)).join("),(")})
+				${returningSQL}
+			`;
+
+			return { query, values: v };
+		}
 
 		const params = SharedHelpers.clearUndefinedFields(paramsRaw);
 		const k = Object.keys(params);

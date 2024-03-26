@@ -88,16 +88,11 @@ export default async () => {
 						title: "title",
 					};
 
-					const { query, values } = PG
-						.BaseModel
-						.getInsertFields<
-							TestTable.Types.CreateFields,
-							TestTable.Types.TableKeys
-						>({
-							params,
-							returning: ["id"],
-							tableName: testTable.tableName,
-						});
+					const { query, values } = PG.BaseModel.getInsertFields<TestTable.Types.CreateFields, TestTable.Types.TableKeys>({
+						params,
+						returning: ["id"],
+						tableName: testTable.tableName,
+					});
 
 					const { rows: [entity] } = (await client.query<{ id: string; }>(query, values));
 
@@ -106,17 +101,36 @@ export default async () => {
 					assert.equal(!!entity.id, true);
 
 					{
-						const data = (await client.query<{
-							meta: { firstName: string; lastName: string; };
-							title: string;
-						}>(
-							`
-								SELECT meta, title
-								FROM ${testTable.tableName}
-								WHERE id = $1
-							`,
-							[entity.id],
-						)).rows[0];
+						const params = [
+							{ meta: { firstName: "firstName", lastName: "lastName" }, number_key: 10, title: "title" },
+							{ meta: { firstName: "firstName", lastName: "lastName" }, number_key: 11, title: "title" },
+							{ meta: { firstName: "firstName", lastName: "lastName" }, number_key: 12, title: "title" },
+							{ meta: { firstName: "firstName", lastName: "lastName" }, number_key: 13, title: "title" },
+							{ meta: { firstName: "firstName", lastName: "lastName" }, number_key: 14, title: "title" },
+							{ meta: { firstName: "firstName", lastName: "lastName" }, number_key: 15, title: "title" },
+							{ meta: { firstName: "firstName", lastName: "lastName" }, number_key: 16, title: "title" },
+							{ meta: { firstName: "firstName", lastName: "lastName" }, number_key: 17, title: "title" },
+							{ meta: { firstName: "firstName", lastName: "lastName" }, number_key: 18, title: "title" },
+							{ meta: { firstName: "firstName", lastName: "lastName" }, number_key: 19, title: "title" },
+						];
+
+						const { query, values } = PG.BaseModel.getInsertFields<TestTable.Types.CreateFields, TestTable.Types.TableKeys>({
+							params,
+							returning: ["id", "number_key"],
+							tableName: testTable.tableName,
+						});
+
+						const { rows: entities } = (await client.query<{ id: string; }>(query, values));
+
+						assert.equal(entities.length, params.length);
+					}
+
+					{
+						const { rows: [data] } = (await client.query<{ meta: { firstName: string; lastName: string; }; title: string; }>(`
+							SELECT meta, title
+							FROM ${testTable.tableName}
+							WHERE id = $1
+						`, [entity.id]));
 
 						assert.equal(data?.meta.firstName, params.meta.firstName);
 						assert.equal(data?.meta.lastName, params.meta.lastName);
@@ -129,10 +143,7 @@ export default async () => {
 							title: "title updated",
 						};
 
-						const { query, values } = PG.BaseModel.getUpdateFields<
-							TestTable.Types.UpdateFields,
-							TestTable.Types.TableKeys
-						>({
+						const { query, values } = PG.BaseModel.getUpdateFields<TestTable.Types.UpdateFields, TestTable.Types.TableKeys>({
 							params: paramsToUpdate,
 							primaryKey: { field: "id", value: entity.id },
 							tableName: testTable.tableName,
@@ -142,17 +153,11 @@ export default async () => {
 						await client.query(query, values);
 
 						{
-							const data = (await client.query<{
-								meta: { firstName: string; lastName: string; };
-								title: string;
-							}>(
-								`
-									SELECT meta, title
-									FROM ${testTable.tableName}
-									WHERE id = $1
-								`,
-								[entity.id],
-							)).rows[0];
+							const { rows: [data] } = (await client.query<{ meta: { firstName: string; lastName: string; }; title: string; }>(`
+								SELECT meta, title
+								FROM ${testTable.tableName}
+								WHERE id = $1
+							`, [entity.id]));
 
 							assert.equal(data?.meta.firstName, paramsToUpdate.meta.firstName);
 							assert.equal(data?.meta.lastName, paramsToUpdate.meta.lastName);
@@ -163,17 +168,11 @@ export default async () => {
 					await client.query(`DELETE FROM ${testTable.tableName}`);
 
 					{
-						const data = (await client.query<{
-							meta: { firstName: string; lastName: string; };
-							title: string;
-						}>(
-							`
-								SELECT meta, title
-								FROM ${testTable.tableName}
-								WHERE id = $1
-							`,
-							[entity.id],
-						)).rows[0];
+						const { rows: [data] } = (await client.query<{ meta: { firstName: string; lastName: string; }; title: string; }>(`
+							SELECT meta, title
+							FROM ${testTable.tableName}
+							WHERE id = $1
+						`, [entity.id]));
 
 						assert.equal(data, undefined);
 					}

@@ -227,18 +227,14 @@ export default async () => {
 					await client.query("BEGIN");
 
 					{
-						const [userRole] = await UserRole
-							.model
-							.queryBuilder({ client })
+						const [userRole] = await UserRole.model.queryBuilder({ client })
 							.select(["id"])
 							.where({ params: { title: "admin" } })
 							.execute<{ id: string; }>();
 
 						if (!userRole) throw new Error("User role not found");
 
-						const [userCreated] = await User
-							.model
-							.queryBuilder({ client })
+						const [userCreated] = await User.model.queryBuilder({ client })
 							.insert({ params: { first_name: "Robin admin", id_user_role: userRole.id } })
 							.returning(["id"])
 							.execute();
@@ -249,19 +245,15 @@ export default async () => {
 					}
 
 					{
-						const [userRole] = await UserRole
-							.model
-							.queryBuilder({ client })
+						const [userRole] = await UserRole.model.queryBuilder({ client })
 							.select(["id"])
 							.where({ params: { title: "head" } })
 							.execute<{ id: string; }>();
 
 						if (!userRole) throw new Error("User role not found");
 
-						const [userCreated] = await User
-							.model
-							.queryBuilder({ client })
-							.insert({ params: { first_name: "Bob head", id_user_role: userRole.id } })
+						const [userCreated] = await User.model.queryBuilder({ client })
+							.insert<UserTable.Types.CreateFields>({ params: { first_name: "Bob head", id_user_role: userRole.id } })
 							.returning(["id"])
 							.execute<{ id: string; }>();
 
@@ -271,35 +263,27 @@ export default async () => {
 					}
 
 					{
-						const [userRole] = await UserRole
-							.model
-							.queryBuilder({ client })
+						const [userRole] = await UserRole.model.queryBuilder({ client })
 							.select(["id"])
 							.where({ params: { title: "user" } })
 							.execute<{ id: string; }>();
 
 						if (!userRole) throw new Error("User role not found");
 
-						const users = ["John", "Mary", "Peter", "Max", "Ann"];
+						const firstNames = ["John", "Mary", "Peter", "Max", "Ann"];
 
-						for (const user of users) {
-							const [userCreated] = await User
-								.model
-								.queryBuilder({ client })
-								.insert({ params: { first_name: user, id_user_role: userRole.id } })
-								.returning(["id"])
-								.execute<{ id: string; }>();
+						const users = await User.model.queryBuilder({ client })
+							.insert<UserTable.Types.CreateFields>({
+								params: firstNames.map((e) => ({ first_name: e, id_user_role: userRole.id })),
+							})
+							.returning(["id"])
+							.execute<{ id: string; }>();
 
-							if (!userCreated) throw new Error("User not create");
-
-							assert.equal(typeof userCreated.id, "string");
-						}
+						assert.equal(users.length, 5);
 					}
 
 					{
-						const admins = await User
-							.model
-							.queryBuilder({ client, tableName: "users u" })
+						const admins = await User.model.queryBuilder({ client, tableName: "users u" })
 							.select([
 								"u.id         AS id",
 								"u.first_name AS first_name",
@@ -324,9 +308,7 @@ export default async () => {
 					}
 
 					{
-						const heads = await User
-							.model
-							.queryBuilder({ client, tableName: "users u" })
+						const heads = await User.model.queryBuilder({ client, tableName: "users u" })
 							.select([
 								"u.id         AS id",
 								"u.first_name AS first_name",
@@ -381,18 +363,14 @@ export default async () => {
 					}
 
 					{
-						const [userRole] = await UserRole
-							.model
-							.queryBuilder({ client })
+						const [userRole] = await UserRole.model.queryBuilder({ client })
 							.select(["id"])
 							.where({ params: { title: "admin" } })
 							.execute<{ id: string; }>();
 
 						if (!userRole) throw new Error("User role not found");
 
-						const [userInitial] = await User
-							.model
-							.queryBuilder({ client })
+						const [userInitial] = await User.model.queryBuilder({ client })
 							.select(["id", "first_name"])
 							.where({ params: { id_user_role: userRole.id } })
 							.execute<{ id: string; first_name: string; }>();
@@ -400,9 +378,7 @@ export default async () => {
 						if (!userInitial) throw new Error("User not found");
 
 						{
-							const [userUpdated] = await User
-								.model
-								.queryBuilder({ client })
+							const [userUpdated] = await User.model.queryBuilder({ client })
 								.update({
 									params: { last_name: "Brown" },
 									updateColumn: { title: "updated_at", type: "unix_timestamp" },
@@ -419,9 +395,7 @@ export default async () => {
 						}
 
 						{
-							const [userUpdated] = await User
-								.model
-								.queryBuilder({ client })
+							const [userUpdated] = await User.model.queryBuilder({ client })
 								.select(["id", "first_name", "last_name"])
 								.where({ params: { id_user_role: userRole.id } })
 								.execute<{ id: string; first_name: string; last_name: string; }>();

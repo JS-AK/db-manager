@@ -15,15 +15,13 @@ export class Domain extends DbManager.PG.BaseDomain<{
 	}
 
 	async getAll() {
-		return this.model
-			.queryBuilder()
+		return this.model.queryBuilder()
 			.select(["name", "path"])
 			.execute<Types.TableFields>();
 	}
 
 	async getAllWithLevel() {
-		return this.model
-			.queryBuilder()
+		return this.model.queryBuilder()
 			.select([
 				"name",
 				"path",
@@ -33,8 +31,7 @@ export class Domain extends DbManager.PG.BaseDomain<{
 	}
 
 	async getAllInsideHomePath() {
-		return this.model
-			.queryBuilder()
+		return this.model.queryBuilder()
 			.select(["name", "path"])
 			.where({
 				params: { path: { "$<@": "root.home" } },
@@ -43,8 +40,7 @@ export class Domain extends DbManager.PG.BaseDomain<{
 	}
 
 	async getAllOutsideHomePath() {
-		return this.model
-			.queryBuilder()
+		return this.model.queryBuilder()
 			.select(["name", "path"])
 			.where({
 				params: { path: { "$@>": "root.home" } },

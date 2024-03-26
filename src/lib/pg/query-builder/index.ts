@@ -105,38 +105,97 @@ export class QueryBuilder {
 		return this;
 	}
 
-	insert(options: {
+	insert<T extends SharedTypes.TRawParams = SharedTypes.TRawParams>(options: {
 		onConflict?: string;
-		params: SharedTypes.TRawParams;
+		params: T | T[];
 		updateColumn?: { title: string; type: "unix_timestamp" | "timestamp"; } | null;
 	}) {
-		const params = SharedHelpers.clearUndefinedFields(options.params);
-		const k = Object.keys(params);
-		const v = Object.values(params);
+		const v = [];
+		const k = [];
+		const headers = new Set<string>();
 
-		if (!k.length) throw new Error(`Invalid params, all fields are undefined - ${Object.keys(options.params).join(", ")}`);
+		let insertQuery = "";
 
-		const valuesOrder = this.#valuesOrder;
-		let updateQuery = k.map((e, idx) => "$" + (idx + 1 + valuesOrder)).join(",");
+		if (Array.isArray(options.params)) {
+			const [example] = options.params;
 
-		if (options.updateColumn) {
-			switch (options.updateColumn.type) {
-				case "timestamp": {
-					updateQuery += `, ${options.updateColumn.title} = NOW()`;
-					break;
+			if (!example) throw new Error("Invalid parameters");
+
+			const params = SharedHelpers.clearUndefinedFields(example);
+
+			Object.keys(params).forEach((e) => headers.add(e));
+
+			for (const pR of options.params) {
+				const params = SharedHelpers.clearUndefinedFields(pR);
+				const keys = Object.keys(params);
+
+				if (!keys.length) throw new Error(`Invalid params, all fields are undefined - ${Object.keys(pR).join(", ")}`);
+
+				for (const key of keys) {
+					if (!headers.has(key)) {
+						throw new Error(`Invalid params, all fields are undefined - ${Object.keys(pR).join(", ")}`);
+					}
 				}
-				case "unix_timestamp": {
-					updateQuery += `, ${options.updateColumn.title} = ROUND((EXTRACT(EPOCH FROM NOW()) * (1000)::NUMERIC))`;
-					break;
+
+				v.push(...Object.values(params));
+
+				if (options.updateColumn) {
+					switch (options.updateColumn.type) {
+						case "timestamp": {
+							keys.push(`${options.updateColumn.title} = NOW()`);
+							break;
+						}
+						case "unix_timestamp": {
+							keys.push(`${options.updateColumn.title} = ROUND((EXTRACT(EPOCH FROM NOW()) * (1000)::NUMERIC))`);
+							break;
+						}
+
+						default: {
+							throw new Error("Invalid type: " + options.updateColumn.type);
+						}
+					}
 				}
 
-				default: {
-					throw new Error("Invalid type: " + options.updateColumn.type);
+				k.push(keys);
+			}
+
+			const valuesOrder = this.#valuesOrder;
+
+			let idx = valuesOrder;
+
+			insertQuery += k.map((e) => e.map(() => "$" + (++idx))).join("),(");
+		} else {
+			const params = SharedHelpers.clearUndefinedFields(options.params);
+
+			Object.keys(params).forEach((e) => { headers.add(e); k.push(e); });
+			v.push(...Object.values(params));
+
+			if (!headers.size) throw new Error(`Invalid params, all fields are undefined - ${Object.keys(options.params).join(", ")}`);
+
+			if (options.updateColumn) {
+				switch (options.updateColumn.type) {
+					case "timestamp": {
+						k.push(`${options.updateColumn.title} = NOW()`);
+						break;
+					}
+
+					case "unix_timestamp": {
+						k.push(`${options.updateColumn.title} = ROUND((EXTRACT(EPOCH FROM NOW()) * (1000)::NUMERIC))`);
+						break;
+					}
+
+					default: {
+						throw new Error("Invalid type: " + options.updateColumn.type);
+					}
 				}
 			}
+
+			const valuesOrder = this.#valuesOrder;
+
+			insertQuery += k.map((e, idx) => "$" + (idx + 1 + valuesOrder)).join(",");
 		}
 
-		this.#mainQuery = `INSERT INTO ${this.#tableNameRaw}(${k.join(",")}) VALUES(${updateQuery})`;
+		this.#mainQuery = `INSERT INTO ${this.#tableNameRaw}(${Array.from(headers).join(",")}) VALUES(${insertQuery})`;
 
 		if (options.onConflict) this.#mainQuery += ` ${options.onConflict}`;
 
@@ -146,9 +205,9 @@ export class QueryBuilder {
 		return this;
 	}
 
-	update(options: {
+	update<T extends SharedTypes.TRawParams = SharedTypes.TRawParams>(options: {
 		onConflict?: string;
-		params: SharedTypes.TRawParams;
+		params: T;
 		updateColumn?: { title: string; type: "unix_timestamp" | "timestamp"; } | null;
 	}) {
 		const params = SharedHelpers.clearUndefinedFields(options.params);

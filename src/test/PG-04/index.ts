@@ -43,8 +43,8 @@ export default async () => {
 					    is_deleted                      BOOLEAN NOT NULL DEFAULT FALSE,
 					    first_name                      TEXT,
 					    last_name                       TEXT,
-					    created_at                      BIGINT DEFAULT ROUND((EXTRACT(EPOCH FROM NOW()) * (1000)::NUMERIC)),
-					    updated_at                      BIGINT,
+					    created_at                      TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+					    updated_at                      TIMESTAMP WITH TIME ZONE,
 
 					    CONSTRAINT users_user_roles_id_user_role_fk
 					        FOREIGN KEY(id_user_role)
@@ -104,11 +104,16 @@ export default async () => {
 
 							if (!userRole) throw new Error("User role not found");
 
-							await Promise.all(
-								["John", "Mary", "Peter", "Max", "Ann"].map((e) =>
-									User.createOne({ first_name: e, id_user_role: userRole.id }),
-								),
-							);
+							const firstNames = ["John", "Mary", "Peter", "Max", "Ann"];
+
+							const users = await User.model.queryBuilder()
+								.insert<UserTable.Types.CreateFields>({
+									params: firstNames.map((e) => ({ first_name: e, id_user_role: userRole.id })),
+								})
+								.returning(["id"])
+								.execute<{ id: string; }>();
+
+							assert.equal(users.length, 5);
 						},
 					);
 
@@ -125,7 +130,7 @@ export default async () => {
 								assert.equal(typeof firstUser?.is_deleted, "boolean");
 								assert.equal(typeof firstUser?.first_name, "string");
 								assert.equal(firstUser?.last_name, null);
-								assert.equal(typeof firstUser?.created_at, "string");
+								assert.equal(typeof firstUser?.created_at, "object");
 								assert.equal(firstUser?.updated_at, null);
 							},
 						);
@@ -144,7 +149,7 @@ export default async () => {
 								assert.equal(typeof firstUser?.is_deleted, "boolean");
 								assert.equal(typeof firstUser?.first_name, "string");
 								assert.equal(firstUser?.last_name, null);
-								assert.equal(typeof firstUser?.created_at, "string");
+								assert.equal(typeof firstUser?.created_at, "object");
 								assert.equal(firstUser?.updated_at, null);
 							},
 						);
@@ -154,17 +159,13 @@ export default async () => {
 						await testContext.test(
 							"select + where + second",
 							async () => {
-								const users = await User
-									.model
-									.queryBuilder()
+								const users = await User.model.queryBuilder()
 									.select(["id"])
 									.where({ params: {} })
 									.execute<{ id: string; }>();
 
 								{
-									await User
-										.model
-										.queryBuilder()
+									await User.model.queryBuilder()
 										.select(["*"])
 										.where({
 											params: {
@@ -177,9 +178,7 @@ export default async () => {
 								}
 
 								{
-									await User
-										.model
-										.queryBuilder()
+									await User.model.queryBuilder()
 										.select(["*"])
 										.where({
 											params: {

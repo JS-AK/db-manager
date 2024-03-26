@@ -18,23 +18,20 @@ export class Domain extends DbManager.PG.BaseDomain<{
 	}
 
 	async getAll() {
-		return this.model
-			.queryBuilder()
+		return this.model.queryBuilder()
 			.select(["*"])
 			.execute<Types.TableFields>();
 	}
 
 	async getAllNotDeletedWithRole() {
-		return this.model
-			.queryBuilder()
+		return this.model.queryBuilder()
 			.select(["*"])
 			.where({ params: { id_user_role: { $ne: null }, is_deleted: false } })
 			.execute<Types.TableFields>();
 	}
 
 	async getAllWithTitleUser() {
-		return this.model
-			.queryBuilder()
+		return this.model.queryBuilder()
 			.select([
 				"users.first_name AS first_name",
 				"users.id AS id",
@@ -54,8 +51,7 @@ export class Domain extends DbManager.PG.BaseDomain<{
 	}
 
 	async getAllWithTitleUserWithPagination() {
-		return this.model
-			.queryBuilder()
+		return this.model.queryBuilder()
 			.select([
 				"users.first_name AS first_name",
 				"users.id AS id",
@@ -75,8 +71,7 @@ export class Domain extends DbManager.PG.BaseDomain<{
 	}
 
 	async getCountByUserRolesTitle() {
-		return this.model
-			.queryBuilder()
+		return this.model.queryBuilder()
 			.select([
 				"COUNT(users.id) AS users_count",
 				"user_roles.title AS title",
@@ -93,8 +88,7 @@ export class Domain extends DbManager.PG.BaseDomain<{
 	}
 
 	async getCountByUserRolesTitleWithCountGte5() {
-		return this.model
-			.queryBuilder()
+		return this.model.queryBuilder()
 			.select([
 				"COUNT(users.id) AS users_count",
 				"user_roles.title AS title",
