@@ -24,28 +24,26 @@ test("top level test MYSQL", async (t) => {
 		await pool.query(`DROP TABLE IF EXISTS ${testTable1.tableName};`);
 		await pool.query(`
 			CREATE TABLE ${testTable1.tableName}(
-			  id                              INT NOT NULL AUTO_INCREMENT,
+			  id                              INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
 
 			  description                     varchar(255),
 			  title                           varchar(255) NOT NULL,
 
 			  created_at                      DATETIME DEFAULT (UTC_TIMESTAMP),
-			  updated_at                      DATETIME,
-			  PRIMARY KEY (id)
+			  updated_at                      DATETIME
 			);
 		`);
 
 		await pool.query(`DROP TABLE IF EXISTS ${testTable2.tableName};`);
 		await pool.query(`
 			CREATE TABLE ${testTable2.tableName}(
-			  id                              INT NOT NULL AUTO_INCREMENT,
+			  id                              INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
 
 			  description                     varchar(255),
 			  title                           varchar(255) NOT NULL,
 
 			  created_at                      BIGINT DEFAULT (ROUND(UNIX_TIMESTAMP(CURTIME(4)) * 1000)),
-			  updated_at                      BIGINT,
-			  PRIMARY KEY (id)
+			  updated_at                      BIGINT
 			);
 		`);
 	});

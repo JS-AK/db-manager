@@ -3,18 +3,9 @@ import mysql from "mysql2/promise";
 export type ResultSetHeader = mysql.ResultSetHeader;
 export type RowDataPacket = mysql.RowDataPacket;
 
-export type TDBCreds = mysql.PoolOptions & {
-	database: string;
-	host: string;
-	password: string;
-	port: number;
-	user: string;
-};
-export type TField = {
-	key: string;
-	sign?: string;
-	operator: "=" | "<>" | ">" | ">=" | "<" | "<=" | "$in" | "$nin" | "$like" | "$nlike" | "$custom";
-};
+export type TDBCreds = mysql.PoolOptions & { database: string; host: string; password: string; port: number; user: string; };
+export type TField = { key: string; sign?: string; operator: TOperator; };
+export type TOperator = "=" | "<>" | ">" | ">=" | "<" | "<=" | "$in" | "$nin" | "$like" | "$nlike" | "$custom";
 export type TSearchParams = {
 	[key: string]: {
 		$ne?: number | string | boolean | null;

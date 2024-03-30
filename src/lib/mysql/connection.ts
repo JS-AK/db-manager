@@ -43,3 +43,31 @@ export const getTransactionPool = (config: MYSQL.ModelTypes.TDBCreds, poolName =
 		return pool;
 	}
 };
+
+export const removeStandardPool = async (config: MYSQL.ModelTypes.TDBCreds, poolName = "00") => {
+	const { database, host, password, port, user } = config;
+	const poolNameResult = "st" + poolName;
+	const credsString = `${poolNameResult}#${user}:${password}@${host}:${port}/${database}`;
+
+	const pool = pools.get(credsString);
+
+	if (pool) {
+		pools.delete(credsString);
+
+		await pool.end();
+	}
+};
+
+export const removeTransactionPool = async (config: MYSQL.ModelTypes.TDBCreds, poolName = "00") => {
+	const { database, host, password, port, user } = config;
+	const poolNameResult = "tr" + poolName;
+	const credsString = `${poolNameResult}#${user}:${password}@${host}:${port}/${database}`;
+
+	const pool = pools.get(credsString);
+
+	if (pool) {
+		pools.delete(credsString);
+
+		await pool.end();
+	}
+};
