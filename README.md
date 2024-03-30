@@ -17,7 +17,7 @@ npm install @js-ak/db-manager
 
 To get started with db-manager, you can check out one of the examples in https://github.com/JS-AK/db-manager/tree/master/src/examples This shows how to connect to a database and perform basic CRUD operations.
 
-## Auto-generated documentation
+## Documentation
 
 https://js-ak.github.io/db-manager
 
