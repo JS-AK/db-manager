@@ -10,7 +10,7 @@ Before using the MySQL Core module, ensure the following steps are completed:
 
 1. **Prepare Database**: Set up the MySQL database environment and ensure it is accessible.
 
-2. **Apply Migrations**[(MySQL Migration System)](mysql-migration-system): Execute necessary database migrations to prepare the database schema for the application. This includes creating tables, defining indexes, and setting up any initial data.
+2. **Apply Migrations**: [(MySQL Migration System)](mysql-migration-system) Execute necessary database migrations to prepare the database schema for the application. This includes creating tables, defining indexes, and setting up any initial data.
 
 ## Usage Example
 

@@ -10,7 +10,7 @@ Before using the PostgreSQL Core module, ensure the following steps are complete
 
 1. **Prepare Database**: Set up the PostgreSQL database environment and ensure it is accessible.
 
-2. **Apply Migrations**[(PostgreSQL Migration System)](postgresql-migration-system): Execute necessary database migrations to prepare the database schema for the application. This includes creating tables, defining indexes, and setting up any initial data.
+2. **Apply Migrations**: [(PostgreSQL Migration System)](postgresql-migration-system) Execute necessary database migrations to prepare the database schema for the application. This includes creating tables, defining indexes, and setting up any initial data.
 
 ## Usage Example
 
