@@ -4,7 +4,7 @@ import * as Helpers from "./helpers.js";
 import * as SharedHelpers from "../../../shared-helpers/index.js";
 import * as SharedTypes from "../../../shared-types/index.js";
 import * as Types from "./types.js";
-import { getStandardPool, getTransactionPool } from "../connection.js";
+import * as connection from "../connection.js";
 import queries from "./queries.js";
 
 export class BaseModel {
@@ -19,9 +19,9 @@ export class BaseModel {
 	tableName;
 	updateField;
 
-	constructor(tableData: Types.TTable, options: Types.TDBCreds) {
+	constructor(tableData: Types.TTable, dbCreds: Types.TDBCreds) {
 		this.createField = tableData.createField;
-		this.pool = getStandardPool(options);
+		this.pool = connection.getStandardPool(dbCreds);
 		this.primaryKey = tableData.primaryKey;
 		this.isPKAutoIncremented = typeof tableData.isPKAutoIncremented === "boolean"
 			? tableData.isPKAutoIncremented
@@ -207,11 +207,19 @@ export class BaseModel {
 
 	// STATIC METHODS
 	static getStandardPool(creds: Types.TDBCreds, poolName?: string): mysql.Pool {
-		return getStandardPool(creds, poolName);
+		return connection.getStandardPool(creds, poolName);
+	}
+
+	static async removeStandardPool(creds: Types.TDBCreds, poolName?: string): Promise<void> {
+		return connection.removeStandardPool(creds, poolName);
 	}
 
 	static getTransactionPool(creds: Types.TDBCreds, poolName?: string): mysql.Pool {
-		return getTransactionPool(creds, poolName);
+		return connection.getTransactionPool(creds, poolName);
+	}
+
+	static async removeTransactionPool(creds: Types.TDBCreds, poolName?: string): Promise<void> {
+		return connection.removeTransactionPool(creds, poolName);
 	}
 
 	static getInsertFields<
@@ -232,11 +240,9 @@ export class BaseModel {
 		if (!k.length) throw new Error(`Invalid params, all fields are undefined - ${Object.keys(paramsRaw).join(", ")}`);
 
 		const query = `
-		INSERT INTO ${tableName}(
-			${k.join(",")}
-		)
-		VALUES(${k.map(() => "?").join(",")})
-	`;
+			INSERT INTO ${tableName}(${k.join(",")})
+			VALUES(${k.map(() => "?").join(",")})
+		`;
 
 		return { query, values: v };
 	}
@@ -280,10 +286,10 @@ export class BaseModel {
 		}
 
 		const query = `
-		UPDATE ${tableName}
-		SET ${updateFields}
-		WHERE ${primaryKey.field} = ?
-	`;
+			UPDATE ${tableName}
+			SET ${updateFields}
+			WHERE ${primaryKey.field} = ?
+		`;
 
 		return { query, values: [...v, primaryKey.value] };
 	}
