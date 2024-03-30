@@ -1,3 +1,10 @@
+# [3.17.0](https://github.com/JS-AK/db-manager/compare/v3.16.0...v3.17.0) (2024-03-30)
+
+
+### Features
+
+* updated mysql core ([02fb469](https://github.com/JS-AK/db-manager/commit/02fb469034d0f3ab1d56a67060c3975450dd8d4f))
+
 # [3.16.0](https://github.com/JS-AK/db-manager/compare/v3.15.1...v3.16.0) (2024-03-26)
 
 
