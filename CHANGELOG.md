@@ -1,3 +1,10 @@
+## [3.18.1](https://github.com/JS-AK/db-manager/compare/v3.18.0...v3.18.1) (2024-03-30)
+
+
+### Bug Fixes
+
+* updated docu ([8bf5055](https://github.com/JS-AK/db-manager/commit/8bf505586739890985d56e56d578afd147e7cb94))
+
 # [3.18.0](https://github.com/JS-AK/db-manager/compare/v3.17.0...v3.18.0) (2024-03-30)
 
 
