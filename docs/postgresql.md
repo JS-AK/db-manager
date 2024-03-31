@@ -61,14 +61,14 @@ export * as Entity from "./entity/index.js";
 
 ```
 
-### data-access-layer/entity/index.js
+### data-access-layer/models/entity/index.js
 ```javascript
 export * from "./domain.js";
 export * from "./model.js";
 
 ```
 
-### data-access-layer/entity/domain.js
+### data-access-layer/models/entity/domain.js
 ```javascript
 import { PG } from "@js-ak/db-manager";
 
@@ -82,7 +82,7 @@ export class Domain extends PG.BaseDomain {
 
 ```
 
-### data-access-layer/entity/model.js
+### data-access-layer/models/entity/model.js
 ```javascript
 import { PG } from "@js-ak/db-manager";
 
@@ -115,7 +115,7 @@ const creds = {
     user: "user",
 };
 
-const { repository } = await init(creds)
+const { repository } = init(creds);
 
 const entity = await repository.entity.createOne({
     first_name: "firstName",
