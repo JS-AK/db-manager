@@ -1,16 +1,16 @@
-# PostgreSQL core
+# MySQL core
 
 ## Overview
 
-The PostgreSQL Core module provides essential functionalities for interacting with a PostgreSQL database. It includes a Domain class that encapsulates operations related to entities in the database, offering functionalities for creating, retrieving, updating, and deleting records.
+The MySQL Core module provides essential functionalities for interacting with a MySQL database. It includes a Domain class that encapsulates operations related to entities in the database, offering functionalities for creating, retrieving, updating, and deleting records.
 
 ## Prerequisites
 
-Before using the PostgreSQL Core module, ensure the following steps are completed:
+Before using the MySQL Core module, ensure the following steps are completed:
 
-1. **Prepare Database**: Set up the PostgreSQL database environment and ensure it is accessible.
+1. **Prepare Database**: Set up the MySQL database environment and ensure it is accessible.
 
-2. **Apply Migrations**: [(PostgreSQL Migration System)](postgresql-migration-system) Execute necessary database migrations to prepare the database schema for the application. This includes creating tables, defining indexes, and setting up any initial data.
+2. **Apply Migrations**: [(MySQL Migration System)](mysql-migration-system) Execute necessary database migrations to prepare the database schema for the application. This includes creating tables, defining indexes, and setting up any initial data.
 
 ## Usage Example
 
@@ -29,7 +29,7 @@ data-access-layer
 
 ### data-access-layer/index.js
 ```javascript
-import { PG } from "@js-ak/db-manager";
+import { MYSQL } from "@js-ak/db-manager";
 
 import * as Models from "./models/index.js";
 
@@ -38,19 +38,11 @@ export const init = (config) => {
         entity: new Models.Entity.Domain(config),
     };
 
-    PG.BaseModel.getStandardPool(config).on("error", (error) => {
-        console.error(error.message)
-    });
-
-    PG.BaseModel.getStandardPool(config).on("connect", (client) => {
-        client.on("error", (error) => { console.error(error.message) });
-    });
-
     return { repository };
 };
 
 export const shutdown = async (config) => {
-  await PG.BaseModel.removeStandardPool(config);
+  await MYSQL.BaseModel.removeStandardPool(config);
 }
 
 ```
@@ -70,11 +62,11 @@ export * from "./model.js";
 
 ### data-access-layer/models/entity/domain.js
 ```javascript
-import { PG } from "@js-ak/db-manager";
+import { MYSQL } from "@js-ak/db-manager";
 
 import { Model } from "./model.js";
 
-export class Domain extends PG.BaseDomain {
+export class Domain extends MYSQL.BaseDomain {
     constructor(creds) {
         super({ model: new Model(creds) });
     }
@@ -84,16 +76,16 @@ export class Domain extends PG.BaseDomain {
 
 ### data-access-layer/models/entity/model.js
 ```javascript
-import { PG } from "@js-ak/db-manager";
+import { MYSQL } from "@js-ak/db-manager";
 
-export class Model extends PG.BaseModel {
+export class Model extends MYSQL.BaseModel {
     constructor(creds) {
         super(
             {
                 createField: { title: "created_at", type: "timestamp" },
                 primaryKey: "id",
                 tableFields: ["id", "first_name", "last_name", "created_at", "updated_at"],
-                tableName: "users",
+                tableName: "entities",
                 updateField: { title: "updated_at", type: "timestamp" },
             },
             creds,
@@ -111,27 +103,27 @@ const creds = {
     database: "database",
     host: "localhost",
     password: "password",
-    port: 5432,
+    port: 3306,
     user: "user",
 };
 
 const { repository } = init(creds);
 
 const entity = await repository.entity.createOne({
-    first_name: "firstName",
-    last_name: "lastName",
+    first_name: "Foo",
+    last_name: "Bar",
 });
 
 console.log({ entity });
 
 const { message, one } = await repository.entity.getOneByParams({
-    params: { first_name: "firstName" },
+    params: { first_name: "Foo" },
     selected: ["id"],
 });
 
 if (one) {
-    await repository.entity.updateOneByPk(one.id, {
-        first_name: "firstName updated",
+   await repository.entity.updateOneByPk(one.id, {
+        first_name: "Foo updated",
     });
 
     const { one: updated } = await repository.entity.getOneByParams({

@@ -52,7 +52,7 @@ export class BaseDomain<TC extends {
 	}
 
 	compareQuery = {
-		createOne: (createFields: TC["CreateFields"]) => this.model.compareQuery.save(createFields),
+		createOne: (create: TC["CreateFields"]) => this.model.compareQuery.save(create),
 		deleteAll: () => this.model.compareQuery.deleteAll(),
 		deleteByParams: (options: {
 			params: Types.TSearchParams<TC["SearchFields"]>;
@@ -97,8 +97,8 @@ export class BaseDomain<TC extends {
 		) => this.model.compareQuery.updateOneByPk(pk, update),
 	};
 
-	async createOne(createFields: TC["CreateFields"]): Promise<TC["TableFields"]> {
-		const res = await this.model.save(createFields);
+	async createOne(create: TC["CreateFields"]): Promise<TC["TableFields"]> {
+		const res = await this.model.save(create);
 
 		if (!res) throw new Error(`Save to ${this.model.tableName} table error`);
 

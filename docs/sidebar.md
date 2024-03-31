@@ -1,7 +1,7 @@
 <!-- markdownlint-disable-next-line first-line-heading -->
-- [MySQL Core](mysql)
+- [MySQL Core](mysql-core)
 - [MySQL Migration System](mysql-migration-system)
-- [PostgreSQL Core](postgresql)
+- [PostgreSQL Core](postgresql-core)
 - [PostgreSQL Migration System](postgresql-migration-system)
 - [Changelog](changelog.md)
 - **Links**
