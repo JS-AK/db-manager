@@ -246,14 +246,14 @@ export class QueryBuilder {
 		return this;
 	}
 
-	select(arr: string[]) {
-		this.#mainQuery = `SELECT ${arr.join(", ")}\r\nFROM ${this.#tableNameRaw}`;
+	select(data: string[]) {
+		this.#mainQuery = `SELECT ${data.join(", ")}\r\nFROM ${this.#tableNameRaw}`;
 
 		return this;
 	}
 
-	rawJoin(rawText: string) {
-		this.#join.push(rawText);
+	rawJoin(data: string) {
+		this.#join.push(data);
 
 		return this;
 	}
@@ -397,12 +397,12 @@ export class QueryBuilder {
 		return this;
 	}
 
-	rawWhere(rawText: string) {
-		if (!rawText) return this;
+	rawWhere(data: string) {
+		if (!data) return this;
 
 		if (!this.#mainWhere) this.#mainWhere += "WHERE ";
 
-		this.#mainWhere += rawText;
+		this.#mainWhere += data;
 
 		return this;
 	}

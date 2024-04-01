@@ -1,4 +1,4 @@
-# PostgreSQL core
+# PostgreSQL Domain model
 
 ## Overview
 
@@ -183,6 +183,8 @@ FROM entities;
 ```
 - **deleteByParams(options)**: Deletes records based on the specified parameters.
 
+Options see at [conditional clause](postgresql-conditional-clause)
+
   Example Usage:
 ```javascript
 await repository.entity.deleteByParams({
@@ -213,6 +215,8 @@ WHERE id = $1
 RETURNING id;
 ```
 - **getArrByParams(options)**: Retrieves an array of records based on the specified parameters.
+
+Options see at [conditional clause](postgresql-conditional-clause)
 
   Example Usage:
 ```javascript
@@ -245,6 +249,8 @@ WHERE id = ANY ($1);
 ```
 - **getCountByPksAndParams(pks, options)**: Gets the count of records based on both specified primary keys and parameters.
 
+Options see at [conditional clause](postgresql-conditional-clause)
+
   Example Usage:
 ```javascript
 await repository.entity.getCountByPksAndParams(["0c383fcc-d6af-4be3-a906-d956e9dc10e8"],{
@@ -263,6 +269,8 @@ WHERE id = ANY ($1) AND first_name = $2 AND (last_name = $3 OR last_name = $4);
 ```
 - **getCountByParams(options)**: Gets the count of records based on the specified parameters.
 
+Options see at [conditional clause](postgresql-conditional-clause)
+
   Example Usage:
 ```javascript
 await repository.entity.getCountByParams({
@@ -280,6 +288,8 @@ FROM entities
 WHERE first_name = $1 AND (last_name = $2 OR last_name = $3);
 ```
 - **getOneByParams(options)**: Retrieves a single record based on the specified parameters.
+
+Options see at [conditional clause](postgresql-conditional-clause)
 
   Example Usage:
 ```javascript
@@ -311,6 +321,8 @@ FROM entities
 WHERE id = $1;
 ```
 - **updateByParams(options, update)**: Updates records based on the specified parameters.
+
+Options see at [conditional clause](postgresql-conditional-clause)
 
   Example Usage:
 ```javascript
@@ -388,271 +400,3 @@ These methods are used for performing database queries and comparing the results
 - Adjust parameters and data types according to your specific domain requirements.
 - Additional methods and functionalities may be available based on the specific implementation of the `BaseDomain` class.
 - These methods provide a convenient interface for performing common database operations on entities.
-
-## Params/ParamsOr
-
-**Params**: An object that defines various operators used in database queries.
-
-**ParamsOr**: An array of objects containing additional conditions for database queries. Each object in the array represents a set of conditions combined using the logical OR operator.
-
-### Options
-
-- `:` - Equal to
-```javascript
-await repository.entity.getOneByParams({
-    params: { first_name: "Foo" },
-});
-```
-Equivalent in SQL
-```sql
-SELECT *
-FROM entities
-WHERE first_name = $1;
-```
-
-- `$ne` - Not equal to
-```javascript
-await repository.entity.getOneByParams({
-    params: { first_name: { $ne: "Foo" } },
-});
-```
-Equivalent in SQL
-```sql
-SELECT *
-FROM entities
-WHERE first_name <> $1;
-```
-
-- `$ge` - Greater than
-```javascript
-await repository.entity.getOneByParams({
-    params: { amount: { $ge: 42 } },
-});
-```
-Equivalent in SQL
-```sql
-SELECT *
-FROM entities
-WHERE amount > $1;
-```
-
-- `$gte` - Greater than or equal to
-```javascript
-await repository.entity.getOneByParams({
-    params: { amount: { $gte: 42 } },
-});
-```
-Equivalent in SQL
-```sql
-SELECT *
-FROM entities
-WHERE amount >= $1;
-```
-
-- `$le` - Less than
-```javascript
-await repository.entity.getOneByParams({
-    params: { amount: { $le: 42 } },
-});
-```
-Equivalent in SQL
-```sql
-SELECT *
-FROM entities
-WHERE amount < $1;
-```
-
-- `$lte` - Less than or equal to
-```javascript
-await repository.entity.getOneByParams({
-    params: { amount: { $lte: 42 } },
-});
-```
-Equivalent in SQL
-```sql
-SELECT *
-FROM entities
-WHERE amount <= $1;
-```
-
-- `$@>`: Contains
-```javascript
-await repository.entity.getOneByParams({
-    params: { amount_range: {"$@>": "[0,42)" } },
-});
-```
-Equivalent in SQL
-```sql
-SELECT *
-FROM entities
-WHERE amount_range @> $1;
-```
-
-- `$<@`: Is contained by
-```javascript
-await repository.entity.getOneByParams({
-    params: { amount_range: {"$<@": "[0,42)" } },
-});
-```
-Equivalent in SQL
-```sql
-SELECT *
-FROM entities
-WHERE amount_range <@ $1;
-```
-
-- `$&&`: Overlaps
-```javascript
-await repository.entity.getOneByParams({
-    params: { amount_range: {"$&&": "[0,42)" } },
-});
-```
-Equivalent in SQL
-```sql
-SELECT *
-FROM entities
-WHERE amount_range && $1;
-```
-
-- `$@`: Matches
-```javascript
-await repository.entity.getOneByParams({
-    params: { amount_range: {"$@": "[0,42)" } },
-});
-```
-Equivalent in SQL
-```sql
-SELECT *
-FROM entities
-WHERE amount_range @ $1;
-```
-
-- `$~`: Regular expression match
-```javascript
-await repository.entity.getOneByParams({
-    params: { amount: { "$~": 42 } },
-});
-```
-Equivalent in SQL
-```sql
-SELECT *
-FROM entities
-WHERE amount_range ~ $1;
-```
-
-- `$?`: Fuzzy search
-```javascript
-await repository.entity.getOneByParams({
-    params: { amount: { "$?": 42 } },
-});
-```
-Equivalent in SQL
-```sql
-SELECT *
-FROM entities
-WHERE amount_range ? $1;
-```
-
-- `$between`: Between
-```javascript
-await repository.entity.getOneByParams({
-    params: { amount: { $between: [0, 42] } },
-});
-```
-Equivalent in SQL
-```sql
-SELECT *
-FROM entities
-WHERE amount BETWEEN $1 AND $2;
-```
-
-- `$in`: In
-```javascript
-await repository.entity.getOneByParams({
-    params: { amount: { $in: [42] } },
-});
-```
-Equivalent in SQL
-```sql
-SELECT *
-FROM entities
-WHERE amount = ANY($1);
-```
-
-- `$like`: Like
-```javascript
-await repository.entity.getOneByParams({
-    params: { first_name: { $like: "%Foo%" } },
-});
-```
-Equivalent in SQL
-```sql
-SELECT *
-FROM entities
-WHERE first_name LIKE $1;
-```
-
-- `$ilike`: Case-insensitive like
-```javascript
-await repository.entity.getOneByParams({
-    params: { first_name: { $ilike: "%Foo%" } },
-});
-```
-Equivalent in SQL
-```sql
-SELECT *
-FROM entities
-WHERE first_name ILIKE $1;
-```
-
-- `$nbetween`: Not between
-```javascript
-await repository.entity.getOneByParams({
-    params: { amount: { $nbetween: [0, 42] } },
-});
-```
-Equivalent in SQL
-```sql
-SELECT *
-FROM entities
-WHERE amount NOT BETWEEN $1 AND $2;
-```
-
-- `$nlike`: Not like
-```javascript
-await repository.entity.getOneByParams({
-    params: { first_name: { $nlike: "%Foo%" } },
-});
-```
-Equivalent in SQL
-```sql
-SELECT *
-FROM entities
-WHERE first_name NOT LIKE $1;
-```
-
-- `$nilike`: Not case-insensitive like
-```javascript
-await repository.entity.getOneByParams({
-    params: { first_name: { $nilike: "%Foo%" } },
-});
-```
-Equivalent in SQL
-```sql
-SELECT *
-FROM entities
-WHERE first_name NOT ILIKE $1;
-```
-
-- `$nin`: Not in
-```javascript
-await repository.entity.getOneByParams({
-    params: { amount: { $nin: [42] } },
-});
-```
-Equivalent in SQL
-```sql
-SELECT *
-FROM entities
-WHERE NOT (amount = ANY($1));
-```
