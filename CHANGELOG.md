@@ -1,3 +1,10 @@
+## [3.18.2](https://github.com/JS-AK/db-manager/compare/v3.18.1...v3.18.2) (2024-04-04)
+
+
+### Bug Fixes
+
+* updated compare sql methods ([2da4677](https://github.com/JS-AK/db-manager/commit/2da46777adc8cf856eae7495f16a53abfd37e70a))
+
 ## [3.18.1](https://github.com/JS-AK/db-manager/compare/v3.18.0...v3.18.1) (2024-03-30)
 
 
