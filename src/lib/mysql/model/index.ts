@@ -35,9 +35,9 @@ export class BaseModel {
 
 	compareFields = Helpers.compareFields;
 
-	async delete(primaryKey: SharedTypes.TPrimaryKeyValue) {
+	async deleteOneByPk(primaryKey: SharedTypes.TPrimaryKeyValue) {
 		await this.pool.query(
-			queries.delete(this.tableName, this.primaryKey),
+			queries.deleteByPk(this.tableName, this.primaryKey),
 			Array.isArray(primaryKey) ? primaryKey : [primaryKey],
 		);
 	}
@@ -69,24 +69,8 @@ export class BaseModel {
 
 		if (!selected.length) selected.push("*");
 
-		const {
-			fields,
-			fieldsOr,
-			nullFields,
-			values,
-		} = this.compareFields($and, $or);
-
-		const {
-			orderByFields,
-			paginationFields,
-			searchFields,
-			selectedFields,
-		} = this.getFieldsToSearch(
-			{ fields, fieldsOr, nullFields },
-			selected,
-			pagination,
-			order,
-		);
+		const { fields, fieldsOr, nullFields, values } = this.compareFields($and, $or);
+		const { orderByFields, paginationFields, searchFields, selectedFields } = this.getFieldsToSearch({ fields, fieldsOr, nullFields }, selected, pagination, order);
 
 		const [rows] = (await this.pool.query<mysql.RowDataPacket[]>(
 			queries.getByParams(
@@ -115,14 +99,14 @@ export class BaseModel {
 				values.push(value);
 			}
 		}
-		const [rows] = (await this.pool.query<mysql.RowDataPacket[]>(
+		const [[entity]] = (await this.pool.query<mysql.RowDataPacket[]>(
 			queries.getCountByParams(this.tableName, fields, nullFields),
 			values,
 		));
 
-		if (!rows[0]) return 0;
+		if (!entity) return 0;
 
-		return parseInt(rows[0].count, 10);
+		return parseInt(entity.count, 10);
 	}
 
 	getFieldsToSearch = Helpers.getFieldsToSearch;
@@ -136,23 +120,10 @@ export class BaseModel {
 	) {
 		if (!selected.length) selected.push("*");
 
-		const {
-			fields,
-			fieldsOr,
-			nullFields,
-			values,
-		} = this.compareFields($and, $or);
-		const {
-			orderByFields,
-			paginationFields,
-			searchFields,
-			selectedFields,
-		} = this.getFieldsToSearch(
-			{ fields, fieldsOr, nullFields },
-			selected,
-		);
+		const { fields, fieldsOr, nullFields, values } = this.compareFields($and, $or);
+		const { orderByFields, paginationFields, searchFields, selectedFields } = this.getFieldsToSearch({ fields, fieldsOr, nullFields }, selected, { limit: 1, offset: 0 });
 
-		const [rows] = (await this.pool.query<mysql.RowDataPacket[]>(
+		const [[entity]] = (await this.pool.query<mysql.RowDataPacket[]>(
 			queries.getByParams(
 				this.tableName,
 				selectedFields,
@@ -163,16 +134,16 @@ export class BaseModel {
 			values,
 		));
 
-		return rows[0];
+		return entity;
 	}
 
 	async getOneByPk(primaryKey: SharedTypes.TPrimaryKeyValue) {
-		const [rows] = (await this.pool.query<mysql.RowDataPacket[]>(
+		const [[entity]] = (await this.pool.query<mysql.RowDataPacket[]>(
 			queries.getOneByPk(this.tableName, this.primaryKey),
 			Array.isArray(primaryKey) ? primaryKey : [primaryKey],
 		));
 
-		return rows[0];
+		return entity;
 	}
 
 	async save(params = {}): Promise<number> {

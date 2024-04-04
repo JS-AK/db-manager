@@ -60,7 +60,7 @@ export class BaseDomain<TC extends {
 	}
 
 	async deleteOneByPk(pk: SharedTypes.TPrimaryKeyValue): Promise<void> {
-		await this.model.delete(pk);
+		await this.model.deleteOneByPk(pk);
 	}
 
 	async deleteAll(): Promise<void> {

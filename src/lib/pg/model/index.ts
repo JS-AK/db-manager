@@ -118,7 +118,7 @@ export class BaseModel {
 			if (!selected.length) selected.push("*");
 
 			const { fields, fieldsOr, nullFields, values } = this.compareFields($and, $or);
-			const { orderByFields, paginationFields, searchFields, selectedFields } = this.getFieldsToSearch({ fields, fieldsOr, nullFields }, selected);
+			const { orderByFields, paginationFields, searchFields, selectedFields } = this.getFieldsToSearch({ fields, fieldsOr, nullFields }, selected, { limit: 1, offset: 0 });
 
 			return {
 				query: queries.getByParams(
@@ -394,11 +394,7 @@ export class BaseModel {
 			? `RETURNING ${returning.join(",")}`
 			: "";
 
-		const query = `
-			INSERT INTO ${tableName}(${k.join(",")})
-			VALUES(${k.map((e, idx) => "$" + ++idx).join(",")})
-			${returningSQL}
-		`;
+		const query = `INSERT INTO ${tableName}(${k.join(",")}) VALUES(${k.map((e, idx) => "$" + ++idx).join(",")}) ${returningSQL};`;
 
 		return { query, values: v };
 	}
@@ -450,12 +446,7 @@ export class BaseModel {
 			? `RETURNING ${returning.join(",")}`
 			: "";
 
-		const query = `
-			UPDATE ${tableName}
-			SET ${updateFields}
-			WHERE ${primaryKey.field} = $1
-			${returningSQL}
-		`;
+		const query = `UPDATE ${tableName} SET ${updateFields} WHERE ${primaryKey.field} = $1 ${returningSQL};`;
 
 		return { query, values: [primaryKey.value, ...v] };
 	}

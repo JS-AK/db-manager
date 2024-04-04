@@ -1,32 +1,20 @@
 export default {
 	deleteAll(tableName: string) {
-		return `
-			DELETE
-			FROM ${tableName}
-		`;
+		return `DELETE FROM ${tableName};`;
 	},
 
 	deleteByParams(
 		tableName: string,
 		searchFields: string,
 	) {
-		return `
-			DELETE
-			FROM ${tableName}
-			${searchFields}
-		`;
+		return `DELETE FROM ${tableName} ${searchFields};`;
 	},
 
 	deleteByPk(
 		tableName: string,
 		primaryKeyField: string,
 	) {
-		return `
-			DELETE
-			FROM ${tableName}
-			WHERE ${primaryKeyField} = $1
-			RETURNING ${primaryKeyField}
-		`;
+		return `DELETE FROM ${tableName} WHERE ${primaryKeyField} = $1 RETURNING ${primaryKeyField};`;
 	},
 
 	getByParams(
@@ -36,29 +24,15 @@ export default {
 		orderByFields: string,
 		paginationFields: string,
 	) {
-		return `
-			SELECT ${selectedFields}
-			FROM ${tableName}
-			${searchFields}
-			${orderByFields}
-			${paginationFields}
-		`;
+		return `SELECT ${selectedFields} FROM ${tableName} ${searchFields} ${orderByFields} ${paginationFields};`;
 	},
 
 	getCountByParams(tableName: string, searchFields: string) {
-		return `
-			SELECT COUNT(*) AS count
-			FROM ${tableName}
-			${searchFields}
-		`;
+		return `SELECT COUNT(*) AS count FROM ${tableName} ${searchFields};`;
 	},
 
 	getCountByPks(primaryKeyField: string, tableName: string) {
-		return `
-			SELECT COUNT(*) AS count
-			FROM ${tableName}
-			WHERE ${primaryKeyField} = ANY ($1)
-		`;
+		return `SELECT COUNT(*) AS count FROM ${tableName} WHERE ${primaryKeyField} = ANY ($1);`;
 	},
 
 	getCountByPksAndParams(
@@ -67,20 +41,11 @@ export default {
 		searchFields: string,
 		orderNumber: number,
 	) {
-		return `
-			SELECT COUNT(*) AS count
-			FROM ${tableName}
-			${searchFields}
-			  AND ${primaryKeyField} = ANY ($${orderNumber + 1})
-		`;
+		return `SELECT COUNT(*) AS count FROM ${tableName} ${searchFields} AND ${primaryKeyField} = ANY ($${orderNumber + 1});`;
 	},
 
 	getOneByPk(tableName: string, primaryKeyField: string) {
-		return `
-			SELECT *
-			FROM ${tableName}
-			WHERE ${primaryKeyField} = $1
-		`;
+		return `SELECT * FROM ${tableName} WHERE ${primaryKeyField} = $1 LIMIT 1;`;
 	},
 
 	save(
@@ -113,12 +78,7 @@ export default {
 			}
 		}
 
-		return `
-			INSERT INTO ${tableName} (${intoFields.join(",")})
-			VALUES (${valuesFields.join(",")})
-			${onConflict}
-			RETURNING *
-		`;
+		return `INSERT INTO ${tableName} (${intoFields.join(",")}) VALUES (${valuesFields.join(",")}) ${onConflict} RETURNING *;`;
 	},
 
 	updateByParams(
@@ -145,12 +105,7 @@ export default {
 			}
 		}
 
-		return `
-			UPDATE ${tableName}
-			SET ${updateFields}
-			${searchFields}
-			RETURNING *
-		`;
+		return `UPDATE ${tableName} SET ${updateFields} ${searchFields} RETURNING *;`;
 	},
 
 	updateByPk(
@@ -176,11 +131,6 @@ export default {
 			}
 		}
 
-		return `
-			UPDATE ${tableName}
-			SET ${updateFields}
-			WHERE ${primaryKeyField} = $${idx}
-			RETURNING *
-		`;
+		return `UPDATE ${tableName} SET ${updateFields} WHERE ${primaryKeyField} = $${idx} RETURNING *;`;
 	},
 };

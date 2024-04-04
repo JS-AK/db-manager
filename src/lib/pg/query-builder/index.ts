@@ -84,13 +84,13 @@ export class QueryBuilder {
 		let sql = "";
 
 		if (this.#mainQuery) sql += this.#mainQuery;
-		if (this.#join.length) sql += "\r\n" + this.#join.join("\r\n");
-		if (this.#mainWhere) sql += "\r\n" + this.#mainWhere;
-		if (this.#groupBy) sql += "\r\n" + this.#groupBy;
-		if (this.#mainHaving) sql += "\r\n" + this.#mainHaving;
-		if (this.#orderBy) sql += "\r\n" + this.#orderBy;
-		if (this.#pagination) sql += "\r\n" + this.#pagination;
-		if (this.#returning) sql += "\r\n" + this.#returning;
+		if (this.#join.length) sql += " " + this.#join.join(" ");
+		if (this.#mainWhere) sql += " " + this.#mainWhere;
+		if (this.#groupBy) sql += " " + this.#groupBy;
+		if (this.#mainHaving) sql += " " + this.#mainHaving;
+		if (this.#orderBy) sql += " " + this.#orderBy;
+		if (this.#pagination) sql += " " + this.#pagination;
+		if (this.#returning) sql += " " + this.#returning;
 
 		return sql + ";";
 	}
@@ -100,7 +100,7 @@ export class QueryBuilder {
 	}
 
 	delete() {
-		this.#mainQuery = `DELETE\r\nFROM ${this.#tableNameRaw}`;
+		this.#mainQuery = `DELETE FROM ${this.#tableNameRaw}`;
 
 		return this;
 	}
@@ -247,7 +247,7 @@ export class QueryBuilder {
 	}
 
 	select(data: string[]) {
-		this.#mainQuery = `SELECT ${data.join(", ")}\r\nFROM ${this.#tableNameRaw}`;
+		this.#mainQuery = `SELECT ${data.join(", ")} FROM ${this.#tableNameRaw}`;
 
 		return this;
 	}

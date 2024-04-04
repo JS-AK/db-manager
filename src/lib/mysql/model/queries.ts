@@ -1,32 +1,21 @@
 import * as SharedTypes from "../../../shared-types/index.js";
 
 export default {
-	delete(
+	deleteAll(tableName: string) {
+		return `DELETE FROM ${tableName};`;
+	},
+
+	deleteByPk(
 		tableName: string,
 		primaryKeyField: SharedTypes.TPrimaryKeyField,
 	) {
 		if (Array.isArray(primaryKeyField)) {
 			const query = primaryKeyField.map((e) => `${e} = ?`);
 
-			return `
-				DELETE
-				FROM ${tableName}
-				WHERE ${query.join(" AND ")}
-			`;
+			return `DELETE FROM ${tableName} WHERE ${query.join(" AND ")};`;
 		}
 
-		return `
-			DELETE
-			FROM ${tableName}
-			WHERE ${primaryKeyField} = ?
-		`;
-	},
-
-	deleteAll(tableName: string) {
-		return `
-			DELETE
-			FROM ${tableName}
-		`;
+		return `DELETE FROM ${tableName} WHERE ${primaryKeyField} = ?;`;
 	},
 
 	getByParams(
@@ -36,13 +25,7 @@ export default {
 		orderByFields: string,
 		paginationFields: string,
 	) {
-		return `
-			SELECT ${selectedFields}
-			FROM ${tableName}
-			${searchFields}
-			${orderByFields}
-			${paginationFields}
-		`;
+		return `SELECT ${selectedFields} FROM ${tableName} ${searchFields} ${orderByFields} ${paginationFields};`;
 	},
 
 	getCountByParams(
@@ -59,11 +42,7 @@ export default {
 			else searchFields = nullFields.join(",");
 		}
 
-		return `
-			SELECT COUNT(*) AS count
-			FROM ${tableName}
-			WHERE ${searchFields}
-		`;
+		return `SELECT COUNT(*) AS count FROM ${tableName} WHERE ${searchFields};`;
 	},
 
 	getOneByPk(
@@ -73,18 +52,10 @@ export default {
 		if (Array.isArray(primaryKeyField)) {
 			const query = primaryKeyField.map((e) => `${e} = ?`);
 
-			return `
-				SELECT *
-				FROM ${tableName}
-				WHERE ${query.join(" AND ")}
-			`;
+			return `SELECT * FROM ${tableName} WHERE ${query.join(" AND ")};`;
 		}
 
-		return `
-			SELECT *
-			FROM ${tableName}
-			WHERE ${primaryKeyField} = ?
-		`;
+		return `SELECT * FROM ${tableName} WHERE ${primaryKeyField} = ? LIMIT 1;`;
 	},
 
 	save(
@@ -116,10 +87,7 @@ export default {
 			}
 		}
 
-		return `
-			INSERT INTO ${tableName} (${intoFields.join(",")})
-			VALUES (${valuesFields.join(",")})
-		`;
+		return `INSERT INTO ${tableName} (${intoFields.join(",")}) VALUES (${valuesFields.join(",")});`;
 	},
 
 	update(
@@ -147,17 +115,9 @@ export default {
 		if (Array.isArray(primaryKeyField)) {
 			const query = primaryKeyField.map((e) => `${e} = ?`);
 
-			return `
-				UPDATE ${tableName}
-				SET ${updateFields}
-				WHERE ${query.join(" AND ")}
-			`;
+			return `UPDATE ${tableName} SET ${updateFields} WHERE ${query.join(" AND ")};`;
 		}
 
-		return `
-			UPDATE ${tableName}
-			SET ${updateFields}
-			WHERE ${primaryKeyField} = ?
-		`;
+		return `UPDATE ${tableName} SET ${updateFields} WHERE ${primaryKeyField} = ?;`;
 	},
 };
