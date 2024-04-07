@@ -25,24 +25,11 @@ export default {
 		orderByFields: string,
 		paginationFields: string,
 	) {
-		return `SELECT ${selectedFields} FROM ${tableName} ${searchFields} ${orderByFields} ${paginationFields};`;
+		return `SELECT ${selectedFields} FROM ${tableName}${searchFields}${orderByFields}${paginationFields};`;
 	},
 
-	getCountByParams(
-		tableName: string,
-		fields: string[],
-		nullFields: string[],
-	) {
-		let searchFields;
-
-		if (fields.length) searchFields = fields.map((e: string) => `${e} = ?`).join(" AND ");
-		else searchFields = "1=1";
-		if (nullFields.length) {
-			if (searchFields) searchFields += ` AND ${nullFields.join(" AND ")}`;
-			else searchFields = nullFields.join(",");
-		}
-
-		return `SELECT COUNT(*) AS count FROM ${tableName} WHERE ${searchFields};`;
+	getCountByParams(tableName: string, searchFields: string) {
+		return `SELECT COUNT(*) AS count FROM ${tableName}${searchFields};`;
 	},
 
 	getOneByPk(

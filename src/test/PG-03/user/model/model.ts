@@ -25,7 +25,7 @@ export class Model extends PG.BaseModel {
 		params?: PG.ModelTypes.TSearchParams;
 		paramsOr?: PG.ModelTypes.TSearchParams[];
 	}) {
-		const { fields, nullFields, values } = this.compareFields(params);
+		const { queryArray, values } = this.compareFields(params);
 		const selected = [
 			"u.first_name AS first_name",
 			"u.last_name  AS last_name",
@@ -41,7 +41,7 @@ export class Model extends PG.BaseModel {
 			searchFields,
 			selectedFields,
 		} = this.getFieldsToSearch(
-			{ fields, nullFields },
+			{ queryArray },
 			selected,
 			pagination,
 			order,

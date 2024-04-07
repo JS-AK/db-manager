@@ -29,7 +29,8 @@ export type TOperator =
 	| "$nbetween"
 	| "$nlike"
 	| "$nilike"
-	| "$nin";
+	| "$nin"
+	| "$withoutParameters";
 export type TSearchParams = {
 	[key: string]:
 	| TSearchParamsWithOperator
@@ -39,29 +40,29 @@ export type TSearchParams = {
 	| undefined;
 };
 export type TSearchParamsWithOperator = {
+	$eq?: SNDB | SNDArray | null;
+	$ne?: SNDB | null;
 	$custom?: { sign: string; value: SND; };
 	$between?: [SND, SND];
+	$nbetween?: [SND, SND];
+	$json?: object;
+	$jsonb?: object;
 	$gt?: SND;
 	$gte?: SND;
+	$lt?: SND;
+	$lte?: SND;
 	$in?: SNDBArray;
+	$nin?: SNDBArray;
+	$like?: string;
+	$ilike?: string;
+	$nlike?: string;
+	$nilike?: string;
 	"$@>"?: SND | SNDArray;
 	"$<@"?: SND | SNDArray;
 	"$&&"?: SNDArray;
 	"$@"?: string | string[];
 	"$~"?: string | string[];
 	"$?"?: string | string[];
-	$json?: object;
-	$jsonb?: object;
-	$like?: string;
-	$ilike?: string;
-	$lt?: SND;
-	$lte?: SND;
-	$nbetween?: [SND, SND];
-	$ne?: SNDB | null;
-	$nin?: SNDBArray;
-	$nlike?: string;
-	$nilike?: string;
-	$eq?: SNDB | SNDArray | null;
 };
 export type TTable = {
 	createField: { title: string; type: "unix_timestamp" | "timestamp"; } | null;

@@ -16,7 +16,6 @@ export const getFieldsToSearch = (
 
 	const res = {
 		orderByFields: "",
-		orderNumber: 0,
 		paginationFields: "",
 		searchFields: " WHERE ",
 		selectedFields: selected.join(", "),
@@ -28,19 +27,9 @@ export const getFieldsToSearch = (
 		searchFields = queryArray.map((e: Types.TField) => {
 			const operatorFunction = operatorMappings.get(e.operator);
 
-			if (operatorFunction) {
-				const [text, orderNumber] = operatorFunction(e, res.orderNumber);
+			if (operatorFunction) return operatorFunction(e);
 
-				res.orderNumber = orderNumber;
-
-				return text;
-			} else {
-				res.orderNumber += 1;
-
-				const text = `${e.key} ${e.operator} $${res.orderNumber}`;
-
-				return text;
-			}
+			else return ` ${e.key} ${e.operator} ?`;
 		}).join(" AND ");
 	} else {
 		searchFields = "1=1";
@@ -56,19 +45,9 @@ export const getFieldsToSearch = (
 			const comparedFields = query.map((e: Types.TField) => {
 				const operatorFunction = operatorMappings.get(e.operator);
 
-				if (operatorFunction) {
-					const [text, orderNumber] = operatorFunction(e, res.orderNumber);
+				if (operatorFunction) return operatorFunction(e);
 
-					res.orderNumber = orderNumber;
-
-					return text;
-				} else {
-					res.orderNumber += 1;
-
-					const text = `${e.key} ${e.operator} $${res.orderNumber}`;
-
-					return text;
-				}
+				else return ` ${e.key} ${e.operator} ?`;
 			}).join(" AND ");
 
 			comparedFieldsOr.push(`(${comparedFields})`);

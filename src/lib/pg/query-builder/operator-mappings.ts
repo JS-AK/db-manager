@@ -1,4 +1,4 @@
-import * as Types from "../types.js";
+import * as Types from "../model/types.js";
 
 export const operatorMappings: Map<
 	Types.TOperator,

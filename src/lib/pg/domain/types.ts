@@ -22,9 +22,6 @@ type Base<T> =
 	| { $ne: NonNullable<T> | null; }
 	| { $between: [NonNullable<T>, NonNullable<T>]; }
 	| { $nbetween: [NonNullable<T>, NonNullable<T>]; }
-	| { $gt: NonNullable<T>; $lt: NonNullable<T>; }
-	| { $gte: NonNullable<T>; $lt: NonNullable<T>; }
-	| { $gt: NonNullable<T>; $lte: NonNullable<T>; }
 	| { $gt: NonNullable<T>; }
 	| { $gte: NonNullable<T>; }
 	| { $lt: NonNullable<T>; }

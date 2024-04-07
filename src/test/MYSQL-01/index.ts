@@ -301,6 +301,7 @@ test("top level test MYSQL", async (t) => {
 					$ne: null,
 					$nin: [1, 4],
 				},
+				updated_at: null,
 			},
 			paramsOr: [
 				{ description: null, title: "test 1" },
@@ -310,7 +311,7 @@ test("top level test MYSQL", async (t) => {
 						$ne: null,
 						$nlike: "%12345%",
 					},
-					title: "test 3",
+					title: { $eq: "test 3" },
 				},
 			],
 		});
@@ -319,13 +320,13 @@ test("top level test MYSQL", async (t) => {
 	});
 
 	await t.test("getArrByParams found { $custom: { sign: \"LIKE\", value: \"%test 3%\" }", async () => {
-		const res = await testTable1.getArrByParams({
+		const [entity] = await testTable1.getArrByParams({
 			params: {
 				description: { $custom: { sign: "LIKE", value: "%test 3%" } },
 			},
 		});
 
-		assert.equal(res[0]?.title, "test 3");
+		assert.equal(entity?.title, "test 3");
 	});
 
 	await t.test("getOneByParams not found", async () => {

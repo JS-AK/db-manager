@@ -37,6 +37,7 @@ export class BaseModel {
 	}
 
 	compareFields = Helpers.compareFields;
+	getFieldsToSearch = Helpers.getFieldsToSearch;
 
 	compareQuery = {
 		deleteAll: (): { query: string; values: unknown[]; } => {
@@ -45,8 +46,8 @@ export class BaseModel {
 		deleteByParams: (
 			{ $and = {}, $or }: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
 		): { query: string; values: unknown[]; } => {
-			const { fields, fieldsOr, nullFields, values } = this.compareFields($and, $or);
-			const { searchFields } = this.getFieldsToSearch({ fields, fieldsOr, nullFields });
+			const { queryArray, queryOrArray, values } = this.compareFields($and, $or);
+			const { searchFields } = this.getFieldsToSearch({ queryArray, queryOrArray });
 
 			return {
 				query: queries.deleteByParams(this.tableName, searchFields),
@@ -74,8 +75,8 @@ export class BaseModel {
 
 			if (!selected.length) selected.push("*");
 
-			const { fields, fieldsOr, nullFields, values } = this.compareFields($and, $or);
-			const { orderByFields, paginationFields, searchFields, selectedFields } = this.getFieldsToSearch({ fields, fieldsOr, nullFields }, selected, pagination, order);
+			const { queryArray, queryOrArray, values } = this.compareFields($and, $or);
+			const { orderByFields, paginationFields, searchFields, selectedFields } = this.getFieldsToSearch({ queryArray, queryOrArray }, selected, pagination, order);
 
 			return {
 				query: queries.getByParams(this.tableName, selectedFields, searchFields, orderByFields, paginationFields),
@@ -85,8 +86,8 @@ export class BaseModel {
 		getCountByParams: (
 			{ $and = {}, $or }: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
 		): { query: string; values: unknown[]; } => {
-			const { fields, fieldsOr, nullFields, values } = this.compareFields($and, $or);
-			const { searchFields } = this.getFieldsToSearch({ fields, fieldsOr, nullFields });
+			const { queryArray, queryOrArray, values } = this.compareFields($and, $or);
+			const { searchFields } = this.getFieldsToSearch({ queryArray, queryOrArray });
 
 			return {
 				query: queries.getCountByParams(this.tableName, searchFields),
@@ -103,8 +104,8 @@ export class BaseModel {
 			pks: T[],
 			{ $and = {}, $or }: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
 		): { query: string; values: unknown[]; } => {
-			const { fields, fieldsOr, nullFields, values } = this.compareFields($and, $or);
-			const { orderNumber, searchFields } = this.getFieldsToSearch({ fields, fieldsOr, nullFields });
+			const { queryArray, queryOrArray, values } = this.compareFields($and, $or);
+			const { orderNumber, searchFields } = this.getFieldsToSearch({ queryArray, queryOrArray });
 
 			return {
 				query: queries.getCountByPksAndParams(this.primaryKey as string, this.tableName, searchFields, orderNumber),
@@ -117,8 +118,8 @@ export class BaseModel {
 		): { query: string; values: unknown[]; } => {
 			if (!selected.length) selected.push("*");
 
-			const { fields, fieldsOr, nullFields, values } = this.compareFields($and, $or);
-			const { orderByFields, paginationFields, searchFields, selectedFields } = this.getFieldsToSearch({ fields, fieldsOr, nullFields }, selected, { limit: 1, offset: 0 });
+			const { queryArray, queryOrArray, values } = this.compareFields($and, $or);
+			const { orderByFields, paginationFields, searchFields, selectedFields } = this.getFieldsToSearch({ queryArray, queryOrArray }, selected, { limit: 1, offset: 0 });
 
 			return {
 				query: queries.getByParams(
@@ -153,12 +154,12 @@ export class BaseModel {
 			{ $and = {}, $or }: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
 			update: SharedTypes.TRawParams = {},
 		): { query: string; values: unknown[]; } => {
-			const { fields, fieldsOr, nullFields, values } = this.compareFields($and, $or);
-			const { orderNumber, searchFields } = this.getFieldsToSearch({ fields, fieldsOr, nullFields });
+			const { queryArray, queryOrArray, values } = this.compareFields($and, $or);
+			const { orderNumber, searchFields } = this.getFieldsToSearch({ queryArray, queryOrArray });
 			const clearedUpdate = SharedHelpers.clearUndefinedFields(update);
 			const fieldsToUpdate = Object.keys(clearedUpdate);
 
-			if (!fields.length) throw new Error("No one update field arrived");
+			if (!queryArray.length) throw new Error("No one update field arrived");
 
 			return {
 				query: queries.updateByParams(this.tableName, fieldsToUpdate, searchFields, this.updateField, orderNumber + 1),
@@ -247,8 +248,6 @@ export class BaseModel {
 
 		return Number(entity?.count) || 0;
 	}
-
-	getFieldsToSearch = Helpers.getFieldsToSearch;
 
 	async getOneByParams(
 		params: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },

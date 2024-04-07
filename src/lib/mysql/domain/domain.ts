@@ -82,8 +82,11 @@ export class BaseDomain<TC extends {
 		) as Promise<Array<Pick<TC["TableFields"], T>>>;
 	}
 
-	async getCountByParams(options: { params: TC["SearchFields"]; }): Promise<number> {
-		return this.model.getCountByParams(options.params);
+	async getCountByParams(options: {
+		params: Types.TSearchParams<TC["SearchFields"]>;
+		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<TC["SearchFields"]>>;
+	}): Promise<number> {
+		return this.model.getCountByParams({ $and: options.params, $or: options.paramsOr });
 	}
 
 	/**

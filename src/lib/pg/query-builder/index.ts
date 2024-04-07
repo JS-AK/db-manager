@@ -6,48 +6,6 @@ import * as ModelTypes from "../model/types.js";
 import * as SharedHelpers from "../../../shared-helpers/index.js";
 import * as SharedTypes from "../../../shared-types/index.js";
 
-const operatorMappings: Map<
-	string,
-	(el: ModelTypes.TField, orderNumber: number) => [string, number]
-> = new Map([
-	[
-		"$custom",
-		(el: ModelTypes.TField, orderNumber: number) => [`${el.key} ${el.sign} $${orderNumber + 1}`, orderNumber + 1],
-	],
-	[
-		"$between",
-		(el: ModelTypes.TField, orderNumber: number) => [`${el.key} BETWEEN $${orderNumber + 1} AND $${orderNumber + 2}`, orderNumber + 2],
-	],
-	[
-		"$in",
-		(el: ModelTypes.TField, orderNumber: number) => [`${el.key} = ANY ($${orderNumber + 1})`, orderNumber + 1],
-	],
-	[
-		"$like",
-		(el: ModelTypes.TField, orderNumber: number) => [`${el.key} LIKE $${orderNumber + 1}`, orderNumber + 1],
-	],
-	[
-		"$ilike",
-		(el: ModelTypes.TField, orderNumber: number) => [`${el.key} ILIKE $${orderNumber + 1}`, orderNumber + 1],
-	],
-	[
-		"$nin",
-		(el: ModelTypes.TField, orderNumber: number) => [`NOT (${el.key} = ANY ($${orderNumber + 1}))`, orderNumber + 1],
-	],
-	[
-		"$nbetween",
-		(el: ModelTypes.TField, orderNumber: number) => [`${el.key} NOT BETWEEN $${orderNumber + 1} AND $${orderNumber + 2}`, orderNumber + 2],
-	],
-	[
-		"$nlike",
-		(el: ModelTypes.TField, orderNumber: number) => [`${el.key} NOT LIKE $${orderNumber + 1}`, orderNumber + 1],
-	],
-	[
-		"$nilike",
-		(el: ModelTypes.TField, orderNumber: number) => [`${el.key} NOT ILIKE $${orderNumber + 1}`, orderNumber + 1],
-	],
-]);
-
 export class QueryBuilder {
 	#mainQuery = "";
 	#mainHaving = "";
@@ -318,16 +276,16 @@ export class QueryBuilder {
 		params?: ModelTypes.TSearchParams;
 		paramsOr?: DomainTypes.TArray2OrMore<ModelTypes.TSearchParams>;
 	}) {
-		const { fields, fieldsOr, nullFields, values } = Helpers.compareFields(
+		const { queryArray, queryOrArray, values } = Helpers.compareFields(
 			data.params as ModelTypes.TSearchParams,
 			data.paramsOr,
 		);
 
-		if (fields.length) {
+		if (queryArray.length) {
 			if (!this.#mainWhere) this.#mainWhere += "WHERE ";
 
-			this.#mainWhere += fields.map((e: ModelTypes.TField) => {
-				const operatorFunction = operatorMappings.get(e.operator);
+			this.#mainWhere += queryArray.map((e: ModelTypes.TField) => {
+				const operatorFunction = Helpers.operatorMappings.get(e.operator);
 
 				if (operatorFunction) {
 					const [text, orderNumber] = operatorFunction(e, this.#valuesOrder);
@@ -345,22 +303,13 @@ export class QueryBuilder {
 			}).join(" AND ");
 		}
 
-		if (nullFields.length) {
-			if (this.#mainWhere) {
-				this.#mainWhere += ` AND ${nullFields.join(" AND ")}`;
-			} else {
-				this.#mainWhere += "WHERE ";
-				this.#mainWhere += nullFields.join(" AND ");
-			}
-		}
-
-		if (fieldsOr?.length) {
+		if (queryOrArray?.length) {
 			const comparedFieldsOr = [];
 
-			for (const row of fieldsOr) {
-				const { fields, nullFields } = row;
-				let comparedFields = fields.map((e: ModelTypes.TField) => {
-					const operatorFunction = operatorMappings.get(e.operator);
+			for (const row of queryOrArray) {
+				const { query } = row;
+				const comparedFields = query.map((e: ModelTypes.TField) => {
+					const operatorFunction = Helpers.operatorMappings.get(e.operator);
 
 					if (operatorFunction) {
 						const [text, orderNumber] = operatorFunction(e, this.#valuesOrder);
@@ -376,11 +325,6 @@ export class QueryBuilder {
 						return text;
 					}
 				}).join(" AND ");
-
-				if (nullFields.length) {
-					if (comparedFields) comparedFields += ` AND ${nullFields.join(" AND ")}`;
-					else comparedFields = nullFields.join(" AND ");
-				}
 
 				comparedFieldsOr.push(`(${comparedFields})`);
 			}
@@ -435,15 +379,15 @@ export class QueryBuilder {
 		params?: ModelTypes.TSearchParams;
 		paramsOr?: DomainTypes.TArray2OrMore<ModelTypes.TSearchParams>;
 	}) {
-		const { fields, fieldsOr, nullFields, values } = Helpers.compareFields(
+		const { queryArray, queryOrArray, values } = Helpers.compareFields(
 			data.params as ModelTypes.TSearchParams,
 			data.paramsOr,
 		);
 
-		if (fields.length) {
+		if (queryArray.length) {
 			this.#mainHaving += "HAVING ";
-			this.#mainHaving += fields.map((e: ModelTypes.TField) => {
-				const operatorFunction = operatorMappings.get(e.operator);
+			this.#mainHaving += queryArray.map((e: ModelTypes.TField) => {
+				const operatorFunction = Helpers.operatorMappings.get(e.operator);
 
 				if (operatorFunction) {
 					const [text, orderNumber] = operatorFunction(e, this.#valuesOrder);
@@ -461,22 +405,13 @@ export class QueryBuilder {
 			}).join(" AND ");
 		}
 
-		if (nullFields.length) {
-			if (this.#mainHaving) {
-				this.#mainHaving += ` AND ${nullFields.join(" AND ")}`;
-			} else {
-				this.#mainHaving += "HAVING ";
-				this.#mainHaving += nullFields.join(" AND ");
-			}
-		}
-
-		if (fieldsOr?.length) {
+		if (queryOrArray?.length) {
 			const comparedFieldsOr = [];
 
-			for (const row of fieldsOr) {
-				const { fields, nullFields } = row;
-				let comparedFields = fields.map((e: ModelTypes.TField) => {
-					const operatorFunction = operatorMappings.get(e.operator);
+			for (const row of queryOrArray) {
+				const { query } = row;
+				const comparedFields = query.map((e: ModelTypes.TField) => {
+					const operatorFunction = Helpers.operatorMappings.get(e.operator);
 
 					if (operatorFunction) {
 						const [text, orderNumber] = operatorFunction(e, this.#valuesOrder);
@@ -492,11 +427,6 @@ export class QueryBuilder {
 						return text;
 					}
 				}).join(" AND ");
-
-				if (nullFields.length) {
-					if (comparedFields) comparedFields += ` AND ${nullFields.join(" AND ")}`;
-					else comparedFields = nullFields.join(" AND ");
-				}
 
 				comparedFieldsOr.push(`(${comparedFields})`);
 			}

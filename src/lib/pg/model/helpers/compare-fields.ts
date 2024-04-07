@@ -6,14 +6,12 @@ export const compareFields = (
 	params: Types.TSearchParams = {},
 	paramsOr?: Types.TSearchParams[],
 ) => {
-	const nullFields: string[] = [];
-
-	const fields: Types.TField[] = [];
+	const queryArray: Types.TField[] = [];
 	const values: unknown[] = [];
 
 	for (const [key, value] of Object.entries(params)) {
 		if (value === null) {
-			nullFields.push(`${key} IS NULL`);
+			queryArray.push({ key: `${key} IS NULL`, operator: "$withoutParameters" });
 		} else if (typeof value === "object") {
 			if (Array.isArray(value)) {
 				for (const v of value) {
@@ -24,7 +22,7 @@ export const compareFields = (
 							throw new Error(`Invalid value.key ${k}, Available values: ${Array.from(processMappings.keys())}`);
 						}
 
-						processFunction(key, v, fields, nullFields, values);
+						processFunction(key, v, queryArray, values);
 					}
 				}
 			} else {
@@ -35,25 +33,24 @@ export const compareFields = (
 						throw new Error(`Invalid value.key ${k}, Available values: ${Array.from(processMappings.keys())}`);
 					}
 
-					processFunction(key, value, fields, nullFields, values);
+					processFunction(key, value, queryArray, values);
 				}
 			}
 		} else if (value !== undefined) {
-			fields.push({ key, operator: "=" });
+			queryArray.push({ key, operator: "=" });
 			values.push(value);
 		}
 	}
 
-	const fieldsOr: { fields: Types.TField[]; nullFields: string[]; }[] = [];
+	const queryOrArray: { query: Types.TField[]; }[] = [];
 
 	if (paramsOr) {
 		for (const params of paramsOr) {
-			const fieldsOrLocal: Types.TField[] = [];
-			const nullFieldsOrLocal: string[] = [];
+			const queryOrArrayLocal: Types.TField[] = [];
 
 			for (const [key, value] of Object.entries(params)) {
 				if (value === null) {
-					nullFieldsOrLocal.push(`${key} IS NULL`);
+					queryOrArrayLocal.push({ key: `${key} IS NULL`, operator: "$withoutParameters" });
 				} else if (typeof value === "object") {
 					if (Array.isArray(value)) {
 						for (const v of value) {
@@ -64,7 +61,7 @@ export const compareFields = (
 									throw new Error(`Invalid value.key ${k}, Available values: ${Array.from(processMappings.keys())}`);
 								}
 
-								processFunction(key, v, fieldsOrLocal, nullFieldsOrLocal, values);
+								processFunction(key, v, queryOrArrayLocal, values);
 							}
 						}
 					} else {
@@ -75,18 +72,18 @@ export const compareFields = (
 								throw new Error(`Invalid value.key ${k}, Available values: ${Array.from(processMappings.keys())}`);
 							}
 
-							processFunction(key, value, fieldsOrLocal, nullFieldsOrLocal, values);
+							processFunction(key, value, queryOrArrayLocal, values);
 						}
 					}
 				} else if (value !== undefined) {
-					fieldsOrLocal.push({ key, operator: "=" });
+					queryOrArrayLocal.push({ key, operator: "=" });
 					values.push(value);
 				}
 			}
 
-			fieldsOr.push({ fields: fieldsOrLocal, nullFields: nullFieldsOrLocal });
+			queryOrArray.push({ query: queryOrArrayLocal });
 		}
 	}
 
-	return { fields, fieldsOr, nullFields, values };
+	return { queryArray, queryOrArray, values };
 };

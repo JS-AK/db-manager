@@ -654,6 +654,7 @@ export default async () => {
 								{ $nlike: "ABC" },
 								{ $ne: null },
 							],
+							updated_at: null,
 						} as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
 					};
 

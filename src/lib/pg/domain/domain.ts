@@ -158,10 +158,7 @@ export class BaseDomain<TC extends {
 		params: Types.TSearchParams<TC["SearchFields"]>;
 		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<TC["SearchFields"]>>;
 	}): Promise<number> {
-		return this.model.getCountByParams({
-			$and: options.params,
-			$or: options.paramsOr,
-		});
+		return this.model.getCountByParams({ $and: options.params, $or: options.paramsOr });
 	}
 
 	/**

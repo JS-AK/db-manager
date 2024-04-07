@@ -1,6 +1,6 @@
 import mysql from "mysql2/promise";
 
-import * as Helpers from "./helpers.js";
+import * as Helpers from "./helpers/index.js";
 import * as SharedHelpers from "../../../shared-helpers/index.js";
 import * as SharedTypes from "../../../shared-types/index.js";
 import * as Types from "./types.js";
@@ -34,6 +34,7 @@ export class BaseModel {
 	}
 
 	compareFields = Helpers.compareFields;
+	getFieldsToSearch = Helpers.getFieldsToSearch;
 
 	async deleteOneByPk(primaryKey: SharedTypes.TPrimaryKeyValue) {
 		await this.pool.query(
@@ -69,8 +70,8 @@ export class BaseModel {
 
 		if (!selected.length) selected.push("*");
 
-		const { fields, fieldsOr, nullFields, values } = this.compareFields($and, $or);
-		const { orderByFields, paginationFields, searchFields, selectedFields } = this.getFieldsToSearch({ fields, fieldsOr, nullFields }, selected, pagination, order);
+		const { queryArray, queryOrArray, values } = this.compareFields($and, $or);
+		const { orderByFields, paginationFields, searchFields, selectedFields } = this.getFieldsToSearch({ queryArray, queryOrArray }, selected, pagination, order);
 
 		const [rows] = (await this.pool.query<mysql.RowDataPacket[]>(
 			queries.getByParams(
@@ -86,42 +87,28 @@ export class BaseModel {
 		return rows;
 	}
 
-	async getCountByParams(params = {}) {
-		const fields = [];
-		const values = [];
-		const nullFields = [];
+	async getCountByParams(
+		{ $and = {}, $or }: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
+	) {
+		const { queryArray, queryOrArray, values } = this.compareFields($and, $or);
+		const { searchFields } = this.getFieldsToSearch({ queryArray, queryOrArray });
 
-		for (const [key, value] of Object.entries(params)) {
-			if (value === null) {
-				nullFields.push(`${key} IS NULL`);
-			} else {
-				fields.push(key);
-				values.push(value);
-			}
-		}
 		const [[entity]] = (await this.pool.query<mysql.RowDataPacket[]>(
-			queries.getCountByParams(this.tableName, fields, nullFields),
+			queries.getCountByParams(this.tableName, searchFields),
 			values,
 		));
 
-		if (!entity) return 0;
-
-		return parseInt(entity.count, 10);
+		return Number(entity?.count) || 0;
 	}
 
-	getFieldsToSearch = Helpers.getFieldsToSearch;
-
 	async getOneByParams(
-		{ $and = {}, $or }: {
-			$and: Types.TSearchParams;
-			$or?: Types.TSearchParams[];
-		},
+		{ $and = {}, $or }: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
 		selected = ["*"],
 	) {
 		if (!selected.length) selected.push("*");
 
-		const { fields, fieldsOr, nullFields, values } = this.compareFields($and, $or);
-		const { orderByFields, paginationFields, searchFields, selectedFields } = this.getFieldsToSearch({ fields, fieldsOr, nullFields }, selected, { limit: 1, offset: 0 });
+		const { queryArray, queryOrArray, values } = this.compareFields($and, $or);
+		const { orderByFields, paginationFields, searchFields, selectedFields } = this.getFieldsToSearch({ queryArray, queryOrArray }, selected, { limit: 1, offset: 0 });
 
 		const [[entity]] = (await this.pool.query<mysql.RowDataPacket[]>(
 			queries.getByParams(
@@ -210,10 +197,7 @@ export class BaseModel {
 
 		if (!k.length) throw new Error(`Invalid params, all fields are undefined - ${Object.keys(paramsRaw).join(", ")}`);
 
-		const query = `
-			INSERT INTO ${tableName}(${k.join(",")})
-			VALUES(${k.map(() => "?").join(",")})
-		`;
+		const query = `INSERT INTO ${tableName}(${k.join(",")}) VALUES(${k.map(() => "?").join(",")});`;
 
 		return { query, values: v };
 	}
@@ -256,11 +240,7 @@ export class BaseModel {
 			}
 		}
 
-		const query = `
-			UPDATE ${tableName}
-			SET ${updateFields}
-			WHERE ${primaryKey.field} = ?
-		`;
+		const query = `UPDATE ${tableName} SET ${updateFields} WHERE ${primaryKey.field} = ?;`;
 
 		return { query, values: [...v, primaryKey.value] };
 	}

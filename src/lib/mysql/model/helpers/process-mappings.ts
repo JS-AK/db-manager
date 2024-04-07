@@ -54,93 +54,12 @@ export const processMappings: Map<
 		},
 	],
 	[
-		"$@>",
-		(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], queryArray: Types.TField[], values: unknown[]) => {
-			const v = value as { "$@>": object; };
-
-			queryArray.push({ key, operator: "@>" });
-			values.push(v["$@>"]);
-		},
-	],
-	[
-		"$<@",
-		(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], queryArray: Types.TField[], values: unknown[]) => {
-			const v = value as { "$<@": object; };
-
-			queryArray.push({ key, operator: "<@" });
-			values.push(v["$<@"]);
-		},
-	],
-	[
-		"$&&",
-		(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], queryArray: Types.TField[], values: unknown[]) => {
-			const v = value as { "$&&": object; };
-
-			queryArray.push({ key, operator: "&&" });
-			values.push(v["$&&"]);
-		},
-	],
-	[
-		"$@",
-		(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], queryArray: Types.TField[], values: unknown[]) => {
-			const v = value as { "$@": string; };
-
-			queryArray.push({ key, operator: "@" });
-			values.push(v["$@"]);
-		},
-	],
-	[
-		"$~",
-		(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], queryArray: Types.TField[], values: unknown[]) => {
-			const v = value as { "$~": string; };
-
-			queryArray.push({ key, operator: "~" });
-			values.push(v["$~"]);
-		},
-	],
-	[
-		"$?",
-		(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], queryArray: Types.TField[], values: unknown[]) => {
-			const v = value as { "$?": string; };
-
-			queryArray.push({ key, operator: "?" });
-			values.push(v["$?"]);
-		},
-	],
-	[
-		"$json",
-		(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], queryArray: Types.TField[], values: unknown[]) => {
-			const v = value as { $json: object; };
-
-			queryArray.push({ key, operator: "=" });
-			values.push(v.$json);
-		},
-	],
-	[
-		"$jsonb",
-		(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], queryArray: Types.TField[], values: unknown[]) => {
-			const v = value as { $jsonb: object; };
-
-			queryArray.push({ key, operator: "=" });
-			values.push(v.$jsonb);
-		},
-	],
-	[
 		"$like",
 		(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], queryArray: Types.TField[], values: unknown[]) => {
 			const v = value as { $like: string; };
 
 			queryArray.push({ key, operator: "$like" });
 			values.push(v.$like);
-		},
-	],
-	[
-		"$ilike",
-		(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], queryArray: Types.TField[], values: unknown[]) => {
-			const v = value as { $ilike: string; };
-
-			queryArray.push({ key, operator: "$ilike" });
-			values.push(v.$ilike);
 		},
 	],
 	[
@@ -184,39 +103,11 @@ export const processMappings: Map<
 		},
 	],
 	[
-		"$between",
-		(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], queryArray: Types.TField[], values: unknown[]) => {
-			const v = value as { $between: string[] | number[]; };
-
-			queryArray.push({ key, operator: "$between" });
-			values.push(v.$between[0]);
-			values.push(v.$between[1]);
-		},
-	],
-	[
-		"$nbetween",
-		(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], queryArray: Types.TField[], values: unknown[]) => {
-			const v = value as { $nbetween: string[] | number[]; };
-
-			queryArray.push({ key, operator: "$nbetween" });
-			values.push(v.$nbetween[0]);
-			values.push(v.$nbetween[1]);
-		},
-	],
-	[
 		"$nlike",
 		(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], queryArray: Types.TField[], values: unknown[]) => {
 			const v = value as { $nlike: string; };
 
 			queryArray.push({ key, operator: "$nlike" });
 			values.push(v.$nlike);
-		}],
-	[
-		"$nilike",
-		(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], queryArray: Types.TField[], values: unknown[]) => {
-			const v = value as { $nilike: string; };
-
-			queryArray.push({ key, operator: "$nilike" });
-			values.push(v.$nilike);
 		}],
 ]);
