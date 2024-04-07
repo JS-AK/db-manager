@@ -1,6 +1,6 @@
 import pg from "pg";
 
-import * as Helpers from "./helpers.js";
+import * as Helpers from "./helpers/index.js";
 import * as SharedHelpers from "../../../shared-helpers/index.js";
 import * as SharedTypes from "../../../shared-types/index.js";
 import * as Types from "./types.js";

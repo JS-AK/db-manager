@@ -31,11 +31,11 @@ export class Domain extends DbManager.PG.BaseDomain<{
 	}
 
 	async getAllWithTitleUser() {
-		return this.model.queryBuilder()
+		return this.model.queryBuilder({ tableName: "users u" })
 			.select([
-				"users.first_name AS first_name",
-				"users.id AS id",
-				"users.last_name AS last_name",
+				"u.first_name AS first_name",
+				"u.id AS id",
+				"u.last_name AS last_name",
 				"ur.id AS ur_id",
 				"ur.title AS ur_title",
 			])
@@ -45,8 +45,8 @@ export class Domain extends DbManager.PG.BaseDomain<{
 				targetTableName: "user_roles",
 				targetTableNameAs: "ur",
 			})
-			.where({ params: { "ur.title": "user" } })
-			.orderBy([{ column: "users.first_name", sorting: "ASC" }])
+			.where({ params: { "ur.title": { $eq: "user" } } })
+			.orderBy([{ column: "u.first_name", sorting: "ASC" }])
 			.execute<Types.ListedEntity>();
 	}
 

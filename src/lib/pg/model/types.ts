@@ -21,6 +21,7 @@ export type TOperator =
 	| "~"
 	| "?"
 	| "$custom"
+	| "$eq"
 	| "$between"
 	| "$in"
 	| "$like"
@@ -46,9 +47,9 @@ export type TSearchParamsWithOperator = {
 	"$@>"?: SND | SNDArray;
 	"$<@"?: SND | SNDArray;
 	"$&&"?: SNDArray;
-	"$@"?: string;
-	"$~"?: string;
-	"$?"?: string;
+	"$@"?: string | string[];
+	"$~"?: string | string[];
+	"$?"?: string | string[];
 	$json?: object;
 	$jsonb?: object;
 	$like?: string;
@@ -60,6 +61,7 @@ export type TSearchParamsWithOperator = {
 	$nin?: SNDBArray;
 	$nlike?: string;
 	$nilike?: string;
+	$eq?: SNDB | SNDArray | null;
 };
 export type TTable = {
 	createField: { title: string; type: "unix_timestamp" | "timestamp"; } | null;

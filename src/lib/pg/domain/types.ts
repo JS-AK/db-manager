@@ -3,100 +3,73 @@
 export type TArray2OrMore<T> = { 0: T; 1: T; } & Array<T>;
 export type TDomain<Model> = { model: Model; };
 export type TDomainFields = { [key: string]: any; };
+
 export type TSearchParams<T> = {
 	[key in keyof T]: NonNullable<T[key]> extends object
 		? NonNullable<T[key]> extends Date
-			? T[key]
-				| { $ne: NonNullable<T[key]> | null; }
-				| { $between: [NonNullable<T[key]>, NonNullable<T[key]>]; }
-				| { $nbetween: [NonNullable<T[key]>, NonNullable<T[key]>]; }
-				| { $gt: NonNullable<T[key]>; $lt: NonNullable<T[key]>; }
-				| { $gte: NonNullable<T[key]>; $lt: NonNullable<T[key]>; }
-				| { $gt: NonNullable<T[key]>; $lte: NonNullable<T[key]>; }
-				| { $gt: NonNullable<T[key]>; }
-				| { $gte: NonNullable<T[key]>; }
-				| { $lt: NonNullable<T[key]>; }
-				| { $lte: NonNullable<T[key]>; }
-				| { $like: string; }
-				| { $ilike: string; }
-				| { $nlike: string; }
-				| { $nilike: string; }
-				| { $in: NonNullable<T[key]>[]; }
-				| { $nin: NonNullable<T[key]>[]; }
-				| { $custom: { sign: string; value: string | number; }; }
-				| Array<
-					| { $ne: NonNullable<T[key]> | null; } | { $between: [NonNullable<T[key]>, NonNullable<T[key]>]; }
-					| { $nbetween: [NonNullable<T[key]>, NonNullable<T[key]>]; }
-					| { $gt: NonNullable<T[key]>; $lt: NonNullable<T[key]>; }
-					| { $gte: NonNullable<T[key]>; $lt: NonNullable<T[key]>; }
-					| { $gt: NonNullable<T[key]>; $lte: NonNullable<T[key]>; }
-					| { $gt: NonNullable<T[key]>; }
-					| { $gte: NonNullable<T[key]>; }
-					| { $lt: NonNullable<T[key]>; }
-					| { $lte: NonNullable<T[key]>; }
-					| { $like: string; }
-					| { $ilike: string; }
-					| { $nlike: string; }
-					| { $nilike: string; }
-					| { $in: NonNullable<T[key]>[]; }
-					| { $nin: NonNullable<T[key]>[]; }
-					| { $custom: { sign: string; value: string | number; }; }
-				>
+			? BaseDate<T[key]>
 			: NonNullable<T[key]> extends Array<unknown>
-				? | { ["$@>"]: NonNullable<T[key]>; }
-					| { ["$<@"]: NonNullable<T[key]>; }
-					| { ["$&&"]: NonNullable<T[key]>; }
-				: | { $json: NonNullable<T[key]>; }
-					| { $jsonb: NonNullable<T[key]>; }
+				? BaseArray<T[key]>
+				: BaseObject<T[key]>
 		: NonNullable<T[key]> extends string | number
-			? T[key]
-				| { ["$@>"]: NonNullable<T[key]>; }
-				| { ["$<@"]: NonNullable<T[key]>; }
-				| { ["$~"]: string; }
-				| { ["$@"]: string; }
-				| { ["$?"]: string; }
-				| { $ne: NonNullable<T[key]> | null; }
-				| { $between: [NonNullable<T[key]>, NonNullable<T[key]>]; }
-				| { $nbetween: [NonNullable<T[key]>, NonNullable<T[key]>]; }
-				| { $gt: NonNullable<T[key]>; $lt: NonNullable<T[key]>; }
-				| { $gte: NonNullable<T[key]>; $lt: NonNullable<T[key]>; }
-				| { $gt: NonNullable<T[key]>; $lte: NonNullable<T[key]>; }
-				| { $gt: NonNullable<T[key]>; }
-				| { $gte: NonNullable<T[key]>; }
-				| { $lt: NonNullable<T[key]>; }
-				| { $lte: NonNullable<T[key]>; }
-				| { $like: string; }
-				| { $ilike: string; }
-				| { $nlike: string; }
-				| { $nilike: string; }
-				| { $in: NonNullable<T[key]>[]; }
-				| { $nin: NonNullable<T[key]>[]; }
-				| { $custom: { sign: string; value: string | number; }; }
-				| Array<
-					| { ["$@>"]: NonNullable<T[key]>; }
-					| { ["$<@"]: NonNullable<T[key]>; }
-					| { ["$~"]: string; }
-					| { ["$@"]: string; }
-					| { ["$?"]: string; }
-					| { $ne: NonNullable<T[key]> | null; }
-					| { $between: [NonNullable<T[key]>, NonNullable<T[key]>]; }
-					| { $nbetween: [NonNullable<T[key]>, NonNullable<T[key]>]; }
-					| { $gt: NonNullable<T[key]>; $lt: NonNullable<T[key]>; }
-					| { $gte: NonNullable<T[key]>; $lt: NonNullable<T[key]>; }
-					| { $gt: NonNullable<T[key]>; $lte: NonNullable<T[key]>; }
-					| { $gt: NonNullable<T[key]>; }
-					| { $gte: NonNullable<T[key]>; }
-					| { $lt: NonNullable<T[key]>; }
-					| { $lte: NonNullable<T[key]>; }
-					| { $like: string; }
-					| { $ilike: string; }
-					| { $nlike: string; }
-					| { $nilike: string; }
-					| { $in: NonNullable<T[key]>[]; }
-					| { $nin: NonNullable<T[key]>[]; }
-					| { $custom: { sign: string; value: string | number; }; }
-				>
-			: T[key]
-				| { $ne: NonNullable<T[key]> | null; }
-				| { $custom: { sign: string; value: string | number; }; }
+			? BaseStringOrNumber<T[key]>
+			: BaseBoolean<T[key]>
 };
+
+type Base<T> =
+	| { $custom: { sign: string; value: string | number; }; }
+	| { $eq: T; }
+	| { $ne: NonNullable<T> | null; }
+	| { $between: [NonNullable<T>, NonNullable<T>]; }
+	| { $nbetween: [NonNullable<T>, NonNullable<T>]; }
+	| { $gt: NonNullable<T>; $lt: NonNullable<T>; }
+	| { $gte: NonNullable<T>; $lt: NonNullable<T>; }
+	| { $gt: NonNullable<T>; $lte: NonNullable<T>; }
+	| { $gt: NonNullable<T>; }
+	| { $gte: NonNullable<T>; }
+	| { $lt: NonNullable<T>; }
+	| { $lte: NonNullable<T>; }
+	| { $like: string; }
+	| { $ilike: string; }
+	| { $nlike: string; }
+	| { $nilike: string; }
+	| { $in: NonNullable<T>[]; }
+	| { $nin: NonNullable<T>[]; };
+
+type BaseDate<T> = T | Base<T> | Array<Base<T>>;
+
+type BaseLtree = // https://www.postgresql.org/docs/current/ltree.html
+	| { ["$@>"]: string | string[]; }
+	| { ["$<@"]: string | string[]; }
+	| { ["$@"]: string | string[]; }
+	| { ["$~"]: string | string[]; }
+	| { ["$?"]: string | string[]; };
+
+type BaseArray<T> =
+	| T
+	| { ["$@>"]: NonNullable<T>; }
+	| { ["$<@"]: NonNullable<T>; }
+	| { ["$&&"]: NonNullable<T>; }
+	| { ["$&&"]: NonNullable<T>; }
+	| { $eq: T; }
+	| { $ne: NonNullable<T> | null; };
+
+type BaseObject<T> =
+	| { $json: T; }
+	| { $jsonb: T; }
+	| { $eq: T; }
+	| { $ne: NonNullable<T> | null; };
+
+type BaseStringOrNumber<T> =
+	| T
+	| BaseLtree
+	| Base<T>
+	| Array<
+		| BaseLtree
+		| Base<T>
+	>;
+
+type BaseBoolean<T> =
+	| T
+	| { $ne: NonNullable<T> | null; }
+	| { $custom: { sign: string; value: string | number; }; };

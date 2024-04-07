@@ -1,7 +1,7 @@
 import pg from "pg";
 
 import * as DomainTypes from "../domain/types.js";
-import * as Helpers from "../model/helpers.js";
+import * as Helpers from "../model/helpers/index.js";
 import * as ModelTypes from "../model/types.js";
 import * as SharedHelpers from "../../../shared-helpers/index.js";
 import * as SharedTypes from "../../../shared-types/index.js";
@@ -408,11 +408,10 @@ export class QueryBuilder {
 	}
 
 	pagination(data: { limit: number; offset: number; }) {
-		if (typeof data.limit !== "number" || typeof data.offset !== "number") {
-			throw new Error("Invalid pagination");
-		}
+		this.#pagination += `LIMIT $${++this.#valuesOrder} OFFSET $${++this.#valuesOrder}`;
 
-		this.#pagination += `LIMIT ${data.limit} OFFSET ${data.offset}`;
+		this.#values.push(data.limit);
+		this.#values.push(data.offset);
 
 		return this;
 	}

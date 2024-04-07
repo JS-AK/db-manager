@@ -7,7 +7,7 @@ export default {
 		tableName: string,
 		searchFields: string,
 	) {
-		return `DELETE FROM ${tableName} ${searchFields};`;
+		return `DELETE FROM ${tableName}${searchFields};`;
 	},
 
 	deleteByPk(
@@ -24,11 +24,11 @@ export default {
 		orderByFields: string,
 		paginationFields: string,
 	) {
-		return `SELECT ${selectedFields} FROM ${tableName} ${searchFields} ${orderByFields} ${paginationFields};`;
+		return `SELECT ${selectedFields} FROM ${tableName}${searchFields}${orderByFields}${paginationFields};`;
 	},
 
 	getCountByParams(tableName: string, searchFields: string) {
-		return `SELECT COUNT(*) AS count FROM ${tableName} ${searchFields};`;
+		return `SELECT COUNT(*) AS count FROM ${tableName}${searchFields};`;
 	},
 
 	getCountByPks(primaryKeyField: string, tableName: string) {
@@ -41,7 +41,7 @@ export default {
 		searchFields: string,
 		orderNumber: number,
 	) {
-		return `SELECT COUNT(*) AS count FROM ${tableName} ${searchFields} AND ${primaryKeyField} = ANY ($${orderNumber + 1});`;
+		return `SELECT COUNT(*) AS count FROM ${tableName}${searchFields} AND ${primaryKeyField} = ANY ($${orderNumber + 1});`;
 	},
 
 	getOneByPk(tableName: string, primaryKeyField: string) {
@@ -105,7 +105,7 @@ export default {
 			}
 		}
 
-		return `UPDATE ${tableName} SET ${updateFields} ${searchFields} RETURNING *;`;
+		return `UPDATE ${tableName} SET ${updateFields}${searchFields} RETURNING *;`;
 	},
 
 	updateByPk(

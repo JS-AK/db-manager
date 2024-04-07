@@ -4,9 +4,13 @@
 
 **ParamsOr**: An array of objects containing additional conditions for database queries. Each object in the array represents a set of conditions combined using the logical OR operator.
 
-## `:`
+## `$ eq`
 `Equal to`
 ```javascript
+await repository.entity.getOneByParams({
+    params: { first_name: { $eq: "Foo" } },
+});
+OR
 await repository.entity.getOneByParams({
     params: { first_name: "Foo" },
 });

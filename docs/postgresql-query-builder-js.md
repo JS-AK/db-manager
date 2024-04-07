@@ -271,7 +271,7 @@ const qb = repository.entity.model.queryBuilder()
 ```
 Equivalent in SQL
 ```sql
-LIMIT 10 OFFSET 0
+LIMIT $1 OFFSET $2
 ```
 
 ### returning

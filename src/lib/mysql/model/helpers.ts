@@ -183,7 +183,7 @@ export const getFieldsToSearch = (
 		orderByFields: "",
 		paginationFields: "",
 		searchFields: "WHERE ",
-		selectedFields: selected.join(",\r\n"),
+		selectedFields: selected.join(", "),
 	};
 
 	let searchFields;
