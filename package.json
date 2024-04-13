@@ -45,7 +45,7 @@
   "homepage": "https://github.com/JS-AK/db-manager#readme",
   "dependencies": {
     "@types/pg": "8.11.2",
-    "mysql2": "3.9.2",
+    "mysql2": "3.9.4",
     "pg": "8.11.3"
   },
   "devDependencies": {
