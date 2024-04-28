@@ -52,7 +52,10 @@ export class BaseDomain<TC extends {
 	}
 
 	compareQuery = {
-		createOne: (create: TC["CreateFields"]) => this.model.compareQuery.save(create),
+		createOne: (
+			create: TC["CreateFields"],
+			returning?: Extract<keyof TC["TableFields"], string>[],
+		) => this.model.compareQuery.save(create, returning),
 		deleteAll: () => this.model.compareQuery.deleteAll(),
 		deleteByParams: (options: {
 			params: Types.TSearchParams<TC["SearchFields"]>;
@@ -84,21 +87,26 @@ export class BaseDomain<TC extends {
 			selected?: [T, ...T[]];
 		}) => this.model.compareQuery.getOneByParams({ $and: options.params, $or: options.paramsOr }, options.selected as string[]),
 		getOneByPk: <T = string | number>(pk: T) => this.model.compareQuery.getOneByPk(pk),
-		updateByParams: (
+		updateByParams: <T extends Extract<keyof TC["TableFields"], string>[] = Extract<keyof TC["TableFields"], string>[]>(
 			options: {
 				params: Types.TSearchParams<TC["SearchFields"]>;
 				paramsOr?: Types.TArray2OrMore<Types.TSearchParams<TC["SearchFields"]>>;
 			},
 			update: TC["UpdateFields"],
-		) => this.model.compareQuery.updateByParams({ $and: options.params, $or: options.paramsOr }, update),
-		updateOneByPk: <T = string | number>(
+			returning?: T,
+		) => this.model.compareQuery.updateByParams({ $and: options.params, $or: options.paramsOr }, update, returning),
+		updateOneByPk: <T = string | number, R extends Extract<keyof TC["TableFields"], string>[] = Extract<keyof TC["TableFields"], string>[]>(
 			pk: T,
 			update: TC["UpdateFields"],
-		) => this.model.compareQuery.updateOneByPk(pk, update),
+			returning?: R,
+		) => this.model.compareQuery.updateOneByPk(pk, update, returning),
 	};
 
-	async createOne(create: TC["CreateFields"]): Promise<TC["TableFields"]> {
-		const res = await this.model.save(create);
+	async createOne<T extends Extract<keyof TC["TableFields"], string>[] = Extract<keyof TC["TableFields"], string>[]>(
+		create: TC["CreateFields"],
+		returning?: T,
+	): Promise<T extends undefined ? TC["TableFields"] : Pick<TC["TableFields"], T[0]>> {
+		const res = await this.model.save(create, returning);
 
 		if (!res) throw new Error(`Save to ${this.model.tableName} table error`);
 
@@ -198,20 +206,22 @@ export class BaseDomain<TC extends {
 		return { one };
 	}
 
-	async updateByParams(
+	async updateByParams<T extends Extract<keyof TC["TableFields"], string>[] = Extract<keyof TC["TableFields"], string>[]>(
 		options: {
 			params: Types.TSearchParams<TC["SearchFields"]>;
 			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<TC["SearchFields"]>>;
 		},
 		update: TC["UpdateFields"],
+		returning?: T,
 	): Promise<TC["TableFields"][]> {
-		return this.model.updateByParams({ $and: options.params, $or: options.paramsOr }, update);
+		return this.model.updateByParams({ $and: options.params, $or: options.paramsOr }, update, returning);
 	}
 
-	async updateOneByPk<T = string | number>(
+	async updateOneByPk<T = string | number, R extends Extract<keyof TC["TableFields"], string>[] = Extract<keyof TC["TableFields"], string>[]>(
 		pk: T,
 		update: TC["UpdateFields"],
+		returning?: R,
 	): Promise<TC["TableFields"]> {
-		return this.model.updateOneByPk(pk, update);
+		return this.model.updateOneByPk(pk, update, returning);
 	}
 }

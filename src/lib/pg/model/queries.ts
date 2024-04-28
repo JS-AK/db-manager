@@ -52,7 +52,8 @@ export default {
 		tableName: string,
 		fields: string[],
 		createField: { title: string; type: "unix_timestamp" | "timestamp"; } | null,
-		onConflict: "ON CONFLICT DO NOTHING" | "",
+		onConflict: string,
+		returning?: string[],
 	) {
 		const intoFields = [];
 		const valuesFields = [];
@@ -78,7 +79,7 @@ export default {
 			}
 		}
 
-		return `INSERT INTO ${tableName} (${intoFields.join(",")}) VALUES (${valuesFields.join(",")}) ${onConflict} RETURNING *;`;
+		return `INSERT INTO ${tableName} (${intoFields.join(",")}) VALUES (${valuesFields.join(",")}) ${onConflict} RETURNING ${returning?.length ? returning.join(",") : "*"};`;
 	},
 
 	updateByParams(
@@ -87,6 +88,7 @@ export default {
 		searchFields: string,
 		updateField: { title: string; type: "unix_timestamp" | "timestamp"; } | null,
 		startOrderNumber: number,
+		returning?: string[],
 	) {
 		let idx = startOrderNumber;
 		let updateFields = fields.map((e: string) => `${e} = $${idx++}`).join(",");
@@ -105,7 +107,7 @@ export default {
 			}
 		}
 
-		return `UPDATE ${tableName} SET ${updateFields}${searchFields} RETURNING *;`;
+		return `UPDATE ${tableName} SET ${updateFields}${searchFields} RETURNING ${returning?.length ? returning.join(",") : "*"};`;
 	},
 
 	updateByPk(
@@ -113,6 +115,7 @@ export default {
 		fields: string[],
 		primaryKeyField: string,
 		updateField: { title: string; type: "unix_timestamp" | "timestamp"; } | null,
+		returning?: string[],
 	) {
 		let idx = 1;
 		let updateFields = fields.map((e: string) => `${e} = $${idx++}`).join(",");
@@ -131,6 +134,6 @@ export default {
 			}
 		}
 
-		return `UPDATE ${tableName} SET ${updateFields} WHERE ${primaryKeyField} = $${idx} RETURNING *;`;
+		return `UPDATE ${tableName} SET ${updateFields} WHERE ${primaryKeyField} = $${idx} RETURNING ${returning?.length ? returning.join(",") : "*"};`;
 	},
 };

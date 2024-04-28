@@ -42,7 +42,7 @@ export default async () => {
 					await testContext.test(
 						"create createOne",
 						async () => {
-							const entity = await testTable.createOne(initialParams);
+							const entity = await testTable.createOne(initialParams, ["title"]);
 
 							assert.equal(entity.title, initialParams.title);
 						},

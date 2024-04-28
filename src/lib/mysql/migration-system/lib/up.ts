@@ -1,8 +1,8 @@
 /* eslint-disable no-console */
 
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 import * as Types from "../types/index.js";
 import { walk } from "./helpers.js";
@@ -105,9 +105,7 @@ export async function start(
 				const { fileName, filePath } = file;
 
 				if (!migrations.includes(fileName)) {
-					const file = os.platform() === "win32"
-						? await import("file://" + filePath)
-						: await import(filePath);
+					const file = await import(pathToFileURL(filePath).href);
 					const { error, message } = await file.up(pool);
 
 					if (!error) {
