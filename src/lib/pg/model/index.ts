@@ -139,50 +139,49 @@ export class BaseModel {
 			};
 		},
 		save: (
-			params = {},
-			returning?: string[],
+			recordParams = {},
+			saveOptions?: { returningFields?: string[]; },
 		): { query: string; values: unknown[]; } => {
-			const clearedParams = SharedHelpers.clearUndefinedFields(params);
+			const clearedParams = SharedHelpers.clearUndefinedFields(recordParams);
 			const fields = Object.keys(clearedParams);
 			const onConflict = this.#insertOptions?.onConflict || "";
 
 			if (!fields.length) { throw new Error("No one save field arrived"); }
 
 			return {
-				query: queries.save(this.tableName, fields, this.createField, onConflict, returning),
+				query: queries.save(this.tableName, fields, this.createField, onConflict, saveOptions?.returningFields),
 				values: Object.values(clearedParams),
 			};
 		},
 		updateByParams: (
-			{ $and = {}, $or }: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
-			update: SharedTypes.TRawParams = {},
-			returning?: string[],
+			queryConditions: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; returningFields?: string[]; },
+			updateFields: SharedTypes.TRawParams = {},
 		): { query: string; values: unknown[]; } => {
-			const { queryArray, queryOrArray, values } = this.compareFields($and, $or);
+			const { queryArray, queryOrArray, values } = this.compareFields(queryConditions.$and, queryConditions.$or);
 			const { orderNumber, searchFields } = this.getFieldsToSearch({ queryArray, queryOrArray });
-			const clearedUpdate = SharedHelpers.clearUndefinedFields(update);
+			const clearedUpdate = SharedHelpers.clearUndefinedFields(updateFields);
 			const fieldsToUpdate = Object.keys(clearedUpdate);
 
 			if (!queryArray.length) throw new Error("No one update field arrived");
 
 			return {
-				query: queries.updateByParams(this.tableName, fieldsToUpdate, searchFields, this.updateField, orderNumber + 1, returning),
+				query: queries.updateByParams(this.tableName, fieldsToUpdate, searchFields, this.updateField, orderNumber + 1, queryConditions?.returningFields),
 				values: [...values, ...Object.values(clearedUpdate)],
 			};
 		},
 		updateOneByPk: <T = string | number>(
-			pk: T,
-			update: SharedTypes.TRawParams = {},
-			returning?: string[],
+			primaryKeyValue: T,
+			updateFields: SharedTypes.TRawParams = {},
+			updateOptions?: { returningFields?: string[]; },
 		): { query: string; values: unknown[]; } => {
-			const clearedParams = SharedHelpers.clearUndefinedFields(update);
+			const clearedParams = SharedHelpers.clearUndefinedFields(updateFields);
 			const fields = Object.keys(clearedParams);
 
 			if (!fields.length) throw new Error("No one update field arrived");
 
 			return {
-				query: queries.updateByPk(this.tableName, fields, this.primaryKey as string, this.updateField, returning),
-				values: [...Object.values(clearedParams), pk],
+				query: queries.updateByPk(this.tableName, fields, this.primaryKey as string, this.updateField, updateOptions?.returningFields),
+				values: [...Object.values(clearedParams), primaryKeyValue],
 			};
 		},
 	};
@@ -274,34 +273,33 @@ export class BaseModel {
 	}
 
 	async save(
-		params = {},
-		returning?: string[],
+		recordParams = {},
+		saveOptions?: { returningFields?: string[]; },
 	) {
-		const sql = this.compareQuery.save(params, returning);
+		const sql = this.compareQuery.save(recordParams, saveOptions);
 		const { rows: [entity] } = await this.pool.query(sql.query, sql.values);
 
 		return entity;
 	}
 
 	async updateByParams(
-		params: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
-		update: SharedTypes.TRawParams = {},
-		returning?: string[],
+		queryConditions: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; returningFields?: string[]; },
+		updateFields: SharedTypes.TRawParams = {},
 	) {
-		const sql = this.compareQuery.updateByParams(params, update, returning);
+		const sql = this.compareQuery.updateByParams(queryConditions, updateFields);
 		const { rows } = await this.pool.query(sql.query, sql.values);
 
 		return rows;
 	}
 
 	async updateOneByPk<T = string | number>(
-		pk: T,
-		update: SharedTypes.TRawParams = {},
-		returning?: string[],
+		primaryKeyValue: T,
+		updateFields: SharedTypes.TRawParams = {},
+		updateOptions?: { returningFields?: string[]; },
 	) {
 		if (!this.primaryKey) { throw new Error("Primary key not specified"); }
 
-		const sql = this.compareQuery.updateOneByPk(pk, update, returning);
+		const sql = this.compareQuery.updateOneByPk(primaryKeyValue, updateFields, updateOptions);
 		const { rows: [entity] } = await this.pool.query(sql.query, sql.values);
 
 		return entity;

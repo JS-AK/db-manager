@@ -218,6 +218,94 @@ export default async () => {
 		);
 
 		await testContext.test(
+			"CRUD 2",
+			async (testContext) => {
+				{
+					await testContext.test(
+						"create admin",
+						async () => {
+							const { one: userRole } = await UserRole.getOneByParams({ params: { title: "admin" }, selected: ["id"] });
+
+							if (!userRole) throw new Error("User role not found");
+
+							const createdUser = await User.createOne({ first_name: "Robin", id_user_role: userRole.id }, { returningFields: ["first_name"] });
+
+							assert.equal(createdUser?.first_name, "Robin");
+						},
+					);
+
+					{
+						await testContext.test(
+							"read admins getList",
+							async () => {
+								const users = await User.getList({
+									order: [{ orderBy: "u.first_name", ordering: "ASC" }],
+									params: { "ur.title": "admin" },
+								});
+
+								assert.equal(users.length, 1);
+
+								const firstUser = users.at(0);
+
+								assert.equal(firstUser?.first_name, "Robin");
+								assert.equal(firstUser?.ur_title, "admin");
+							},
+						);
+					}
+
+					{
+						await testContext.test(
+							"update",
+							async () => {
+								const { one: userRole } = await UserRole.getOneByParams({ params: { title: "admin" }, selected: ["id"] });
+
+								if (!userRole) throw new Error("User role not found");
+
+								const { one: userInitial } = await User.getOneByParams({ params: { id_user_role: userRole.id }, selected: ["first_name", "id"] });
+
+								if (!userInitial) throw new Error("User not found");
+
+								{
+									const updatedUser = await User.updateOneByPk(userInitial.id, { last_name: "Brown" }, { returningFields: ["id", "first_name", "last_name"] });
+
+									assert.equal(updatedUser?.id, userInitial.id);
+									assert.equal(updatedUser?.first_name, userInitial.first_name);
+									assert.equal(updatedUser?.last_name, "Brown");
+								}
+
+								{
+									const { one: updatedUser } = await User.getOneByParams({ params: { id_user_role: userRole.id }, selected: ["first_name", "id", "last_name"] });
+
+									assert.equal(updatedUser?.id, userInitial.id);
+									assert.equal(updatedUser?.first_name, userInitial.first_name);
+									assert.equal(updatedUser?.last_name, "Brown");
+								}
+
+								{
+									const [updatedUser] = await User.updateByParams({ params: { id: userInitial.id }, returningFields: ["id", "first_name", "last_name"] }, { last_name: "Brown" });
+
+									assert.equal(updatedUser?.id, userInitial.id);
+									assert.equal(updatedUser?.first_name, userInitial.first_name);
+									assert.equal(updatedUser?.last_name, "Brown");
+								}
+
+								{
+									const { one: updatedUser } = await User.getOneByParams({ params: { id_user_role: userRole.id }, selected: ["first_name", "id", "last_name"] });
+
+									assert.equal(updatedUser?.id, userInitial.id);
+									assert.equal(updatedUser?.first_name, userInitial.first_name);
+									assert.equal(updatedUser?.last_name, "Brown");
+								}
+							},
+						);
+					}
+
+					await User.deleteAll();
+				}
+			},
+		);
+
+		await testContext.test(
 			"CRUD in transaction",
 			async () => {
 				const transactionPool = PG.BaseModel.getTransactionPool(creds);
@@ -419,7 +507,7 @@ export default async () => {
 		);
 
 		await testContext.test(
-			"dropTable",
+			"drop tables",
 			async () => {
 				const pool = PG.BaseModel.getStandardPool(creds);
 
