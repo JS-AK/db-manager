@@ -42,7 +42,7 @@ export default async () => {
 					await testContext.test(
 						"create createOne",
 						async () => {
-							const entity = await testTable.createOne(initialParams);
+							const entity = await testTable.createOne(initialParams, { returningFields: ["title"] });
 
 							assert.equal(entity.title, initialParams.title);
 						},
@@ -64,9 +64,12 @@ export default async () => {
 					await testContext.test(
 						"update updateByParams",
 						async () => {
-							const res = await testTable.updateByParams({ params: initialParams }, updatedParams);
+							const [result] = await testTable.updateByParams({
+								params: initialParams,
+								returningFields: ["title"],
+							}, updatedParams);
 
-							assert.equal(res[0]?.title, updatedParams.title);
+							assert.equal(result?.title, updatedParams.title);
 						},
 					);
 				}
