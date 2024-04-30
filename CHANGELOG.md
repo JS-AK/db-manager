@@ -1,3 +1,15 @@
+# [3.21.0](https://github.com/JS-AK/db-manager/compare/v3.20.2...v3.21.0) (2024-04-30)
+
+
+### Bug Fixes
+
+* updated pg-core args ([32f3bd3](https://github.com/JS-AK/db-manager/commit/32f3bd3144b5777a09e98044e32f2817f1de4766))
+
+
+### Features
+
+* pass returning option to pg-core ([b103ed0](https://github.com/JS-AK/db-manager/commit/b103ed05a32878f92e8234bcb7fc8b03c61e4ac8))
+
 ## [3.20.2](https://github.com/JS-AK/db-manager/compare/v3.20.1...v3.20.2) (2024-04-24)
 
 
