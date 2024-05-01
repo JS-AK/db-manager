@@ -210,6 +210,22 @@ export default async () => {
 
 					{
 						await testContext.test(
+							"User.getListAndCount",
+							async () => {
+								const [list, count] = await User.getListAndCount({
+									order: [{ column: "u.created_at", sorting: "ASC" }],
+									pagination: { limit: 10, offset: 0 },
+									params: {},
+								});
+
+								assert.equal(list.length, 7);
+								assert.equal(count, 7);
+							},
+						);
+					}
+
+					{
+						await testContext.test(
 							"select + rightJoin + where + orderBy",
 							async () => {
 								const users = await User.getAllWithTitleUser();

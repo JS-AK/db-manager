@@ -139,4 +139,48 @@ export class Domain extends DbManager.PG.BaseDomain<{
 			.pagination(data.pagination)
 			.execute<Types.ListedEntity>();
 	}
+
+	async getListAndCount(data: {
+		order: { column: Types.ListOrderBy; sorting: DbManager.Types.TOrdering; }[];
+		pagination: DbManager.Types.TPagination;
+		params: { ids?: string[]; userRoleTitle?: string; };
+	}): Promise<[Types.ListedEntity[], number]> {
+		const params: SearchFieldsList = {
+			"u.id": data.params.ids ? { $in: data.params.ids } : undefined,
+			"u.is_deleted": false,
+			"ur.title": data.params.userRoleTitle,
+		};
+
+		const query = this.model
+			.queryBuilder({ tableName: "users AS u" })
+			.rightJoin({
+				initialField: "id_user_role",
+				targetField: "id",
+				targetTableName: "user_roles",
+				targetTableNameAs: "ur",
+			})
+			.where({ params });
+
+		const queryList = query.clone();
+		const queryTotal = query.clone();
+
+		const [list, total] = await Promise.all([
+			queryList
+				.select([
+					"u.id         AS id",
+					"u.first_name AS first_name",
+					"u.last_name  AS last_name",
+					"ur.id        AS ur_id",
+					"ur.title     AS ur_title",
+				])
+				.orderBy(data.order)
+				.pagination(data.pagination)
+				.execute<Types.ListedEntity>(),
+			queryTotal
+				.select(["COUNT(*)"])
+				.execute<{ count: string; }>(),
+		]);
+
+		return [list, Number(total[0]?.count) || 0];
+	}
 }
