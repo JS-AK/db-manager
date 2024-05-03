@@ -1,3 +1,16 @@
+# [3.22.0](https://github.com/JS-AK/db-manager/compare/v3.21.0...v3.22.0) (2024-05-03)
+
+
+### Bug Fixes
+
+* move qb to same file ([216d33d](https://github.com/JS-AK/db-manager/commit/216d33deff0615b927a7eed434ebb585a129d8e6))
+
+
+### Features
+
+* added query builder clone method ([a966ae9](https://github.com/JS-AK/db-manager/commit/a966ae9f345390f102eb34eb7a80aee7854516d6))
+* added rawHaving for pg query builder ([0616b62](https://github.com/JS-AK/db-manager/commit/0616b62dbb1551c25999aec42ce09fba585b53ce))
+
 # [3.21.0](https://github.com/JS-AK/db-manager/compare/v3.20.2...v3.21.0) (2024-04-30)
 
 
