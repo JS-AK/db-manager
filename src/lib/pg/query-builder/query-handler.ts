@@ -4,7 +4,7 @@ import * as ModelTypes from "../model/types.js";
 import * as SharedHelpers from "../../../shared-helpers/index.js";
 import * as SharedTypes from "../../../shared-types/index.js";
 
-export class QueryBuilderMain {
+export class QueryHandler {
 	#groupBy = "";
 	#join: string[] = [];
 	#mainHaving = "";
@@ -13,7 +13,7 @@ export class QueryBuilderMain {
 	#orderBy = "";
 	#pagination = "";
 	#returning = "";
-	#tableName;
+	#tableNamePrepared;
 	#tableNameRaw;
 	#valuesOrder = 0;
 	#values: unknown[] = [];
@@ -27,7 +27,7 @@ export class QueryBuilderMain {
 		orderBy?: string;
 		pagination?: string;
 		returning?: string;
-		tableName: string;
+		tableNamePrepared: string;
 		tableNameRaw: string;
 		values?: unknown[];
 		valuesOrder?: number;
@@ -44,7 +44,7 @@ export class QueryBuilderMain {
 		if (options.valuesOrder) this.#valuesOrder = options.valuesOrder;
 
 		this.#tableNameRaw = options.tableNameRaw;
-		this.#tableName = options.tableName;
+		this.#tableNamePrepared = options.tableNamePrepared;
 	}
 
 	get optionsToClone() {
@@ -57,7 +57,7 @@ export class QueryBuilderMain {
 			orderBy: this.#orderBy,
 			pagination: this.#pagination,
 			returning: this.#returning,
-			tableName: this.#tableName,
+			tableNamePrepared: this.#tableNamePrepared,
 			tableNameRaw: this.#tableNameRaw,
 			values: structuredClone(this.#values),
 			valuesOrder: this.#valuesOrder,
@@ -241,7 +241,7 @@ export class QueryBuilderMain {
 	}) {
 		const targetTableName = data.targetTableName + (data.targetTableNameAs ? ` AS ${data.targetTableNameAs}` : "");
 
-		this.#join.push(`RIGHT JOIN ${targetTableName} ON ${data.targetTableNameAs || data.targetTableName}.${data.targetField} = ${data.initialTableName || this.#tableName}.${data.initialField}`);
+		this.#join.push(`RIGHT JOIN ${targetTableName} ON ${data.targetTableNameAs || data.targetTableName}.${data.targetField} = ${data.initialTableName || this.#tableNamePrepared}.${data.initialField}`);
 	}
 
 	leftJoin(data: {
@@ -253,7 +253,7 @@ export class QueryBuilderMain {
 	}) {
 		const targetTableName = data.targetTableName + (data.targetTableNameAs ? ` AS ${data.targetTableNameAs}` : "");
 
-		this.#join.push(`LEFT JOIN ${targetTableName} ON ${data.targetTableNameAs || data.targetTableName}.${data.targetField} = ${data.initialTableName || this.#tableName}.${data.initialField}`);
+		this.#join.push(`LEFT JOIN ${targetTableName} ON ${data.targetTableNameAs || data.targetTableName}.${data.targetField} = ${data.initialTableName || this.#tableNamePrepared}.${data.initialField}`);
 	}
 
 	innerJoin(data: {
@@ -265,7 +265,7 @@ export class QueryBuilderMain {
 	}) {
 		const targetTableName = data.targetTableName + (data.targetTableNameAs ? ` AS ${data.targetTableNameAs}` : "");
 
-		this.#join.push(`INNER JOIN ${targetTableName} ON ${data.targetTableNameAs || data.targetTableName}.${data.targetField} = ${data.initialTableName || this.#tableName}.${data.initialField}`);
+		this.#join.push(`INNER JOIN ${targetTableName} ON ${data.targetTableNameAs || data.targetTableName}.${data.targetField} = ${data.initialTableName || this.#tableNamePrepared}.${data.initialField}`);
 	}
 
 	fullOuterJoin(data: {
@@ -277,7 +277,7 @@ export class QueryBuilderMain {
 	}) {
 		const targetTableName = data.targetTableName + (data.targetTableNameAs ? ` AS ${data.targetTableNameAs}` : "");
 
-		this.#join.push(`FULL OUTER JOIN ${targetTableName} ON ${data.targetTableNameAs || data.targetTableName}.${data.targetField} = ${data.initialTableName || this.#tableName}.${data.initialField}`);
+		this.#join.push(`FULL OUTER JOIN ${targetTableName} ON ${data.targetTableNameAs || data.targetTableName}.${data.targetField} = ${data.initialTableName || this.#tableNamePrepared}.${data.initialField}`);
 	}
 
 	where(data: {
@@ -290,9 +290,7 @@ export class QueryBuilderMain {
 		);
 
 		if (queryArray.length) {
-			if (!this.#mainWhere) this.#mainWhere += "WHERE ";
-
-			this.#mainWhere += queryArray.map((e: ModelTypes.TField) => {
+			const comparedFields = queryArray.map((e: ModelTypes.TField) => {
 				const operatorFunction = Helpers.operatorMappings.get(e.operator);
 
 				if (operatorFunction) {
@@ -309,6 +307,12 @@ export class QueryBuilderMain {
 					return text;
 				}
 			}).join(" AND ");
+
+			if (!this.#mainWhere) {
+				this.#mainWhere += `WHERE (${comparedFields})`;
+			} else {
+				this.#mainWhere += ` AND (${comparedFields})`;
+			}
 		}
 
 		if (queryOrArray?.length) {
@@ -350,12 +354,14 @@ export class QueryBuilderMain {
 	rawWhere(data: string) {
 		if (!data) return;
 
-		if (!this.#mainWhere) this.#mainWhere += "WHERE ";
+		if (!this.#mainWhere) this.#mainWhere = "WHERE ";
 
 		this.#mainWhere += data;
 	}
 
 	pagination(data: { limit: number; offset: number; }) {
+		if (this.#pagination) throw new Error("pagination already defined");
+
 		this.#pagination = `LIMIT $${++this.#valuesOrder} OFFSET $${++this.#valuesOrder}`;
 
 		this.#values.push(data.limit);
@@ -366,13 +372,13 @@ export class QueryBuilderMain {
 		column: string;
 		sorting: SharedTypes.TOrdering;
 	}[]) {
-		if (!this.#orderBy) this.#orderBy += "ORDER BY";
+		if (!this.#orderBy) this.#orderBy = "ORDER BY";
 
 		this.#orderBy += ` ${data.map((o) => `${o.column} ${o.sorting}`).join(", ")}`;
 	}
 
 	groupBy(data: string[]) {
-		if (!this.#groupBy) this.#groupBy += "GROUP BY";
+		if (!this.#groupBy) this.#groupBy = "GROUP BY";
 
 		this.#groupBy += ` ${data.join(", ")}`;
 	}
@@ -387,8 +393,7 @@ export class QueryBuilderMain {
 		);
 
 		if (queryArray.length) {
-			this.#mainHaving += "HAVING ";
-			this.#mainHaving += queryArray.map((e: ModelTypes.TField) => {
+			const comparedFields = queryArray.map((e: ModelTypes.TField) => {
 				const operatorFunction = Helpers.operatorMappings.get(e.operator);
 
 				if (operatorFunction) {
@@ -405,6 +410,12 @@ export class QueryBuilderMain {
 					return text;
 				}
 			}).join(" AND ");
+
+			if (!this.#mainHaving) {
+				this.#mainHaving += `HAVING (${comparedFields})`;
+			} else {
+				this.#mainHaving += ` AND (${comparedFields})`;
+			}
 		}
 
 		if (queryOrArray?.length) {
@@ -443,7 +454,15 @@ export class QueryBuilderMain {
 		this.#values.push(...values);
 	}
 
+	rawHaving(data: string) {
+		if (!data) return;
+
+		if (!this.#mainHaving) this.#mainHaving = "HAVING ";
+
+		this.#mainHaving += data;
+	}
+
 	returning(data: string[]) {
-		this.#returning += `RETURNING ${data.join(", ")}`;
+		this.#returning = `RETURNING ${data.join(", ")}`;
 	}
 }

@@ -15,7 +15,6 @@
     "build/shared-types",
     "build/index.js",
     "build/index.d.ts",
-    "build/index.d.ts.map",
     "LICENSE",
     "README.md",
     "package.json"

@@ -3,19 +3,19 @@ import pg from "pg";
 import * as DomainTypes from "../domain/types.js";
 import * as ModelTypes from "../model/types.js";
 import * as SharedTypes from "../../../shared-types/index.js";
-import { QueryBuilderMain } from "./query-builder-main.js";
+import { QueryHandler } from "./query-handler.js";
 
 export class QueryBuilder {
 	#tableNameRaw;
-	#tableName;
+	#tableNamePrepared;
 
 	#client;
-	#main;
+	#queryHandler;
 
 	constructor(
 		tableName: string,
 		client: pg.Pool | pg.PoolClient,
-		queryBuilderMain?: QueryBuilderMain,
+		queryHandler?: QueryHandler,
 	) {
 		this.#tableNameRaw = tableName;
 
@@ -23,13 +23,13 @@ export class QueryBuilder {
 		const as = chunks[1]?.trim();
 
 		if (as) {
-			this.#tableName = as;
+			this.#tableNamePrepared = as;
 		} else {
-			this.#tableName = tableName;
+			this.#tableNamePrepared = tableName;
 		}
 
-		this.#main = queryBuilderMain || new QueryBuilderMain({
-			tableName: this.#tableName,
+		this.#queryHandler = queryHandler || new QueryHandler({
+			tableNamePrepared: this.#tableNamePrepared,
 			tableNameRaw: this.#tableNameRaw,
 		});
 
@@ -37,17 +37,17 @@ export class QueryBuilder {
 	}
 
 	clone() {
-		const main = new QueryBuilderMain(this.#main.optionsToClone);
+		const main = new QueryHandler(this.#queryHandler.optionsToClone);
 
 		return new QueryBuilder(this.#tableNameRaw, this.#client, main);
 	}
 
 	compareQuery(): { query: string; values: unknown[]; } {
-		return this.#main.compareQuery();
+		return this.#queryHandler.compareQuery();
 	}
 
 	delete() {
-		this.#main.delete();
+		this.#queryHandler.delete();
 
 		return this;
 	}
@@ -57,7 +57,7 @@ export class QueryBuilder {
 		params: T | T[];
 		updateColumn?: { title: string; type: "unix_timestamp" | "timestamp"; } | null;
 	}) {
-		this.#main.insert<T>(options);
+		this.#queryHandler.insert<T>(options);
 
 		return this;
 	}
@@ -67,19 +67,19 @@ export class QueryBuilder {
 		params: T;
 		updateColumn?: { title: string; type: "unix_timestamp" | "timestamp"; } | null;
 	}) {
-		this.#main.update<T>(options);
+		this.#queryHandler.update<T>(options);
 
 		return this;
 	}
 
 	select(data: string[]) {
-		this.#main.select(data);
+		this.#queryHandler.select(data);
 
 		return this;
 	}
 
 	rawJoin(data: string) {
-		this.#main.rawJoin(data);
+		this.#queryHandler.rawJoin(data);
 
 		return this;
 	}
@@ -91,7 +91,7 @@ export class QueryBuilder {
 		initialTableName?: string;
 		initialField: string;
 	}) {
-		this.#main.rightJoin(data);
+		this.#queryHandler.rightJoin(data);
 
 		return this;
 	}
@@ -103,7 +103,7 @@ export class QueryBuilder {
 		initialTableName?: string;
 		initialField: string;
 	}) {
-		this.#main.leftJoin(data);
+		this.#queryHandler.leftJoin(data);
 
 		return this;
 	}
@@ -115,7 +115,7 @@ export class QueryBuilder {
 		initialTableName?: string;
 		initialField: string;
 	}) {
-		this.#main.innerJoin(data);
+		this.#queryHandler.innerJoin(data);
 
 		return this;
 	}
@@ -127,7 +127,7 @@ export class QueryBuilder {
 		initialTableName?: string;
 		initialField: string;
 	}) {
-		this.#main.fullOuterJoin(data);
+		this.#queryHandler.fullOuterJoin(data);
 
 		return this;
 	}
@@ -136,19 +136,19 @@ export class QueryBuilder {
 		params?: ModelTypes.TSearchParams;
 		paramsOr?: DomainTypes.TArray2OrMore<ModelTypes.TSearchParams>;
 	}) {
-		this.#main.where(data);
+		this.#queryHandler.where(data);
 
 		return this;
 	}
 
 	rawWhere(data: string) {
-		this.#main.rawWhere(data);
+		this.#queryHandler.rawWhere(data);
 
 		return this;
 	}
 
 	pagination(data: { limit: number; offset: number; }) {
-		this.#main.pagination(data);
+		this.#queryHandler.pagination(data);
 
 		return this;
 	}
@@ -157,13 +157,13 @@ export class QueryBuilder {
 		column: string;
 		sorting: SharedTypes.TOrdering;
 	}[]) {
-		this.#main.orderBy(data);
+		this.#queryHandler.orderBy(data);
 
 		return this;
 	}
 
 	groupBy(data: string[]) {
-		this.#main.groupBy(data);
+		this.#queryHandler.groupBy(data);
 
 		return this;
 	}
@@ -172,13 +172,19 @@ export class QueryBuilder {
 		params?: ModelTypes.TSearchParams;
 		paramsOr?: DomainTypes.TArray2OrMore<ModelTypes.TSearchParams>;
 	}) {
-		this.#main.having(data);
+		this.#queryHandler.having(data);
+
+		return this;
+	}
+
+	rawHaving(data: string) {
+		this.#queryHandler.rawHaving(data);
 
 		return this;
 	}
 
 	returning(data: string[]) {
-		this.#main.returning(data);
+		this.#queryHandler.returning(data);
 
 		return this;
 	}
