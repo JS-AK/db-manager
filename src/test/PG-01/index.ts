@@ -24,7 +24,7 @@ export default async () => {
 				const pool = PG.BaseModel.getStandardPool(creds);
 
 				await pool.query(`
-					DROP TABLE IF EXISTS ${testTable.tableName};
+					DROP TABLE IF EXISTS ${testTable.tableName} CASCADE;
 
 					CREATE TABLE ${testTable.tableName}(
 					  id                              BIGSERIAL PRIMARY KEY,

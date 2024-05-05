@@ -25,7 +25,7 @@ export default async () => {
 				const pool = PG.BaseModel.getStandardPool(creds);
 
 				await pool.query(`
-					DROP TABLE IF EXISTS ${UserRole.tableName};
+					DROP TABLE IF EXISTS ${UserRole.tableName} CASCADE;
 					CREATE TABLE ${UserRole.tableName}(
 					    id                              BIGSERIAL PRIMARY KEY,
 					    title                           TEXT UNIQUE,
@@ -35,7 +35,7 @@ export default async () => {
 					INSERT INTO ${UserRole.tableName} (title) VALUES ('admin'), ('head'), ('user');
 				`);
 				await pool.query(`
-					DROP TABLE IF EXISTS ${User.tableName};
+					DROP TABLE IF EXISTS ${User.tableName} CASCADE;
 
 					CREATE TABLE ${User.tableName}(
 					    id                              BIGSERIAL PRIMARY KEY,

@@ -25,24 +25,32 @@ export default async () => {
 				const pool = PG.BaseModel.getStandardPool(creds);
 
 				await pool.query(`
-					DROP TABLE IF EXISTS ${UserRole.tableName};
+					DROP TABLE IF EXISTS ${UserRole.tableName} CASCADE;
+
 					CREATE TABLE ${UserRole.tableName}(
 					    id                              BIGSERIAL PRIMARY KEY,
+
 					    title                           TEXT UNIQUE,
+
 					    created_at                      TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
 					    updated_at                      TIMESTAMP WITH TIME ZONE
 					);
 					INSERT INTO ${UserRole.tableName} (title) VALUES ('admin'), ('head'), ('user');
 				`);
 				await pool.query(`
-					DROP TABLE IF EXISTS ${User.tableName};
+					DROP TABLE IF EXISTS ${User.tableName} CASCADE;
 
 					CREATE TABLE ${User.tableName}(
 					    id                              BIGSERIAL PRIMARY KEY,
+
 					    id_user_role                    BIGINT,
-					    is_deleted                      BOOLEAN NOT NULL DEFAULT FALSE,
+
 					    first_name                      TEXT,
 					    last_name                       TEXT,
+
+					    deleted_at                      TIMESTAMP WITH TIME ZONE,
+					    is_deleted                      BOOLEAN NOT NULL DEFAULT FALSE,
+
 					    created_at                      TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
 					    updated_at                      TIMESTAMP WITH TIME ZONE,
 

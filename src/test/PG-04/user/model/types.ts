@@ -9,8 +9,10 @@ export type ListOrderBy = "u.created_at";
 
 export type ListedEntity = {
 	id: TableFields["id"];
+
 	first_name: NonNullable<TableFields["first_name"]>;
 	last_name: NonNullable<TableFields["last_name"]>;
+
 	ur_id: string;
 	ur_title: "admin" | "head" | "booker";
 };
@@ -20,16 +22,22 @@ export type SearchFields = Partial<TableFields>;
 export type SearchListFields = {
 	"u.id"?: TableFields["id"];
 	"u.is_deleted"?: TableFields["is_deleted"];
+
 	"ur.title"?: string;
 };
 
 export type TableFields = {
-	created_at: Date;
-	first_name: string;
 	id: string;
+
 	id_user_role: string;
-	is_deleted: boolean;
+
+	first_name: string;
 	last_name: string;
+
+	deleted_at: Date | null;
+	is_deleted: boolean;
+
+	created_at: Date;
 	updated_at: Date | null;
 };
 

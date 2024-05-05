@@ -1,14 +1,13 @@
 import mysql from "mysql2/promise";
 
-import { MYSQL } from "../..";
+import { MYSQL } from "../../index.js";
 
 const pools = new Map<string, mysql.Pool>();
 
-export const createConnection = (config: MYSQL.ModelTypes.TDBCreds) => {
+export const createConnection = async (config: mysql.ConnectionOptions): Promise<mysql.Connection> => {
 	return mysql.createConnection(config);
 };
-
-export const getStandardPool = (config: MYSQL.ModelTypes.TDBCreds, poolName = "00") => {
+export const getStandardPool = (config: MYSQL.ModelTypes.TDBCreds, poolName = "00"): mysql.Pool => {
 	const { database, host, password, port, user } = config;
 	const poolNameResult = "st" + poolName;
 	const credsString = `${poolNameResult}#${user}:${password}@${host}:${port}/${database}`;
@@ -26,7 +25,7 @@ export const getStandardPool = (config: MYSQL.ModelTypes.TDBCreds, poolName = "0
 	}
 };
 
-export const getTransactionPool = (config: MYSQL.ModelTypes.TDBCreds, poolName = "00") => {
+export const getTransactionPool = (config: MYSQL.ModelTypes.TDBCreds, poolName = "00"): mysql.Pool => {
 	const { database, host, password, port, user } = config;
 	const poolNameResult = "tr" + poolName;
 	const credsString = `${poolNameResult}#${user}:${password}@${host}:${port}/${database}`;
@@ -44,7 +43,7 @@ export const getTransactionPool = (config: MYSQL.ModelTypes.TDBCreds, poolName =
 	}
 };
 
-export const removeStandardPool = async (config: MYSQL.ModelTypes.TDBCreds, poolName = "00") => {
+export const removeStandardPool = async (config: MYSQL.ModelTypes.TDBCreds, poolName = "00"): Promise<void> => {
 	const { database, host, password, port, user } = config;
 	const poolNameResult = "st" + poolName;
 	const credsString = `${poolNameResult}#${user}:${password}@${host}:${port}/${database}`;
@@ -58,7 +57,7 @@ export const removeStandardPool = async (config: MYSQL.ModelTypes.TDBCreds, pool
 	}
 };
 
-export const removeTransactionPool = async (config: MYSQL.ModelTypes.TDBCreds, poolName = "00") => {
+export const removeTransactionPool = async (config: MYSQL.ModelTypes.TDBCreds, poolName = "00"): Promise<void> => {
 	const { database, host, password, port, user } = config;
 	const poolNameResult = "tr" + poolName;
 	const credsString = `${poolNameResult}#${user}:${password}@${host}:${port}/${database}`;

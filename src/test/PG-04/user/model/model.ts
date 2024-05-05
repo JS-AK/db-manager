@@ -26,12 +26,17 @@ const primaryKey = "id"; // primaryId from table
 const createField = { title: "created_at", type: "timestamp" } as const;
 const updateField = { title: "updated_at", type: "timestamp" } as const;
 const tableFields: TableKeys[] = [
-	"created_at",
-	"first_name",
 	"id",
+
 	"id_user_role",
-	"is_deleted",
+
+	"first_name",
 	"last_name",
+
+	"deleted_at",
+	"is_deleted",
+
+	"created_at",
 	"updated_at",
 ];
 

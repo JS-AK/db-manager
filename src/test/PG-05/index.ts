@@ -24,7 +24,9 @@ export default async () => {
 
 				await pool.query(`
 					CREATE EXTENSION IF NOT EXISTS LTREE;
-					DROP TABLE IF EXISTS ${FileSystem.tableName};
+
+					DROP TABLE IF EXISTS ${FileSystem.tableName} CASCADE;
+
 					CREATE TABLE ${FileSystem.tableName}(
 					    id                              BIGSERIAL PRIMARY KEY,
 
@@ -35,6 +37,7 @@ export default async () => {
 					    created_at                      TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
 					    updated_at                      TIMESTAMP WITH TIME ZONE
 					);
+
 					CREATE INDEX ${FileSystem.tableName}_path_gist ON ${FileSystem.tableName} USING gist(path);
 				`);
 			},

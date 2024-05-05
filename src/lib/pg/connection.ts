@@ -1,14 +1,14 @@
 import pg from "pg";
 
-import { PG } from "../..";
+import { PG } from "../../index.js";
 
 const pools = new Map<string, pg.Pool>();
 
-export const createClient = (config: PG.ModelTypes.TDBCreds) => {
+export const createClient = (config: string | pg.ClientConfig): pg.Client => {
 	return new pg.Client(config);
 };
 
-export const getStandardPool = (config: PG.ModelTypes.TDBCreds, poolName = "00") => {
+export const getStandardPool = (config: PG.ModelTypes.TDBCreds, poolName = "00"): pg.Pool => {
 	const { database, host, password, port, user } = config;
 	const poolNameResult = "st" + poolName;
 	const credsString = `${poolNameResult}#${user}:${password}@${host}:${port}/${database}`;
@@ -26,7 +26,7 @@ export const getStandardPool = (config: PG.ModelTypes.TDBCreds, poolName = "00")
 	}
 };
 
-export const getTransactionPool = (config: PG.ModelTypes.TDBCreds, poolName = "00") => {
+export const getTransactionPool = (config: PG.ModelTypes.TDBCreds, poolName = "00"): pg.Pool => {
 	const { database, host, password, port, user } = config;
 	const poolNameResult = "tr" + poolName;
 	const credsString = `${poolNameResult}#${user}:${password}@${host}:${port}/${database}`;
@@ -44,7 +44,7 @@ export const getTransactionPool = (config: PG.ModelTypes.TDBCreds, poolName = "0
 	}
 };
 
-export const removeStandardPool = async (config: PG.ModelTypes.TDBCreds, poolName = "00") => {
+export const removeStandardPool = async (config: PG.ModelTypes.TDBCreds, poolName = "00"): Promise<void> => {
 	const { database, host, password, port, user } = config;
 	const poolNameResult = "st" + poolName;
 	const credsString = `${poolNameResult}#${user}:${password}@${host}:${port}/${database}`;
@@ -58,7 +58,7 @@ export const removeStandardPool = async (config: PG.ModelTypes.TDBCreds, poolNam
 	}
 };
 
-export const removeTransactionPool = async (config: PG.ModelTypes.TDBCreds, poolName = "00") => {
+export const removeTransactionPool = async (config: PG.ModelTypes.TDBCreds, poolName = "00"): Promise<void> => {
 	const { database, host, password, port, user } = config;
 	const poolNameResult = "tr" + poolName;
 	const credsString = `${poolNameResult}#${user}:${password}@${host}:${port}/${database}`;

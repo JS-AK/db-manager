@@ -43,6 +43,8 @@
   },
   "homepage": "https://github.com/JS-AK/db-manager#readme",
   "dependencies": {
+    "@js-ak/mysql-migration-system": "1.0.1",
+    "@js-ak/pg-migration-system": "1.0.7",
     "@types/pg": "8.11.2",
     "mysql2": "3.9.7",
     "pg": "8.11.3"
