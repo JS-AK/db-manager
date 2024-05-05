@@ -1,3 +1,10 @@
+# [3.23.0](https://github.com/JS-AK/db-manager/compare/v3.22.0...v3.23.0) (2024-05-05)
+
+
+### Features
+
+* move migration systems to same libs ([2f569e9](https://github.com/JS-AK/db-manager/commit/2f569e9ef9f7e5f119b777a00f0e78ac998c7779))
+
 # [3.22.0](https://github.com/JS-AK/db-manager/compare/v3.21.0...v3.22.0) (2024-05-03)
 
 
