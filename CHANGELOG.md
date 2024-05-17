@@ -1,3 +1,10 @@
+# [3.26.0](https://github.com/JS-AK/db-manager/compare/v3.25.0...v3.26.0) (2024-05-17)
+
+
+### Features
+
+* updated pg-migration-system ([5ed1145](https://github.com/JS-AK/db-manager/commit/5ed11457e6e58221a2069d9b8093b23d90e2f90e))
+
 # [3.25.0](https://github.com/JS-AK/db-manager/compare/v3.24.0...v3.25.0) (2024-05-12)
 
 
