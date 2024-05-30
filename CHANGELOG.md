@@ -1,3 +1,10 @@
+## [3.26.1](https://github.com/JS-AK/db-manager/compare/v3.26.0...v3.26.1) (2024-05-30)
+
+
+### Bug Fixes
+
+* updated deps ([5f2d06d](https://github.com/JS-AK/db-manager/commit/5f2d06ddacc43d89f1b100a8ddaf023ec93720a7))
+
 # [3.26.0](https://github.com/JS-AK/db-manager/compare/v3.25.0...v3.26.0) (2024-05-17)
 
 
