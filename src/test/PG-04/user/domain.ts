@@ -2,9 +2,6 @@ import * as DbManager from "../../../index.js";
 
 import { Model, Types } from "./model/index.js";
 
-export type SearchFieldsList = DbManager.PG.DomainTypes.TSearchParams<Types.SearchListFields>;
-export type SearchFieldsListOr = DbManager.PG.DomainTypes.TArray2OrMore<SearchFieldsList>;
-
 export class Domain extends DbManager.PG.BaseDomain<{
 	Model: Model;
 	CreateFields: Types.CreateFields;
@@ -113,7 +110,7 @@ export class Domain extends DbManager.PG.BaseDomain<{
 			userRoleTitle?: string;
 		};
 	}) {
-		const params: SearchFieldsList = {
+		const params: Types.SearchFieldsList = {
 			"u.id": data.params.ids ? { $in: data.params.ids } : undefined,
 			"u.is_deleted": false,
 			"ur.title": data.params.userRoleTitle,
@@ -145,7 +142,7 @@ export class Domain extends DbManager.PG.BaseDomain<{
 		pagination: DbManager.Types.TPagination;
 		params: { ids?: string[]; userRoleTitle?: string; };
 	}): Promise<[Types.ListedEntity[], number]> {
-		const params: SearchFieldsList = {
+		const params: Types.SearchFieldsList = {
 			"u.id": data.params.ids ? { $in: data.params.ids } : undefined,
 			"u.is_deleted": false,
 			"ur.title": data.params.userRoleTitle,

@@ -589,8 +589,10 @@ export default async () => {
 				}));
 
 				{
-					const params = {
-						params: { number_key: 1 } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
+					const params: {
+						params: PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: { number_key: 1 },
 					};
 
 					await testContext.test(
@@ -629,8 +631,10 @@ export default async () => {
 
 				{
 					const likeText = "description 5";
-					const params = {
-						params: { description: { $like: `%${likeText}%` } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
+					const params: {
+						params: PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: { description: { $like: `%${likeText}%` } },
 					};
 
 					await testContext.test(
@@ -645,7 +649,9 @@ export default async () => {
 
 				{
 					const likeText = "description 5";
-					const params = {
+					const params: {
+						params: PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
 						params: {
 							books: { "$&&": ["book 1"] },
 							description: [
@@ -655,7 +661,7 @@ export default async () => {
 								{ $ne: null },
 							],
 							updated_at: null,
-						} as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
+						},
 					};
 
 					await testContext.test(
@@ -669,8 +675,10 @@ export default async () => {
 				}
 
 				{
-					const params = {
-						params: { number_key: { $lt: 2 } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
+					const params: {
+						params: PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: { number_key: { $lt: 2 } },
 					};
 
 					await testContext.test(
@@ -684,8 +692,10 @@ export default async () => {
 				}
 
 				{
-					const params = {
-						params: { number_key: { $lte: 1 } } as PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>,
+					const params: {
+						params: PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: { number_key: { $lte: 1 } },
 					};
 
 					await testContext.test(
@@ -694,6 +704,25 @@ export default async () => {
 							const res = await testTable.getOneByParams(params);
 
 							assert.equal(res.one?.number_key, 1);
+						},
+					);
+				}
+
+				{
+					const params: {
+						params: PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: {
+							"meta->'firstName'": "\"firstName 1\"",
+						},
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const res = await testTable.getOneByParams(params);
+
+							assert.equal(res.one?.meta.firstName, "firstName 1");
 						},
 					);
 				}

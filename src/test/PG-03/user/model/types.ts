@@ -1,10 +1,11 @@
+import * as DbManager from "../../../../index.js";
+
 export type CreateFields = Pick<TableFields,
 	| "first_name"
 	| "id_user_role"
 > & Partial<Pick<TableFields,
 	| "last_name"
 >>;
-
 export type ListedEntity = {
 	first_name: NonNullable<TableFields["first_name"]>;
 	id: TableFields["id"];
@@ -14,6 +15,9 @@ export type ListedEntity = {
 };
 
 export type SearchFields = Partial<TableFields>;
+
+export type SearchFieldsList = DbManager.PG.DomainTypes.TSearchParams<SearchListFields>;
+export type SearchFieldsListOr = DbManager.PG.DomainTypes.TArray2OrMore<SearchFieldsList>;
 
 export type SearchListFields = {
 	"u.is_deleted"?: boolean;

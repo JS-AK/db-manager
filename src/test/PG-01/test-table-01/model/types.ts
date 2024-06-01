@@ -20,13 +20,7 @@ export type EntityListed = Pick<TableFields,
 	| "title"
 >;
 
-export type SearchFields = Partial<Omit<TableFields,
-	| "created_at"
-	| "updated_at"
->> & {
-	created_at?: string;
-	updated_at?: string | null;
-};
+export type SearchFields = Partial<TableFields>;
 
 export type TableFields = {
 	id: string;
