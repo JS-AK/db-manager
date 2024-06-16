@@ -6,15 +6,7 @@ import { PG } from "../../index.js";
 import * as UserRoleTable from "./user-role/index.js";
 import * as UserTable from "./user/index.js";
 
-const creds = {
-	database: "postgres",
-	host: process.env.POSTGRES_HOST || "localhost",
-	password: "admin",
-	port: parseInt(process.env.POSTGRES_PORT || "", 10) || 5432,
-	user: "postgres",
-};
-
-export default async () => {
+export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 	const User = new UserTable.Domain(creds);
 	const UserRole = new UserRoleTable.Domain(creds);
 

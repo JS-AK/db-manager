@@ -6,15 +6,7 @@ import { PG, Types } from "../../index.js";
 import * as TestTable from "./test-table-01/index.js";
 import { isHasFields } from "../../shared-helpers/index.js";
 
-const creds = {
-	database: "postgres",
-	host: process.env.POSTGRES_HOST || "localhost",
-	password: "admin",
-	port: parseInt(process.env.POSTGRES_PORT || "", 10) || 5432,
-	user: "postgres",
-};
-
-export default async () => {
+export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 	const testTable = new TestTable.Domain(creds);
 
 	return test("PG-01", async (testContext) => {
