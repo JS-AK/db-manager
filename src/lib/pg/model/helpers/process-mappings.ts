@@ -53,6 +53,11 @@ export const processMappings: Map<
 			values.push(v.$in);
 		},
 	],
+	// @> is the "contains" operator.
+	// arrays:          http://www.postgresql.org/docs/current/static/functions-array.html
+	// range types:     http://www.postgresql.org/docs/current/static/functions-range.html
+	// geometric types: http://www.postgresql.org/docs/current/static/functions-geometry.html
+	// JSON(and JSONB): http://www.postgresql.org/docs/current/static/functions-json.html
 	[
 		"$@>",
 		(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], queryArray: Types.TField[], values: unknown[]) => {

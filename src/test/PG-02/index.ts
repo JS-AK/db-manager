@@ -5,15 +5,7 @@ import { PG } from "../../index.js";
 
 import * as TestTable from "./test-table-01/index.js";
 
-const creds = {
-	database: "postgres",
-	host: process.env.POSTGRES_HOST || "localhost",
-	password: "admin",
-	port: parseInt(process.env.POSTGRES_PORT || "", 10) || 5432,
-	user: "postgres",
-};
-
-export default async () => {
+export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 	const testTable = new TestTable.Domain(creds);
 
 	return test("PG-02", async (testContext) => {

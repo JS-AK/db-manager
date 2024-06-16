@@ -40,9 +40,9 @@ export type TSearchParams = {
 	| undefined;
 };
 export type TSearchParamsWithOperator = {
-	$eq?: SNDB | SNDArray | null;
-	$ne?: SNDB | null;
-	$custom?: { sign: string; value: SND; };
+	$eq?: SNDB | SNDBArray | null | object;
+	$ne?: SNDB | null | object;
+	$custom?: { sign: string; value: SNDB; };
 	$between?: [SND, SND];
 	$nbetween?: [SND, SND];
 	$json?: object;
@@ -57,9 +57,9 @@ export type TSearchParamsWithOperator = {
 	$ilike?: string;
 	$nlike?: string;
 	$nilike?: string;
-	"$@>"?: SND | SNDArray;
-	"$<@"?: SND | SNDArray;
-	"$&&"?: SNDArray;
+	"$@>"?: SNDB | SNDBArray;
+	"$<@"?: SNDB | SNDBArray;
+	"$&&"?: SNDB | SNDBArray;
 	"$@"?: string | string[];
 	"$~"?: string | string[];
 	"$?"?: string | string[];

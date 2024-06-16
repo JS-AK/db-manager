@@ -1,3 +1,5 @@
+import * as DbManager from "../../../../index.js";
+
 export type CreateFields = Pick<TableFields,
 	| "first_name"
 	| "id_user_role"
@@ -6,7 +8,6 @@ export type CreateFields = Pick<TableFields,
 >>;
 
 export type ListOrderBy = "u.created_at";
-
 export type ListedEntity = {
 	id: TableFields["id"];
 
@@ -14,10 +15,13 @@ export type ListedEntity = {
 	last_name: NonNullable<TableFields["last_name"]>;
 
 	ur_id: string;
-	ur_title: "admin" | "head" | "booker";
+	ur_title: string;
 };
 
 export type SearchFields = Partial<TableFields>;
+
+export type SearchFieldsList = DbManager.PG.DomainTypes.TSearchParams<SearchListFields>;
+export type SearchFieldsListOr = DbManager.PG.DomainTypes.TArray2OrMore<SearchFieldsList>;
 
 export type SearchListFields = {
 	"u.id"?: TableFields["id"];

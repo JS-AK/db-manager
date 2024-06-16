@@ -14,9 +14,26 @@ export class Domain extends PG.BaseDomain<{
 		super({ model: new Model(creds) });
 	}
 
+	async createDefaultState(): Promise<void> {
+		await Promise.all([1, 2, 3, 4, 5].map((e) => super.createOne({
+			books: [`book ${e}`],
+			description: `description ${e}`,
+			meta: { firstName: `firstName ${e}`, lastName: `lastName ${e}` },
+			number_key: e,
+			number_range: `[${e}00,${++e}01)`,
+			title: `title ${e}`,
+		})));
+	}
+
+	async clearAll(): Promise<void> {
+		await super.deleteAll();
+	}
+
 	async test(): Promise<boolean> {
 		const res = await this.model.test();
 
-		return !!res?.test;
+		if (!res) return false;
+
+		return res.test;
 	}
 }

@@ -5,15 +5,7 @@ import { PG } from "../../index.js";
 
 import * as FileSystemTable from "./file-system/index.js";
 
-const creds = {
-	database: "postgres",
-	host: process.env.POSTGRES_HOST || "localhost",
-	password: "admin",
-	port: parseInt(process.env.POSTGRES_PORT || "", 10) || 5432,
-	user: "postgres",
-};
-
-export default async () => {
+export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 	const FileSystem = new FileSystemTable.Domain(creds);
 
 	return test("PG-05", async (testContext) => {
