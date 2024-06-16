@@ -15,7 +15,7 @@ export type ListedEntity = {
 	last_name: NonNullable<TableFields["last_name"]>;
 
 	ur_id: string;
-	ur_title: "admin" | "head" | "booker";
+	ur_title: string;
 };
 
 export type SearchFields = Partial<TableFields>;

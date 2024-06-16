@@ -67,7 +67,7 @@ export default async () => {
 			async (testContext) => {
 				{
 					await testContext.test(
-						"create admin",
+						"create admin user",
 						async () => {
 							const { one: userRole } = await UserRole.getOneByParams({
 								params: { title: "admin" },
@@ -85,14 +85,14 @@ export default async () => {
 					);
 
 					await testContext.test(
-						"create head",
+						"create head user",
 						async () => {
 							const { one: userRole } = await UserRole.getOneByParams({
 								params: { title: "head" },
 								selected: ["id"],
 							});
 
-							if (!userRole) throw new Error("User role not found");
+							if (!userRole) throw new Error("User role head not found");
 
 							await Promise.all(
 								["Bob"].map((e) =>

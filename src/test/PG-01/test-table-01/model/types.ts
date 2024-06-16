@@ -28,6 +28,7 @@ export type TableFields = {
 	books: string[];
 	description: string | null;
 	meta: { firstName: string; lastName: string; };
+	checklist: { isDone: boolean; title: string; }[] | null;
 	number_key: number;
 	number_range: string | null;
 	title: string;
