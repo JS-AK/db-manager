@@ -598,12 +598,14 @@ export default async () => {
 					await testContext.test(
 						JSON.stringify(params),
 						async () => {
-							const res = await testTable.getOneByParams({
+							const { one } = await testTable.getOneByParams({
 								params: { number_key: 1 },
 							});
 
-							assert.equal(res.one?.number_key, 1);
-							assert.equal(isHasFields(res.one as TestTable.Types.TableFields, ["books", "created_at", "description", "id", "meta", "number_key", "number_range", "title", "updated_at"]), true);
+							if (!one) throw new Error("No one found");
+
+							assert.equal(one.number_key, 1);
+							assert.equal(isHasFields(one, ["books", "created_at", "description", "id", "meta", "number_key", "number_range", "title", "updated_at"]), true);
 						},
 					);
 				}
@@ -617,14 +619,16 @@ export default async () => {
 					await testContext.test(
 						JSON.stringify(params),
 						async () => {
-							const res = await testTable.getOneByParams({
+							const { one } = await testTable.getOneByParams({
 								params: params.params,
 								selected: params.selected,
 							});
 
-							assert.equal(res.one?.number_key, 1);
-							assert.equal(isHasFields(res.one as TestTable.Types.TableFields, ["number_key"]), true);
-							assert.equal(isHasFields(res.one as TestTable.Types.TableFields, ["books", "created_at", "description", "id", "meta", "number_range", "title", "updated_at"]), false);
+							if (!one) throw new Error("No one found");
+
+							assert.equal(one.number_key, 1);
+							assert.equal(isHasFields(one, ["number_key"]), true);
+							assert.equal(isHasFields(one, ["books", "created_at", "description", "id", "meta", "number_range", "title", "updated_at"]), false);
 						},
 					);
 				}
@@ -640,9 +644,11 @@ export default async () => {
 					await testContext.test(
 						JSON.stringify(params),
 						async () => {
-							const res = await testTable.getOneByParams(params);
+							const { one } = await testTable.getOneByParams(params);
 
-							assert.equal(res.one?.description, likeText);
+							if (!one) throw new Error("No one found");
+
+							assert.equal(one.description, likeText);
 						},
 					);
 				}
