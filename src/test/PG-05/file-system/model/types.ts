@@ -4,20 +4,16 @@ export type CreateFields = Pick<TableFields,
 	| "path"
 >;
 
-export type SearchFields = Partial<Omit<TableFields,
-	| "created_at"
-	| "updated_at"
->> & {
-	created_at?: string;
-	updated_at?: string | null;
-};
+export type SearchFields = Partial<TableFields>;
 
 export type TableFields = {
-	created_at: Date;
 	id: string;
-	name: string;
+
 	is_folder: boolean;
+	name: string;
 	path: string;
+
+	created_at: Date;
 	updated_at: Date | null;
 };
 

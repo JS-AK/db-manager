@@ -12,8 +12,8 @@ export function clearUndefinedFields(params: SharedTypes.TRawParams) {
 	}, {});
 }
 
-export function isHasFields<T extends object>(obj: T, fields: Array<keyof T>): boolean {
-	const objKeys = Object.keys(obj) as Array<keyof T>;
+export function isHasFields<T extends object>(obj: T, fields: Array<Extract<keyof T, string> | string>): boolean {
+	const objKeys = Object.keys(obj);
 
 	for (const key of objKeys) {
 		if (!fields.includes(key)) {

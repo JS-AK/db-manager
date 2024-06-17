@@ -6,15 +6,7 @@ import { PG } from "../../index.js";
 import * as UserRoleTable from "./user-role/index.js";
 import * as UserTable from "./user/index.js";
 
-const creds = {
-	database: "postgres",
-	host: process.env.POSTGRES_HOST || "localhost",
-	password: "admin",
-	port: parseInt(process.env.POSTGRES_PORT || "", 10) || 5432,
-	user: "postgres",
-};
-
-export default async () => {
+export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 	const User = new UserTable.Domain(creds);
 	const UserRole = new UserRoleTable.Domain(creds);
 
@@ -67,7 +59,7 @@ export default async () => {
 			async (testContext) => {
 				{
 					await testContext.test(
-						"create admin",
+						"create admin user",
 						async () => {
 							const { one: userRole } = await UserRole.getOneByParams({
 								params: { title: "admin" },
@@ -85,14 +77,14 @@ export default async () => {
 					);
 
 					await testContext.test(
-						"create head",
+						"create head user",
 						async () => {
 							const { one: userRole } = await UserRole.getOneByParams({
 								params: { title: "head" },
 								selected: ["id"],
 							});
 
-							if (!userRole) throw new Error("User role not found");
+							if (!userRole) throw new Error("User role head not found");
 
 							await Promise.all(
 								["Bob"].map((e) =>

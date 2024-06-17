@@ -1,7 +1,8 @@
 import pg from "pg";
 
-export type SND = string | number | Date;
-export type SNDArray = string[] | number[] | Date[];
+export type ClearDate = Omit<Date, Extract<keyof Date, string>>;
+export type SND = string | number | ClearDate;
+export type SNDArray = string[] | number[] | ClearDate[];
 export type SNDB = SND | boolean;
 export type SNDBArray = SNDArray | boolean[];
 export type TDBCreds = pg.PoolConfig & { database: string; host: string; password: string; port: number; user: string; };
@@ -40,9 +41,9 @@ export type TSearchParams = {
 	| undefined;
 };
 export type TSearchParamsWithOperator = {
-	$eq?: SNDB | SNDArray | null;
-	$ne?: SNDB | null;
-	$custom?: { sign: string; value: SND; };
+	$eq?: SNDB | SNDBArray | null | object;
+	$ne?: SNDB | null | object;
+	$custom?: { sign: string; value: SNDB; };
 	$between?: [SND, SND];
 	$nbetween?: [SND, SND];
 	$json?: object;
@@ -57,9 +58,9 @@ export type TSearchParamsWithOperator = {
 	$ilike?: string;
 	$nlike?: string;
 	$nilike?: string;
-	"$@>"?: SND | SNDArray;
-	"$<@"?: SND | SNDArray;
-	"$&&"?: SNDArray;
+	"$@>"?: SNDB | SNDBArray;
+	"$<@"?: SNDB | SNDBArray;
+	"$&&"?: SNDB | SNDBArray;
 	"$@"?: string | string[];
 	"$~"?: string | string[];
 	"$?"?: string | string[];
