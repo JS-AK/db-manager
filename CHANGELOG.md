@@ -1,3 +1,10 @@
+## [3.27.1-next.1](https://github.com/JS-AK/db-manager/compare/v3.27.0...v3.27.1-next.1) (2024-06-17)
+
+
+### Bug Fixes
+
+* updated pg-core types ([845d5bf](https://github.com/JS-AK/db-manager/commit/845d5bf0aabced86afc4b3a4a3d18f81c87d2f3d))
+
 # [3.27.0](https://github.com/JS-AK/db-manager/compare/v3.26.1...v3.27.0) (2024-06-17)
 
 
