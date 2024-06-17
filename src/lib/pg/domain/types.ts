@@ -14,7 +14,7 @@ type TSearchParamValue<T> = T extends object
 	: TSearchParamPrimitiveValue<T>;
 
 type TSearchParamObjectValue<T> = T extends Date
-	? BaseDate<T>
+	? BaseDate
 	: T extends Array<unknown>
 		? BaseArray<T>
 		: BaseObject<T>;
@@ -24,10 +24,10 @@ type TSearchParamPrimitiveValue<T> = NonNullable<T> extends string | number
 	: BaseBoolean<T>;
 
 type TDefault =
-	| BaseDate<Date>
-	| BaseStringOrNumber<string>
-	| BaseStringOrNumber<number>
-	| BaseBoolean<boolean>
+	| BaseDate
+	| BaseStringOrNumber<ClearString>
+	| BaseStringOrNumber<ClearNumber>
+	| BaseBoolean<ClearBoolean>
 	| BaseArray<any[]>
 	| BaseObject<object>
 	| null
@@ -50,10 +50,10 @@ type Base<T> =
 	| { $in: NonNullable<T>[]; }
 	| { $nin: NonNullable<T>[]; };
 
-type BaseDate<T extends Date> =
+type BaseDate =
 	| ClearDate
-	| Base<T>
-	| Array<Base<T>>;
+	| Base<ClearDate>
+	| Array<Base<ClearDate>>;
 
 // https://www.postgresql.org/docs/current/ltree.html
 type BaseLtree =
@@ -114,3 +114,6 @@ type JsonKeysToStringResult<T> = {
 }[keyof T];
 
 type ClearDate = Omit<Date, Extract<keyof Date, string>>;
+type ClearString = Omit<string, Extract<keyof string, string>>;
+type ClearNumber = Omit<number, Extract<keyof number, string>>;
+type ClearBoolean = Omit<boolean, Extract<keyof boolean, string>>;

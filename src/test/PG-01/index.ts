@@ -119,15 +119,17 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 					}
 
 					{
-						const { rows: [data] } = (await client.query<{ meta: { firstName: string; lastName: string; }; title: string; }>(`
+						const { rows: [data] } = (await client.query<Pick<TestTable.Types.TableFields, "meta" | "title">>(`
 							SELECT meta, title
 							FROM ${testTable.tableName}
 							WHERE id = $1
 						`, [entity.id]));
 
-						assert.equal(data?.meta.firstName, params.meta.firstName);
-						assert.equal(data?.meta.lastName, params.meta.lastName);
-						assert.equal(data?.title, params.title);
+						if (!data) throw new Error("Data not found");
+
+						assert.equal(data.meta.firstName, params.meta.firstName);
+						assert.equal(data.meta.lastName, params.meta.lastName);
+						assert.equal(data.title, params.title);
 					}
 
 					{
@@ -146,23 +148,25 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						await client.query(query, values);
 
 						{
-							const { rows: [data] } = (await client.query<{ meta: { firstName: string; lastName: string; }; title: string; }>(`
+							const { rows: [data] } = (await client.query<Pick<TestTable.Types.TableFields, "meta" | "title">>(`
 								SELECT meta, title
 								FROM ${testTable.tableName}
 								WHERE id = $1
 							`, [entity.id]));
 
-							assert.equal(data?.meta.firstName, paramsToUpdate.meta.firstName);
-							assert.equal(data?.meta.lastName, paramsToUpdate.meta.lastName);
-							assert.equal(data?.title, paramsToUpdate.title);
+							if (!data) throw new Error("Data not found");
+
+							assert.equal(data.meta.firstName, paramsToUpdate.meta.firstName);
+							assert.equal(data.meta.lastName, paramsToUpdate.meta.lastName);
+							assert.equal(data.title, paramsToUpdate.title);
 						}
 					}
 
 					await client.query(`DELETE FROM ${testTable.tableName}`);
 
 					{
-						const { rows: [data] } = (await client.query<{ meta: { firstName: string; lastName: string; }; title: string; }>(`
-							SELECT meta, title
+						const { rows: [data] } = (await client.query<TestTable.Types.TableFields>(`
+							SELECT *
 							FROM ${testTable.tableName}
 							WHERE id = $1
 						`, [entity.id]));
@@ -650,7 +654,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						params: PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
 					} = {
 						params: {
-							books: { "$&&": ["book 5"] },
+							books: { "$&&": ["book 05"] },
 							description: [
 								{ $like: `%${likeText}%` },
 								{ $like: likeText },
@@ -795,6 +799,27 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 							const result = await testTable.getOneByParams(params);
 
 							assert.equal(result.one?.meta.firstName, "firstName 1");
+						},
+					);
+				}
+
+				{
+					const params: {
+						params: PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: {
+							books: { $eq: ["book 01", "book 11", "book 21", "book 31", "book 41"] },
+							meta: { $jsonb: { firstName: "firstName 1", lastName: "lastName 1" } },
+						},
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const result = await testTable.getOneByParams(params);
+
+							assert.equal(result.one?.meta.firstName, "firstName 1");
+							assert.equal(result.one?.meta.lastName, "lastName 1");
 						},
 					);
 				}
