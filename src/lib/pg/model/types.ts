@@ -1,7 +1,8 @@
 import pg from "pg";
 
-export type SND = string | number | Date;
-export type SNDArray = string[] | number[] | Date[];
+export type ClearDate = Omit<Date, Extract<keyof Date, string>>;
+export type SND = string | number | ClearDate;
+export type SNDArray = string[] | number[] | ClearDate[];
 export type SNDB = SND | boolean;
 export type SNDBArray = SNDArray | boolean[];
 export type TDBCreds = pg.PoolConfig & { database: string; host: string; password: string; port: number; user: string; };
