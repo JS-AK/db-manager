@@ -30,7 +30,8 @@ type TDefault =
 	| BaseBoolean<boolean>
 	| BaseArray<any[]>
 	| BaseObject<object>
-	| null;
+	| null
+	| { $eq: null; };
 
 type Base<T> =
 	| { $custom: { sign: string; value: string | number; }; }
@@ -49,8 +50,8 @@ type Base<T> =
 	| { $in: NonNullable<T>[]; }
 	| { $nin: NonNullable<T>[]; };
 
-type BaseDate<T> =
-	| T extends Date ? string : T
+type BaseDate<T extends Date> =
+	| ClearDate
 	| Base<T>
 	| Array<Base<T>>;
 
@@ -63,7 +64,7 @@ type BaseLtree =
 	| { ["$?"]: string | string[]; };
 
 type BaseArray<T> =
-	| T extends Date ? string : T
+	| T extends Date ? ClearDate : T
 	| { ["$@>"]: NonNullable<T>; }
 	| { ["$<@"]: NonNullable<T>; }
 	| { ["$&&"]: NonNullable<T>; }
@@ -111,3 +112,5 @@ type JsonKeysToStringResult<T> = {
 					: never
 		: never
 }[keyof T];
+
+type ClearDate = Omit<Date, Extract<keyof Date, string>>;

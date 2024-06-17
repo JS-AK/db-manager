@@ -683,9 +683,11 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 					await testContext.test(
 						JSON.stringify(params),
 						async () => {
-							const result = await testTable.getOneByParams(params);
+							const { one } = await testTable.getOneByParams(params);
 
-							assert.equal(result.one?.number_key, 1);
+							if (!one) throw new Error("No one found");
+
+							assert.equal(one.number_key, 1);
 						},
 					);
 				}
@@ -700,9 +702,80 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 					await testContext.test(
 						JSON.stringify(params),
 						async () => {
-							const result = await testTable.getOneByParams(params);
+							const { one } = await testTable.getOneByParams(params);
 
-							assert.equal(result.one?.number_key, 1);
+							if (!one) throw new Error("No one found");
+
+							assert.equal(one.number_key, 1);
+						},
+					);
+				}
+
+				{
+					const params: {
+						params: PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: {
+							number_key: { $eq: 1 },
+							updated_at: { $eq: null },
+						},
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const { one } = await testTable.getOneByParams(params);
+
+							if (!one) throw new Error("No one found");
+
+							assert.equal(one.number_key, 1);
+						},
+					);
+				}
+
+				{
+					const params: {
+						params: PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: {
+							created_at: [
+								{ $gt: new Date("2000-01-01") },
+								{ $gte: new Date("2000-01-01") },
+							],
+							number_key: { $eq: 1 },
+						},
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const { one } = await testTable.getOneByParams(params);
+
+							if (!one) throw new Error("No one found");
+
+							assert.equal(one.number_key, 1);
+						},
+					);
+				}
+
+				{
+					const params: {
+						params: PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: {
+							created_at: { $ne: null },
+							number_key: { $eq: 1 },
+						},
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const { one } = await testTable.getOneByParams(params);
+
+							if (!one) throw new Error("No one found");
+
+							assert.equal(one.number_key, 1);
 						},
 					);
 				}
