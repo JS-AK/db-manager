@@ -1,3 +1,18 @@
+# [3.27.0](https://github.com/JS-AK/db-manager/compare/v3.26.1...v3.27.0) (2024-06-17)
+
+
+### Bug Fixes
+
+* updated pg tests ([340a0f1](https://github.com/JS-AK/db-manager/commit/340a0f198d1f1a06c3779aed86a4c17f667f5ec1))
+* updated pg tests ([4a54ac8](https://github.com/JS-AK/db-manager/commit/4a54ac80b0de8177e3520963e472c81399d0873c))
+* updated pg-core Date type ([563eeb7](https://github.com/JS-AK/db-manager/commit/563eeb76b3f0301b857d2ceeb3300438c647b397))
+* updated tests ([74572e6](https://github.com/JS-AK/db-manager/commit/74572e64b50703f2e8ec04cded7185d8bc7ca242))
+
+
+### Features
+
+* updated pg-core TSearchParams ([8afe4e3](https://github.com/JS-AK/db-manager/commit/8afe4e33b441861896b6fa8a117becb1a5971822))
+
 ## [3.26.1](https://github.com/JS-AK/db-manager/compare/v3.26.0...v3.26.1) (2024-05-30)
 
 
