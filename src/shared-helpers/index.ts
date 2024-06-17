@@ -1,15 +1,15 @@
 import * as SharedTypes from "../shared-types";
 
-export function clearUndefinedFields(params: SharedTypes.TRawParams) {
-	return Object.keys(params).reduce((acc: SharedTypes.TRawParamsPrepared, key: string) => {
-		const _acc = acc;
+export function clearUndefinedFields(params: SharedTypes.TRawParams): SharedTypes.TRawParamsPrepared {
+	const result: SharedTypes.TRawParamsPrepared = {};
 
-		const v = params[key];
+	for (const key in params) {
+		if (typeof params[key] === "undefined") continue;
 
-		if (v !== undefined) _acc[key] = v;
+		result[key] = params[key] as object | string | number | boolean | null;
+	}
 
-		return _acc;
-	}, {});
+	return result;
 }
 
 export function isHasFields<T extends object>(obj: T, fields: Array<Extract<keyof T, string> | string>): boolean {

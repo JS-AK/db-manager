@@ -1,10 +1,14 @@
 import pg from "pg";
 
-export type ClearDate = Omit<Date, Extract<keyof Date, string>>;
-export type SND = string | number | ClearDate;
-export type SNDArray = string[] | number[] | ClearDate[];
-export type SNDB = SND | boolean;
-export type SNDBArray = SNDArray | boolean[];
+type ClearDate = Omit<Date, Extract<keyof Date, string>>;
+type ClearString = Omit<string, Extract<keyof string, string>>;
+type ClearNumber = Omit<number, Extract<keyof number, string>>;
+type ClearBoolean = Omit<boolean, Extract<keyof boolean, string>>;
+
+export type SND = ClearString | ClearNumber | ClearDate;
+export type SNDArray = ClearString[] | ClearNumber[] | ClearDate[];
+export type SNDB = SND | ClearBoolean;
+export type SNDBArray = SNDArray | ClearBoolean[];
 export type TDBCreds = pg.PoolConfig & { database: string; host: string; password: string; port: number; user: string; };
 export type TDBOptions = { insertOptions?: { onConflict: string; }; };
 export type TField = { key: string; sign?: string; operator: TOperator; };

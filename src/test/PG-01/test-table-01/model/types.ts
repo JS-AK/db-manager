@@ -4,8 +4,10 @@ export type CreateFields = Pick<TableFields,
 	| "title"
 > & Partial<Pick<TableFields,
 	| "books"
+	| "checklist"
 	| "description"
 	| "number_range"
+	| "updated_at"
 >>;
 
 export type EntityFull = Pick<TableFields,
@@ -25,7 +27,7 @@ export type SearchFields = Partial<TableFields>;
 export type TableFields = {
 	id: string;
 
-	books: string[];
+	books: string[] | null;
 	description: string | null;
 	meta: { firstName: string; lastName: string; };
 	checklist: { isDone: boolean; title: string; }[] | null;

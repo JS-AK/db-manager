@@ -16,7 +16,7 @@ export const processMappings: Map<
 	[
 		"$eq",
 		(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], queryArray: Types.TField[], values: unknown[]) => {
-			const v = value as { $eq: number | string | boolean | null; };
+			const v = value as { $eq: number | string | boolean | object; };
 
 			if (v.$eq === null) {
 				queryArray.push({ key: `${key} IS NULL`, operator: "$withoutParameters" });
