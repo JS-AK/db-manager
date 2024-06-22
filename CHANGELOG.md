@@ -1,3 +1,10 @@
+# [3.28.0](https://github.com/JS-AK/db-manager/compare/v3.27.1...v3.28.0) (2024-06-22)
+
+
+### Features
+
+* updated deps ([167e4d8](https://github.com/JS-AK/db-manager/commit/167e4d82e6cee9374059ade7b0c327731bb0e005))
+
 ## [3.27.1](https://github.com/JS-AK/db-manager/compare/v3.27.0...v3.27.1) (2024-06-17)
 
 

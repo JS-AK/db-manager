@@ -1,6 +1,6 @@
 {
   "name": "@js-ak/db-manager",
-  "version": "3.27.1",
+  "version": "3.28.0",
   "description": "db-manager",
   "publishConfig": {
     "access": "public",
