@@ -35,24 +35,14 @@ export class Model extends PG.BaseModel {
 			"ur.title     AS ur_title",
 		];
 
-		const {
-			orderByFields,
-			paginationFields,
-			searchFields,
-			selectedFields,
-		} = this.getFieldsToSearch(
+		const data = this.getFieldsToSearch(
 			{ queryArray },
 			selected,
 			pagination,
 			order,
 		);
 
-		return (await this.pool.query(queries.getList(
-			orderByFields,
-			paginationFields,
-			searchFields,
-			selectedFields,
-		), values)).rows;
+		return (await this.pool.query(queries.getList(data), values)).rows;
 	}
 
 }
@@ -74,19 +64,19 @@ const tableFields: TableKeys[] = [
 
 // ----- queries -----------------------
 const queries = {
-	getList(
-		orderByFields: string,
-		paginationFields: string,
-		searchFields: string,
-		selectedFields: string,
-	) {
+	getList(payload: {
+		orderByFields: string;
+		paginationFields: string;
+		searchFields: string;
+		selectedFields: string;
+	}) {
 		return `
-			SELECT ${selectedFields}
+			SELECT ${payload.selectedFields}
 			FROM ${tableName} u
 			JOIN user_roles ur ON ur.id = u.id_user_role
-			${searchFields}
-			${orderByFields}
-			${paginationFields}
+			${payload.searchFields}
+			${payload.orderByFields}
+			${payload.paginationFields}
 		`;
 	},
 };
