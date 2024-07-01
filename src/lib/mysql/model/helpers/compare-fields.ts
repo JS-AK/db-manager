@@ -31,6 +31,10 @@ export const compareFields = (
 	const queryOrArray: { query: Types.TField[]; }[] = [];
 
 	if (paramsOr) {
+		if (paramsOr.length < 2) {
+			throw new Error("The minimum length of the paramsOr array must be 2");
+		}
+
 		for (const params of paramsOr) {
 			const queryOrArrayLocal: Types.TField[] = [];
 
@@ -51,6 +55,10 @@ export const compareFields = (
 					queryOrArrayLocal.push({ key, operator: "=" });
 					values.push(value);
 				}
+			}
+
+			if (queryOrArrayLocal.length === 0) {
+				throw new Error(`Empty object in one of the array elements ${JSON.stringify(paramsOr)}`);
 			}
 
 			queryOrArray.push({ query: queryOrArrayLocal });
