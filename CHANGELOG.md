@@ -1,3 +1,10 @@
+## [3.28.1](https://github.com/JS-AK/db-manager/compare/v3.28.0...v3.28.1) (2024-07-01)
+
+
+### Bug Fixes
+
+* mysql-core pg-core added paramsOr check for empty ([3d3b148](https://github.com/JS-AK/db-manager/commit/3d3b1482ae407317edb09e6f4b2000a20923aa31))
+
 # [3.28.0](https://github.com/JS-AK/db-manager/compare/v3.27.1...v3.28.0) (2024-06-22)
 
 
