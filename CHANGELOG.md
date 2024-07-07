@@ -1,3 +1,11 @@
+# [3.29.0](https://github.com/JS-AK/db-manager/compare/v3.28.1...v3.29.0) (2024-07-07)
+
+
+### Features
+
+* pg-core added pass jenerics for qb where and having ([f1be70c](https://github.com/JS-AK/db-manager/commit/f1be70c2c4b83cc830c6de7c2e4c7897bf9fa9cd))
+* updated deps ([fecd27c](https://github.com/JS-AK/db-manager/commit/fecd27c47be54c6f01576452f53c164f3f989498))
+
 ## [3.28.1](https://github.com/JS-AK/db-manager/compare/v3.28.0...v3.28.1) (2024-07-01)
 
 
