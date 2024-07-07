@@ -167,7 +167,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 								{
 									await User.model.queryBuilder()
 										.select(["*"])
-										.where({
+										.where<UserTable.Types.TableFields>({
 											params: {
 												first_name: { $ilike: "Max" },
 												id: { $in: users.map((e) => e.id) },

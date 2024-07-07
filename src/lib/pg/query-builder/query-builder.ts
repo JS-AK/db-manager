@@ -132,9 +132,9 @@ export class QueryBuilder {
 		return this;
 	}
 
-	where(data: {
-		params?: ModelTypes.TSearchParams;
-		paramsOr?: DomainTypes.TArray2OrMore<ModelTypes.TSearchParams>;
+	where<T extends ModelTypes.TSearchParams>(data: {
+		params?: ModelTypes.TSearchParams | DomainTypes.TSearchParams<T>;
+		paramsOr?: DomainTypes.TArray2OrMore<ModelTypes.TSearchParams | DomainTypes.TSearchParams<T>>;
 	}) {
 		this.#queryHandler.where(data);
 
@@ -168,9 +168,9 @@ export class QueryBuilder {
 		return this;
 	}
 
-	having(data: {
-		params?: ModelTypes.TSearchParams;
-		paramsOr?: DomainTypes.TArray2OrMore<ModelTypes.TSearchParams>;
+	having<T extends ModelTypes.TSearchParams>(data: {
+		params?: ModelTypes.TSearchParams | DomainTypes.TSearchParams<T>;
+		paramsOr?: DomainTypes.TArray2OrMore<ModelTypes.TSearchParams | DomainTypes.TSearchParams<T>>;
 	}) {
 		this.#queryHandler.having(data);
 
