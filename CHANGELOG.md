@@ -1,3 +1,10 @@
+# [3.30.0](https://github.com/JS-AK/db-manager/compare/v3.29.0...v3.30.0) (2024-07-11)
+
+
+### Features
+
+* updated pg-core qb added rawFor method ([3ea07fb](https://github.com/JS-AK/db-manager/commit/3ea07fb86a5967cf52f5c6a1828614b4adc939db))
+
 # [3.29.0](https://github.com/JS-AK/db-manager/compare/v3.28.1...v3.29.0) (2024-07-07)
 
 
