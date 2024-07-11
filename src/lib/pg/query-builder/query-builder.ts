@@ -46,6 +46,12 @@ export class QueryBuilder {
 		return this.#queryHandler.compareQuery();
 	}
 
+	rawFor(data: string) {
+		this.#queryHandler.rawFor(data);
+
+		return this;
+	}
+
 	delete() {
 		this.#queryHandler.delete();
 

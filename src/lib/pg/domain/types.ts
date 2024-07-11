@@ -5,7 +5,7 @@ export type TDomain<Model> = { model: Model; };
 export type TDomainFields = { [key: string]: any; };
 
 export type TSearchParams<T> =
-	& { [key in keyof T]: TSearchParamValue<T[key]>}
+	& { [key in keyof T]: (null extends T[key] ? (null | { $eq: null; }) | TSearchParamValue<NonNullable<T[key]>> : TSearchParamValue<NonNullable<T[key]>>)}
 	& Partial<Record<JsonKeysToStringResult<Required<T>>, TDefault>>
 	& { [key: string]: TDefault | undefined; };
 
@@ -19,7 +19,7 @@ type TSearchParamObjectValue<T> = T extends Date
 		? BaseArray<T>
 		: BaseObject<T>;
 
-type TSearchParamPrimitiveValue<T> = NonNullable<T> extends string | number
+type TSearchParamPrimitiveValue<T> = T extends string | number
 	? BaseStringOrNumber<T>
 	: BaseBoolean<T>;
 

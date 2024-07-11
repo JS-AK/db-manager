@@ -13,6 +13,7 @@ export class QueryHandler {
 	#orderBy = "";
 	#pagination = "";
 	#returning = "";
+	#for = "";
 	#tableNamePrepared;
 	#tableNameRaw;
 	#valuesOrder = 0;
@@ -75,12 +76,17 @@ export class QueryHandler {
 		if (this.#orderBy) sql += " " + this.#orderBy;
 		if (this.#pagination) sql += " " + this.#pagination;
 		if (this.#returning) sql += " " + this.#returning;
+		if (this.#for) sql += " " + this.#for;
 
 		return sql + ";";
 	}
 
 	compareQuery(): { query: string; values: unknown[]; } {
 		return { query: this.#compareSql(), values: this.#values };
+	}
+
+	rawFor(data: string) {
+		this.#for += data;
 	}
 
 	delete() {
