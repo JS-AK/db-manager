@@ -8,8 +8,7 @@ import * as connection from "../connection.js";
 import queries from "./queries.js";
 
 export class BaseModel {
-	#possibleOrderings = new Set(["ASC", "DESC"]);
-	#tableFieldsSet;
+	#sortingOrders = new Set(["ASC", "DESC"]);
 
 	createField;
 	isPKAutoIncremented;
@@ -29,8 +28,6 @@ export class BaseModel {
 		this.tableName = tableData.tableName;
 		this.tableFields = tableData.tableFields;
 		this.updateField = tableData.updateField;
-
-		this.#tableFieldsSet = new Set(this.tableFields);
 	}
 
 	compareFields = Helpers.compareFields;
@@ -58,11 +55,7 @@ export class BaseModel {
 	) {
 		if (order?.length) {
 			for (const o of order) {
-				if (!this.#tableFieldsSet.has(o.orderBy)) {
-					throw new Error("Invalid orderBy");
-				}
-
-				if (!this.#possibleOrderings.has(o.ordering)) {
+				if (!this.#sortingOrders.has(o.ordering)) {
 					throw new Error("Invalid ordering");
 				}
 			}

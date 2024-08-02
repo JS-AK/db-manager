@@ -1,14 +1,16 @@
 import * as SharedTypes from "../../../shared-types/index.js";
 import * as Types from "./types.js";
-import { BaseModel } from "../model/index.js";
+import { BaseTableModel } from "../model/index.js";
 
-export class BaseDomain<TC extends {
-	Model: BaseModel;
+type BaseDomainGeneric = {
+	Model: BaseTableModel;
 	CreateFields: SharedTypes.TRawParams;
 	SearchFields: Types.TDomainFields;
 	TableFields: SharedTypes.TRawParams;
 	UpdateFields: SharedTypes.TRawParams;
-}> {
+};
+
+export class BaseTableDomain<TC extends BaseDomainGeneric> {
 	#createField;
 	#primaryKey;
 	#tableName;
@@ -18,8 +20,8 @@ export class BaseDomain<TC extends {
 	model;
 
 	constructor(data: Types.TDomain<TC["Model"]>) {
-		if (!(data.model instanceof BaseModel)) {
-			throw new Error("You need pass extended of BaseModel");
+		if (!(data.model instanceof BaseTableModel)) {
+			throw new Error("You need pass extended of BaseTableModel");
 		}
 
 		this.model = data.model;

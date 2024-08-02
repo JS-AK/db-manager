@@ -14,10 +14,11 @@ export class QueryHandler {
 	#pagination = "";
 	#returning = "";
 	#for = "";
-	#tableNamePrepared;
-	#tableNameRaw;
+	#dataSourcePrepared;
+	#dataSourceRaw;
 	#valuesOrder = 0;
 	#values: unknown[] = [];
+	#with = "";
 
 	constructor(options: {
 		groupBy?: string;
@@ -28,10 +29,11 @@ export class QueryHandler {
 		orderBy?: string;
 		pagination?: string;
 		returning?: string;
-		tableNamePrepared: string;
-		tableNameRaw: string;
+		dataSourcePrepared: string;
+		dataSourceRaw: string;
 		values?: unknown[];
 		valuesOrder?: number;
+		with?: string;
 	}) {
 		if (options.groupBy) this.#groupBy = options.groupBy;
 		if (options.join) this.#join = options.join;
@@ -43,13 +45,16 @@ export class QueryHandler {
 		if (options.returning) this.#returning = options.returning;
 		if (options.values) this.#values = options.values;
 		if (options.valuesOrder) this.#valuesOrder = options.valuesOrder;
+		if (options.with) this.#with = options.with;
 
-		this.#tableNameRaw = options.tableNameRaw;
-		this.#tableNamePrepared = options.tableNamePrepared;
+		this.#dataSourceRaw = options.dataSourceRaw;
+		this.#dataSourcePrepared = options.dataSourcePrepared;
 	}
 
 	get optionsToClone() {
 		return {
+			dataSourcePrepared: this.#dataSourcePrepared,
+			dataSourceRaw: this.#dataSourceRaw,
 			groupBy: this.#groupBy,
 			join: [...this.#join],
 			mainHaving: this.#mainHaving,
@@ -58,16 +63,16 @@ export class QueryHandler {
 			orderBy: this.#orderBy,
 			pagination: this.#pagination,
 			returning: this.#returning,
-			tableNamePrepared: this.#tableNamePrepared,
-			tableNameRaw: this.#tableNameRaw,
 			values: structuredClone(this.#values),
 			valuesOrder: this.#valuesOrder,
+			with: this.#with,
 		};
 	}
 
 	#compareSql() {
 		let sql = "";
 
+		if (this.#with) sql += this.#with + " ";
 		if (this.#mainQuery) sql += this.#mainQuery;
 		if (this.#join.length) sql += " " + this.#join.join(" ");
 		if (this.#mainWhere) sql += " " + this.#mainWhere;
@@ -81,16 +86,83 @@ export class QueryHandler {
 		return sql + ";";
 	}
 
+	/* #replaceDollarSign(text: string) {
+		const regex = /\$\?/g;
+
+		const initialCounter = this.#valuesOrder;
+		const replacedText = text.replace(regex, () => `$${++this.#valuesOrder}`);
+		const growth = this.#valuesOrder - initialCounter;
+
+		return { growth, text: replacedText };
+	} */
+
+	#replaceDollarSign(text: string) {
+		const regex = /\$(\d+)/g;
+		const initialCounter = this.#valuesOrder;
+
+		const matches = text.match(regex);
+
+		if (matches) {
+			const uniqueNumbers = [...new Set(matches.map((match) => Number(match.slice(1))))].sort((a, b) => a - b);
+
+			const minNumber = Math.min(...uniqueNumbers);
+			const maxNumber = Math.max(...uniqueNumbers);
+
+			if (minNumber !== 1 || maxNumber !== uniqueNumbers.length) {
+				throw new Error("Values are not sequential starting from $1");
+			}
+
+			const replacedText = text.replace(regex, (_, p1) => {
+				const number = Number(p1);
+
+				return `$${number + this.#valuesOrder}`;
+			});
+
+			this.#valuesOrder += uniqueNumbers.length;
+			const growth = this.#valuesOrder - initialCounter;
+
+			return { growth, text: replacedText };
+		}
+
+		return { growth: 0, text };
+	}
+
+	#processDataWithValues(data: string, values: unknown[]): string {
+		const { growth, text } = this.#replaceDollarSign(data);
+
+		if (growth !== values.length) {
+			throw new Error(`${text} - Invalid values: ${JSON.stringify(values)}`);
+		}
+
+		this.#values.push(...values);
+
+		return text;
+	}
+
 	compareQuery(): { query: string; values: unknown[]; } {
 		return { query: this.#compareSql(), values: this.#values };
 	}
 
-	rawFor(data: string) {
-		this.#for += data;
+	rawFor(data: string, values?: unknown[]) {
+		if (!data) return;
+
+		if (!this.#for) {
+			const dataLowerCased = data.toLowerCase();
+
+			if (dataLowerCased.slice(0, 3) !== "for") {
+				this.#for = "FOR ";
+			}
+		}
+
+		const dataPrepared = values?.length
+			? this.#processDataWithValues(data, values)
+			: data;
+
+		this.#for += ` ${dataPrepared}`;
 	}
 
 	delete() {
-		this.#mainQuery = `DELETE FROM ${this.#tableNameRaw}`;
+		this.#mainQuery = `DELETE FROM ${this.#dataSourceRaw}`;
 	}
 
 	insert<T extends SharedTypes.TRawParams = SharedTypes.TRawParams>(options: {
@@ -180,15 +252,25 @@ export class QueryHandler {
 
 			const valuesOrder = this.#valuesOrder;
 
-			insertQuery += k.map((e, idx) => "$" + (idx + 1 + valuesOrder)).join(",");
+			insertQuery += k.map((_, idx) => "$" + (idx + 1 + valuesOrder)).join(",");
 		}
 
-		this.#mainQuery = `INSERT INTO ${this.#tableNameRaw}(${Array.from(headers).join(",")}) VALUES(${insertQuery})`;
+		this.#mainQuery = `INSERT INTO ${this.#dataSourceRaw}(${Array.from(headers).join(",")}) VALUES(${insertQuery})`;
 
 		if (options.onConflict) this.#mainQuery += ` ${options.onConflict}`;
 
 		this.#values.push(...v);
 		this.#valuesOrder += v.length;
+	}
+
+	rawInsert(data: string, values?: unknown[]) {
+		if (!data) return;
+
+		const dataPrepared = values?.length
+			? this.#processDataWithValues(data, values)
+			: data;
+
+		this.#mainQuery = `INSERT INTO ${this.#dataSourceRaw} ${dataPrepared}`;
 	}
 
 	update<T extends SharedTypes.TRawParams = SharedTypes.TRawParams>(options: {
@@ -222,7 +304,7 @@ export class QueryHandler {
 			}
 		}
 
-		this.#mainQuery = `UPDATE ${this.#tableNameRaw} SET ${updateQuery}`;
+		this.#mainQuery = `UPDATE ${this.#dataSourceRaw} SET ${updateQuery}`;
 
 		if (options.onConflict) this.#mainQuery += ` ${options.onConflict}`;
 
@@ -230,12 +312,64 @@ export class QueryHandler {
 		this.#valuesOrder += v.length;
 	}
 
-	select(data: string[]) {
-		this.#mainQuery = `SELECT ${data.join(", ")} FROM ${this.#tableNameRaw}`;
+	rawUpdate(data: string, values?: unknown[]) {
+		if (!data) return;
+
+		if (!this.#mainQuery) {
+			const dataLowerCased = data.toLowerCase();
+
+			if (dataLowerCased.slice(0, 6) !== "UPDATE") {
+				this.#mainQuery = `UPDATE ${this.#dataSourceRaw} SET`;
+			}
+		}
+
+		const dataPrepared = values?.length
+			? this.#processDataWithValues(data, values)
+			: data;
+
+		if (this.#mainQuery.at(-1) !== ",") this.#mainQuery += ",";
+
+		this.#mainQuery += ` ${dataPrepared}`;
 	}
 
-	rawJoin(data: string) {
-		this.#join.push(data);
+	select(data: string[]) {
+		const fromClause = this.#dataSourceRaw
+			? ` FROM ${this.#dataSourceRaw}`
+			: "";
+
+		this.#mainQuery = `SELECT ${data.join(", ")}${fromClause}`;
+	}
+
+	from(data: string) {
+		this.#dataSourceRaw = data;
+
+		const [firstClause, fromClause] = this.#mainQuery.split(" FROM ");
+
+		if (fromClause) {
+			this.#mainQuery = `${firstClause} FROM ${this.#dataSourceRaw}`;
+		} else {
+			this.#mainQuery = `${this.#mainQuery} FROM ${this.#dataSourceRaw}`;
+		}
+
+		const chunks = data
+			.toLowerCase()
+			.split(" ")
+			.filter((e) => e && e !== "as");
+		const as = chunks[1]?.trim();
+
+		if (as) {
+			this.#dataSourcePrepared = as;
+		} else {
+			this.#dataSourcePrepared = data;
+		}
+	}
+
+	rawJoin(data: string, values?: unknown[]) {
+		const dataPrepared = values?.length
+			? this.#processDataWithValues(data, values)
+			: data;
+
+		this.#join.push(dataPrepared);
 	}
 
 	rightJoin(data: {
@@ -247,7 +381,7 @@ export class QueryHandler {
 	}) {
 		const targetTableName = data.targetTableName + (data.targetTableNameAs ? ` AS ${data.targetTableNameAs}` : "");
 
-		this.#join.push(`RIGHT JOIN ${targetTableName} ON ${data.targetTableNameAs || data.targetTableName}.${data.targetField} = ${data.initialTableName || this.#tableNamePrepared}.${data.initialField}`);
+		this.#join.push(`RIGHT JOIN ${targetTableName} ON ${data.targetTableNameAs || data.targetTableName}.${data.targetField} = ${data.initialTableName || this.#dataSourcePrepared}.${data.initialField}`);
 	}
 
 	leftJoin(data: {
@@ -259,7 +393,7 @@ export class QueryHandler {
 	}) {
 		const targetTableName = data.targetTableName + (data.targetTableNameAs ? ` AS ${data.targetTableNameAs}` : "");
 
-		this.#join.push(`LEFT JOIN ${targetTableName} ON ${data.targetTableNameAs || data.targetTableName}.${data.targetField} = ${data.initialTableName || this.#tableNamePrepared}.${data.initialField}`);
+		this.#join.push(`LEFT JOIN ${targetTableName} ON ${data.targetTableNameAs || data.targetTableName}.${data.targetField} = ${data.initialTableName || this.#dataSourcePrepared}.${data.initialField}`);
 	}
 
 	innerJoin(data: {
@@ -271,7 +405,7 @@ export class QueryHandler {
 	}) {
 		const targetTableName = data.targetTableName + (data.targetTableNameAs ? ` AS ${data.targetTableNameAs}` : "");
 
-		this.#join.push(`INNER JOIN ${targetTableName} ON ${data.targetTableNameAs || data.targetTableName}.${data.targetField} = ${data.initialTableName || this.#tableNamePrepared}.${data.initialField}`);
+		this.#join.push(`INNER JOIN ${targetTableName} ON ${data.targetTableNameAs || data.targetTableName}.${data.targetField} = ${data.initialTableName || this.#dataSourcePrepared}.${data.initialField}`);
 	}
 
 	fullOuterJoin(data: {
@@ -283,7 +417,7 @@ export class QueryHandler {
 	}) {
 		const targetTableName = data.targetTableName + (data.targetTableNameAs ? ` AS ${data.targetTableNameAs}` : "");
 
-		this.#join.push(`FULL OUTER JOIN ${targetTableName} ON ${data.targetTableNameAs || data.targetTableName}.${data.targetField} = ${data.initialTableName || this.#tableNamePrepared}.${data.initialField}`);
+		this.#join.push(`FULL OUTER JOIN ${targetTableName} ON ${data.targetTableNameAs || data.targetTableName}.${data.targetField} = ${data.initialTableName || this.#dataSourcePrepared}.${data.initialField}`);
 	}
 
 	where(data: {
@@ -357,12 +491,36 @@ export class QueryHandler {
 		this.#values.push(...values);
 	}
 
-	rawWhere(data: string) {
+	with(data: { name: string; query: string; }, values?: unknown[]) {
+		const queryPrepared = values?.length
+			? this.#processDataWithValues(data.query, values)
+			: data.query;
+
+		const text = `${data.name} AS (${queryPrepared})`;
+
+		if (!this.#with) {
+			this.#with = `WITH ${text}`;
+		} else {
+			this.#with += `, ${text}`;
+		}
+	}
+
+	rawWhere(data: string, values?: unknown[]) {
 		if (!data) return;
 
-		if (!this.#mainWhere) this.#mainWhere = "WHERE ";
+		if (!this.#mainWhere) {
+			const dataLowerCased = data.toLowerCase();
 
-		this.#mainWhere += data;
+			if (dataLowerCased.slice(0, 5) !== "where") {
+				this.#mainWhere = "WHERE";
+			}
+		}
+
+		const dataPrepared = values?.length
+			? this.#processDataWithValues(data, values)
+			: data;
+
+		this.#mainWhere += ` ${dataPrepared}`;
 	}
 
 	pagination(data: { limit: number; offset: number; }) {
@@ -460,12 +618,22 @@ export class QueryHandler {
 		this.#values.push(...values);
 	}
 
-	rawHaving(data: string) {
+	rawHaving(data: string, values?: unknown[]) {
 		if (!data) return;
 
-		if (!this.#mainHaving) this.#mainHaving = "HAVING ";
+		if (!this.#mainHaving) {
+			const dataLowerCased = data.toLowerCase();
 
-		this.#mainHaving += data;
+			if (dataLowerCased.slice(0, 6) !== "having") {
+				this.#mainHaving = "HAVING";
+			}
+		}
+
+		const dataPrepared = values?.length
+			? this.#processDataWithValues(data, values)
+			: data;
+
+		this.#mainHaving += ` ${dataPrepared}`;
 	}
 
 	returning(data: string[]) {

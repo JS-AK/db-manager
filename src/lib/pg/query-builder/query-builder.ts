@@ -6,31 +6,31 @@ import * as SharedTypes from "../../../shared-types/index.js";
 import { QueryHandler } from "./query-handler.js";
 
 export class QueryBuilder {
-	#tableNameRaw;
-	#tableNamePrepared;
+	#dataSourceRaw;
+	#dataSourcePrepared;
 
 	#client;
 	#queryHandler;
 
 	constructor(
-		tableName: string,
+		dataSource: string,
 		client: pg.Pool | pg.PoolClient,
 		queryHandler?: QueryHandler,
 	) {
-		this.#tableNameRaw = tableName;
+		this.#dataSourceRaw = dataSource;
 
-		const chunks = tableName.toLowerCase().split(" ").filter((e) => e && e !== "as");
+		const chunks = dataSource.toLowerCase().split(" ").filter((e) => e && e !== "as");
 		const as = chunks[1]?.trim();
 
 		if (as) {
-			this.#tableNamePrepared = as;
+			this.#dataSourcePrepared = as;
 		} else {
-			this.#tableNamePrepared = tableName;
+			this.#dataSourcePrepared = dataSource;
 		}
 
 		this.#queryHandler = queryHandler || new QueryHandler({
-			tableNamePrepared: this.#tableNamePrepared,
-			tableNameRaw: this.#tableNameRaw,
+			dataSourcePrepared: this.#dataSourcePrepared,
+			dataSourceRaw: this.#dataSourceRaw,
 		});
 
 		this.#client = client;
@@ -39,15 +39,25 @@ export class QueryBuilder {
 	clone() {
 		const main = new QueryHandler(this.#queryHandler.optionsToClone);
 
-		return new QueryBuilder(this.#tableNameRaw, this.#client, main);
+		return new QueryBuilder(this.#dataSourceRaw, this.#client, main);
 	}
 
 	compareQuery(): { query: string; values: unknown[]; } {
 		return this.#queryHandler.compareQuery();
 	}
 
-	rawFor(data: string) {
-		this.#queryHandler.rawFor(data);
+	/**
+	 * Processes the input string `data`, optionally replacing all occurrences of `$?` with values from the `values` array.
+	 * If the `#for` property is not set, it initializes it with "FOR " unless the `data` string starts with "FOR" (case-insensitive).
+	 * The processed or original data is then appended to the `#for` property.
+	 *
+	 * @param {string} data - The string to be processed and potentially replaced.
+	 * @param {unknown[]} [values] - An optional array of values to replace placeholders in the `data` string.
+	 *
+	 * @returns {QueryBuilder} The `QueryBuilder` instance to allow for method chaining.
+	 */
+	rawFor(data: string, values?: unknown[]): QueryBuilder {
+		this.#queryHandler.rawFor(data, values);
 
 		return this;
 	}
@@ -68,6 +78,24 @@ export class QueryBuilder {
 		return this;
 	}
 
+	/**
+	 * Processes the input string `data`, optionally replacing placeholders with values from the `values` array.
+	 * The processed or original data is then used to set the `#mainQuery` property with an `INSERT INTO` clause.
+	 *
+	 * This method does not return any value.
+	 *
+	 * @param {string} data - The string to be processed and potentially replaced.
+	 * @param {unknown[]} [values] - An optional array of values to replace placeholders in the `data` string.
+	 *
+	 * @returns {QueryBuilder} The `QueryBuilder` instance to allow for method chaining.
+	 * @private
+	 */
+	rawInsert(data: string, values?: unknown[]): QueryBuilder {
+		this.#queryHandler.rawInsert(data, values);
+
+		return this;
+	}
+
 	update<T extends SharedTypes.TRawParams = SharedTypes.TRawParams>(options: {
 		onConflict?: string;
 		params: T;
@@ -84,8 +112,23 @@ export class QueryBuilder {
 		return this;
 	}
 
-	rawJoin(data: string) {
-		this.#queryHandler.rawJoin(data);
+	from(data: string) {
+		this.#queryHandler.from(data);
+
+		return this;
+	}
+
+	/**
+	 * Processes the input string `data`, optionally replacing all occurrences of `$?` with values from the `values` array.
+	 * The processed or original data is then appended to the `#join` array.
+	 *
+	 * @param {string} data - The string to be processed and potentially replaced.
+	 * @param {unknown[]} [values] - An optional array of values to replace placeholders in the `data` string.
+	 *
+	 * @returns {QueryBuilder} The `QueryBuilder` instance to allow for method chaining.
+	 */
+	rawJoin(data: string, values?: unknown[]): QueryBuilder {
+		this.#queryHandler.rawJoin(data, values);
 
 		return this;
 	}
@@ -147,8 +190,56 @@ export class QueryBuilder {
 		return this;
 	}
 
-	rawWhere(data: string) {
-		this.#queryHandler.rawWhere(data);
+	/**
+	 * Processes the input object `data`, which contains a `query` string, and optionally replaces placeholders with values from the `values` array.
+	 * It then formats the processed query as part of a `WITH` clause. The formatted clause is appended to the `#with` property,
+	 * ensuring that multiple clauses are separated by commas.
+	 *
+	 * If the `#with` property is not set, it initializes it with the `WITH` clause; otherwise, it appends additional clauses.
+	 *
+	 * @param {Object} data - The object containing the name and query to be processed.
+	 * @param {string} data.name - The name or alias to be used in the `WITH` clause.
+	 * @param {string} data.query - The query string to be processed and potentially replaced.
+	 * @param {unknown[]} [values] - An optional array of values to replace placeholders in the `data.query` string.
+	 *
+	 * @returns {QueryBuilder} The `QueryBuilder` instance to allow for method chaining.
+	 */
+	with(data: { name: string; query: string; }, values?: unknown[]): QueryBuilder {
+		this.#queryHandler.with(data, values);
+
+		return this;
+	}
+
+	/**
+	 * Processes the input string `data`, optionally replacing all occurrences of `$?` with values from the `values` array.
+	 * If the `#mainWhere` property is not set, it initializes it with "WHERE " unless the `data` string starts with "WHERE" (case-insensitive).
+	 * The processed or original data is then appended to the `#mainWhere` property.
+	 *
+	 * @param {string} data - The string to be processed and potentially replaced.
+	 * @param {unknown[]} [values] - An optional array of values to replace placeholders in the `data` string.
+	 *
+	 * @returns {QueryBuilder} The `QueryBuilder` instance to allow for method chaining.
+	 */
+	rawWhere(data: string, values?: unknown[]): QueryBuilder {
+		this.#queryHandler.rawWhere(data, values);
+
+		return this;
+	}
+
+	/**
+	 * Processes the input string `data`, optionally replacing placeholders with values from the `values` array.
+	 * If the `#mainQuery` property is not set, it initializes it with an `UPDATE` clause, unless the `data` string starts with "UPDATE" (case-insensitive).
+	 * The processed or original data is then appended to the `#mainQuery` property.
+	 *
+	 * This method does not return any value.
+	 *
+	 * @param {string} data - The string to be processed and potentially replaced.
+	 * @param {unknown[]} [values] - An optional array of values to replace placeholders in the `data` string.
+	 *
+	 * @returns {QueryBuilder} The `QueryBuilder` instance to allow for method chaining.
+	 */
+	rawUpdate(data: string, values?: unknown[]): QueryBuilder {
+		this.#queryHandler.rawUpdate(data, values);
 
 		return this;
 	}
@@ -183,8 +274,18 @@ export class QueryBuilder {
 		return this;
 	}
 
-	rawHaving(data: string) {
-		this.#queryHandler.rawHaving(data);
+	/**
+	 * Processes the input string `data`, optionally replacing all occurrences of `$?` with values from the `values` array.
+	 * If the `#mainHaving` property is not set, it initializes it with "HAVING " unless the `data` string starts with "HAVING" (case-insensitive).
+	 * The processed or original data is then appended to the `#mainHaving` property.
+	 *
+	 * @param {string} data - The string to be processed and potentially replaced.
+	 * @param {unknown[]} [values] - An optional array of values to replace placeholders in the `data` string.
+	 *
+	 * @returns {QueryBuilder} The `QueryBuilder` instance to allow for method chaining.
+	 */
+	rawHaving(data: string, values?: unknown[]): QueryBuilder {
+		this.#queryHandler.rawHaving(data, values);
 
 		return this;
 	}
