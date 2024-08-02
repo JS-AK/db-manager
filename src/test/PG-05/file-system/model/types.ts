@@ -4,8 +4,6 @@ export type CreateFields = Pick<TableFields,
 	| "path"
 >;
 
-export type SearchFields = Partial<TableFields>;
-
 export type TableFields = {
 	id: string;
 

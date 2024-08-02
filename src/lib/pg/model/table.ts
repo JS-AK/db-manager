@@ -166,7 +166,7 @@ export class BaseTableModel {
 				values: [...values, ...Object.values(clearedUpdate)],
 			};
 		},
-		updateOneByPk: <T = string | number>(
+		updateOneByPk: <T extends string | number = string | number > (
 			primaryKeyValue: T,
 			updateFields: SharedTypes.TRawParams = {},
 			updateOptions?: { returningFields?: string[]; },
@@ -289,7 +289,7 @@ export class BaseTableModel {
 		return rows;
 	}
 
-	async updateOneByPk<T = string | number>(
+	async updateOneByPk<T extends string | number = string | number>(
 		primaryKeyValue: T,
 		updateFields: SharedTypes.TRawParams = {},
 		updateOptions?: { returningFields?: string[]; },

@@ -5,7 +5,6 @@ import { Model, Types } from "./model/index.js";
 export class Domain extends DbManager.PG.BaseDomain<{
 	Model: Model;
 	CreateFields: Types.CreateFields;
-	SearchFields: Types.SearchFields;
 	TableFields: Types.TableFields;
 	UpdateFields: Types.UpdateFields;
 }> {

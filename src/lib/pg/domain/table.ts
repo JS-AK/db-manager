@@ -4,10 +4,9 @@ import { BaseTableModel } from "../model/index.js";
 
 type BaseDomainGeneric = {
 	Model: BaseTableModel;
-	CreateFields: SharedTypes.TRawParams;
-	SearchFields: Types.TDomainFields;
-	TableFields: SharedTypes.TRawParams;
-	UpdateFields: SharedTypes.TRawParams;
+	CreateFields?: SharedTypes.TRawParams;
+	CoreFields: SharedTypes.TRawParams;
+	UpdateFields?: SharedTypes.TRawParams;
 };
 
 export class BaseTableDomain<TC extends BaseDomainGeneric> {
@@ -34,7 +33,7 @@ export class BaseTableDomain<TC extends BaseDomainGeneric> {
 	}
 
 	get createField() {
-		return this.#createField as { title: keyof TC["TableFields"]; type: "unix_timestamp" | "timestamp"; } | null;
+		return this.#createField as { title: keyof TC["CoreFields"]; type: "unix_timestamp" | "timestamp"; } | null;
 	}
 
 	get primaryKey() {
@@ -50,64 +49,64 @@ export class BaseTableDomain<TC extends BaseDomainGeneric> {
 	}
 
 	get updateField() {
-		return this.#updateField as { title: keyof TC["TableFields"]; type: "unix_timestamp" | "timestamp"; } | null;
+		return this.#updateField as { title: keyof TC["CoreFields"]; type: "unix_timestamp" | "timestamp"; } | null;
 	}
 
 	compareQuery = {
 		createOne: (
-			recordParams: TC["CreateFields"],
-			saveOptions?: { returningFields?: Extract<keyof TC["TableFields"], string>[]; },
+			recordParams: TC["CreateFields"] extends SharedTypes.TRawParams ? TC["CreateFields"] : Partial<TC["CoreFields"]>,
+			saveOptions?: { returningFields?: Extract<keyof TC["CoreFields"], string>[]; },
 		) => this.model.compareQuery.save(recordParams, saveOptions),
 		deleteAll: () => this.model.compareQuery.deleteAll(),
 		deleteByParams: (options: {
-			params: Types.TSearchParams<TC["SearchFields"]>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<TC["SearchFields"]>>;
+			params: Types.TSearchParams<Partial<TC["CoreFields"]>>;
+			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<TC["CoreFields"]>>>;
 		}) => this.model.compareQuery.deleteByParams({ $and: options.params, $or: options.paramsOr }),
 		deleteOneByPk: <T = string | number>(pk: T) => this.model.compareQuery.deleteOneByPk(pk),
-		getArrByParams: <T extends keyof TC["TableFields"]>(options: {
-			params: Types.TSearchParams<TC["SearchFields"]>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<TC["SearchFields"]>>;
+		getArrByParams: <T extends keyof TC["CoreFields"]>(options: {
+			params: Types.TSearchParams<Partial<TC["CoreFields"]>>;
+			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<TC["CoreFields"]>>>;
 			selected?: [T, ...T[]];
 			pagination?: SharedTypes.TPagination;
-			order?: { orderBy: Extract<keyof TC["TableFields"], string>; ordering: SharedTypes.TOrdering; }[];
+			order?: { orderBy: Extract<keyof TC["CoreFields"], string>; ordering: SharedTypes.TOrdering; }[];
 		}) => this.model.compareQuery.getArrByParams({ $and: options.params, $or: options.paramsOr }, options.selected as string[], options.pagination, options.order),
 		getCountByParams: (options: {
-			params: Types.TSearchParams<TC["SearchFields"]>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<TC["SearchFields"]>>;
+			params: Types.TSearchParams<Partial<TC["CoreFields"]>>;
+			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<TC["CoreFields"]>>>;
 		}) => this.model.compareQuery.getCountByParams({ $and: options.params, $or: options.paramsOr }),
 		getCountByPks: <T = string | number>(pks: T[]) => this.model.compareQuery.getCountByPks(pks),
 		getCountByPksAndParams: <T = string | number>(
 			pks: T[],
 			options: {
-				params: Types.TSearchParams<TC["SearchFields"]>;
-				paramsOr?: Types.TArray2OrMore<Types.TSearchParams<TC["SearchFields"]>>;
+				params: Types.TSearchParams<Partial<TC["CoreFields"]>>;
+				paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<TC["CoreFields"]>>>;
 			},
 		) => this.model.compareQuery.getCountByPksAndParams(pks, { $and: options.params, $or: options.paramsOr }),
-		getOneByParams: <T extends keyof TC["TableFields"]>(options: {
-			params: Types.TSearchParams<TC["SearchFields"]>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<TC["SearchFields"]>>;
+		getOneByParams: <T extends keyof TC["CoreFields"]>(options: {
+			params: Types.TSearchParams<Partial<TC["CoreFields"]>>;
+			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<TC["CoreFields"]>>>;
 			selected?: [T, ...T[]];
 		}) => this.model.compareQuery.getOneByParams({ $and: options.params, $or: options.paramsOr }, options.selected as string[]),
 		getOneByPk: <T = string | number>(pk: T) => this.model.compareQuery.getOneByPk(pk),
-		updateByParams: <T extends Extract<keyof TC["TableFields"], string>[] = Extract<keyof TC["TableFields"], string>[]>(
+		updateByParams: <T extends Extract<keyof TC["CoreFields"], string>[] = Extract<keyof TC["CoreFields"], string>[]>(
 			queryConditions: {
-				params: Types.TSearchParams<TC["SearchFields"]>;
-				paramsOr?: Types.TArray2OrMore<Types.TSearchParams<TC["SearchFields"]>>;
+				params: Types.TSearchParams<Partial<TC["CoreFields"]>>;
+				paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<TC["CoreFields"]>>>;
 				returningFields?: T;
 			},
-			updateFields: TC["UpdateFields"],
+			updateFields: TC["UpdateFields"] extends SharedTypes.TRawParams ? TC["UpdateFields"] : Partial<TC["CoreFields"]>,
 		) => this.model.compareQuery.updateByParams({ $and: queryConditions.params, $or: queryConditions.paramsOr, returningFields: queryConditions.returningFields }, updateFields),
-		updateOneByPk: <T = string | number, R extends Extract<keyof TC["TableFields"], string>[] = Extract<keyof TC["TableFields"], string>[]>(
+		updateOneByPk: <T extends string | number = string | number, R extends Extract<keyof TC["CoreFields"], string>[] = Extract<keyof TC["CoreFields"], string>[]>(
 			primaryKeyValue: T,
-			updateFields: TC["UpdateFields"],
+			updateFields: TC["UpdateFields"] extends SharedTypes.TRawParams ? TC["UpdateFields"] : Partial<TC["CoreFields"]>,
 			updateOptions?: { returningFields?: R; },
 		) => this.model.compareQuery.updateOneByPk(primaryKeyValue, updateFields, updateOptions),
 	};
 
-	async createOne<T extends Extract<keyof TC["TableFields"], string>[] = Extract<keyof TC["TableFields"], string>[]>(
-		recordParams: TC["CreateFields"],
+	async createOne<T extends Extract<keyof TC["CoreFields"], string>[] = Extract<keyof TC["CoreFields"], string>[]>(
+		recordParams: TC["CreateFields"] extends SharedTypes.TRawParams ? TC["CreateFields"] : Partial<TC["CoreFields"]>,
 		saveOptions?: { returningFields?: T; },
-	): Promise<T extends undefined ? TC["TableFields"] : Pick<TC["TableFields"], T[0]>> {
+	): Promise<T extends undefined ? TC["CoreFields"] : Pick<TC["CoreFields"], T[0]>> {
 		const res = await this.model.save(recordParams, saveOptions);
 
 		if (!res) throw new Error(`Save to ${this.model.tableName} table error`);
@@ -120,8 +119,8 @@ export class BaseTableDomain<TC extends BaseDomainGeneric> {
 	}
 
 	async deleteByParams(options: {
-		params: Types.TSearchParams<TC["SearchFields"]>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<TC["SearchFields"]>>;
+		params: Types.TSearchParams<Partial<TC["CoreFields"]>>;
+		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<TC["CoreFields"]>>>;
 	}): Promise<null> {
 		return this.model.deleteByParams(
 			{ $and: options.params, $or: options.paramsOr },
@@ -132,13 +131,13 @@ export class BaseTableDomain<TC extends BaseDomainGeneric> {
 		return this.model.deleteOneByPk<T>(pk);
 	}
 
-	async getArrByParams<T extends keyof TC["TableFields"]>(options: {
-		params: Types.TSearchParams<TC["SearchFields"]>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<TC["SearchFields"]>>;
+	async getArrByParams<T extends keyof TC["CoreFields"]>(options: {
+		params: Types.TSearchParams<Partial<TC["CoreFields"]>>;
+		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<TC["CoreFields"]>>>;
 		selected?: [T, ...T[]];
 		pagination?: SharedTypes.TPagination;
-		order?: { orderBy: Extract<keyof TC["TableFields"], string>; ordering: SharedTypes.TOrdering; }[];
-	}): Promise<Array<Pick<TC["TableFields"], T>>> {
+		order?: { orderBy: Extract<keyof TC["CoreFields"], string>; ordering: SharedTypes.TOrdering; }[];
+	}): Promise<Array<Pick<TC["CoreFields"], T>>> {
 		return this.model.getArrByParams(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
@@ -154,8 +153,8 @@ export class BaseTableDomain<TC extends BaseDomainGeneric> {
 	async getCountByPksAndParams<T = string | number>(
 		pks: T[],
 		options: {
-			params: Types.TSearchParams<TC["SearchFields"]>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<TC["SearchFields"]>>;
+			params: Types.TSearchParams<Partial<TC["CoreFields"]>>;
+			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<TC["CoreFields"]>>>;
 		},
 	): Promise<number> {
 		return this.model.getCountByPksAndParams(
@@ -165,31 +164,17 @@ export class BaseTableDomain<TC extends BaseDomainGeneric> {
 	}
 
 	async getCountByParams(options: {
-		params: Types.TSearchParams<TC["SearchFields"]>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<TC["SearchFields"]>>;
+		params: Types.TSearchParams<Partial<TC["CoreFields"]>>;
+		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<TC["CoreFields"]>>>;
 	}): Promise<number> {
 		return this.model.getCountByParams({ $and: options.params, $or: options.paramsOr });
 	}
 
-	/**
-	 * @deprecated Use getOneByParams
-	 */
-	async getGuaranteedOneByParams<T extends keyof TC["TableFields"]>(options: {
-		params: Types.TSearchParams<TC["SearchFields"]>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<TC["SearchFields"]>>;
+	async getOneByParams<T extends keyof TC["CoreFields"]>(options: {
+		params: Types.TSearchParams<Partial<TC["CoreFields"]>>;
+		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<TC["CoreFields"]>>>;
 		selected?: [T, ...T[]];
-	}): Promise<Pick<TC["TableFields"], T>> {
-		return this.model.getOneByParams(
-			{ $and: options.params, $or: options.paramsOr },
-			options.selected as string[],
-		);
-	}
-
-	async getOneByParams<T extends keyof TC["TableFields"]>(options: {
-		params: Types.TSearchParams<TC["SearchFields"]>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<TC["SearchFields"]>>;
-		selected?: [T, ...T[]];
-	}): Promise<{ message?: string; one?: Pick<TC["TableFields"], T>; }> {
+	}): Promise<{ message?: string; one?: Pick<TC["CoreFields"], T>; }> {
 		const one = await this.model.getOneByParams(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
@@ -200,7 +185,7 @@ export class BaseTableDomain<TC extends BaseDomainGeneric> {
 		return { one };
 	}
 
-	async getOneByPk<T = string | number>(pk: T): Promise<{ message?: string; one?: TC["TableFields"]; }> {
+	async getOneByPk<T = string | number>(pk: T): Promise<{ message?: string; one?: TC["CoreFields"]; }> {
 		const one = await this.model.getOneByPk(pk);
 
 		if (!one) return { message: `Not found from ${this.model.tableName}` };
@@ -208,22 +193,22 @@ export class BaseTableDomain<TC extends BaseDomainGeneric> {
 		return { one };
 	}
 
-	async updateByParams<T extends Extract<keyof TC["TableFields"], string>[] = Extract<keyof TC["TableFields"], string>[]>(
+	async updateByParams<T extends Extract<keyof TC["CoreFields"], string>[] = Extract<keyof TC["CoreFields"], string>[]>(
 		queryConditions: {
-			params: Types.TSearchParams<TC["SearchFields"]>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<TC["SearchFields"]>>;
+			params: Types.TSearchParams<Partial<TC["CoreFields"]>>;
+			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<TC["CoreFields"]>>>;
 			returningFields?: T;
 		},
-		updateFields: TC["UpdateFields"],
-	): Promise<TC["TableFields"][]> {
+		updateFields: TC["UpdateFields"] extends SharedTypes.TRawParams ? TC["UpdateFields"] : Partial<TC["CoreFields"]>,
+	): Promise<TC["CoreFields"][]> {
 		return this.model.updateByParams({ $and: queryConditions.params, $or: queryConditions.paramsOr, returningFields: queryConditions.returningFields }, updateFields);
 	}
 
-	async updateOneByPk<T = string | number, R extends Extract<keyof TC["TableFields"], string>[] = Extract<keyof TC["TableFields"], string>[]>(
+	async updateOneByPk<T extends string | number = string | number, R extends Extract<keyof TC["CoreFields"], string>[] = Extract<keyof TC["CoreFields"], string>[]>(
 		primaryKeyValue: T,
-		updateFields: TC["UpdateFields"],
+		updateFields: TC["UpdateFields"] extends SharedTypes.TRawParams ? TC["UpdateFields"] : Partial<TC["CoreFields"]>,
 		updateOptions?: { returningFields?: R; },
-	): Promise<TC["TableFields"]> {
+	): Promise<TC["CoreFields"]> {
 		return this.model.updateOneByPk(primaryKeyValue, updateFields, updateOptions);
 	}
 }
