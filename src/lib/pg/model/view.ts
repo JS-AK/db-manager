@@ -114,9 +114,6 @@ export class BaseView {
 		return entity;
 	}
 
-	/**
-	 * @experimental
-	 */
 	queryBuilder(options?: {
 		name?: string;
 		client?: pg.Pool | pg.PoolClient;

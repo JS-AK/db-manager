@@ -8,6 +8,9 @@ import * as connection from "../connection.js";
 import { QueryBuilder } from "../query-builder/index.js";
 import queries from "./queries.js";
 
+/**
+ * @experimental
+ */
 export class BaseTable {
 	#insertOptions;
 	#sortingOrders = new Set(["ASC", "DESC"]);
@@ -166,7 +169,7 @@ export class BaseTable {
 				values: [...values, ...Object.values(clearedUpdate)],
 			};
 		},
-		updateOneByPk: <T extends string | number = string | number > (
+		updateOneByPk: <T extends string | number = string | number>(
 			primaryKeyValue: T,
 			updateFields: SharedTypes.TRawParams = {},
 			updateOptions?: { returningFields?: string[]; },
@@ -302,9 +305,6 @@ export class BaseTable {
 		return entity;
 	}
 
-	/**
-	 * @experimental
-	 */
 	queryBuilder(options?: {
 		client?: pg.Pool | pg.PoolClient;
 		tableName?: string;

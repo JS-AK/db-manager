@@ -53,9 +53,6 @@ export class BaseSequence {
 		await this.pool.query(query);
 	}
 
-	/**
-	 * @experimental
-	 */
 	queryBuilder(options?: {
 		client?: pg.Pool | pg.PoolClient;
 		name?: string;
