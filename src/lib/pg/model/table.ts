@@ -8,7 +8,7 @@ import * as connection from "../connection.js";
 import { QueryBuilder } from "../query-builder/index.js";
 import queries from "./queries.js";
 
-export class BaseTableModel {
+export class BaseTable {
 	#insertOptions;
 	#sortingOrders = new Set(["ASC", "DESC"]);
 

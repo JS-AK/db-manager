@@ -1,15 +1,20 @@
 import * as Types from "./types.js";
 import { BaseSequenceModel } from "../model/index.js";
 
+type BaseSequenceGeneric = string | number;
+
 /**
  * @experimental
  */
-export class BaseSequenceDomain<T extends string | number, M extends BaseSequenceModel<T>> {
+export class BaseSequenceDomain<
+	BSM extends BaseSequenceModel = BaseSequenceModel,
+	BSG extends BaseSequenceGeneric = BaseSequenceGeneric,
+> {
 	#name;
 
 	model;
 
-	constructor(data: Types.TDomain<M>) {
+	constructor(data: Types.TDomain<BSM>) {
 		if (!(data.model instanceof BaseSequenceModel)) {
 			throw new Error("You need pass extended of BaseSequenceDomain");
 		}
@@ -23,23 +28,23 @@ export class BaseSequenceDomain<T extends string | number, M extends BaseSequenc
 		return this.#name;
 	}
 
-	async getCurrentValue(): Promise<T | null> {
+	async getCurrentValue(): Promise<BSG | null> {
 		return this.model.getCurrentValue();
 	}
 
-	async getNextValue(): Promise<T> {
+	async getNextValue(): Promise<BSG> {
 		return this.model.getNextValue();
 	}
 
-	async incrementBy(value: T): Promise<void> {
+	async incrementBy(value: BSG): Promise<void> {
 		return this.model.incrementBy(value);
 	}
 
-	async restartWith(value: T): Promise<void> {
+	async restartWith(value: BSG): Promise<void> {
 		return this.model.restartWith(value);
 	}
 
-	async setValue(value: T): Promise<void> {
+	async setValue(value: BSG): Promise<void> {
 		return this.model.setValue(value);
 	}
 }

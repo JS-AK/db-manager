@@ -7,7 +7,7 @@ import { QueryBuilder } from "../query-builder/index.js";
 /**
  * @experimental
  */
-export class BaseSequenceModel<T extends string | number = string | number> {
+export class BaseSequence {
 	pool: pg.Pool;
 	name;
 
@@ -19,14 +19,14 @@ export class BaseSequenceModel<T extends string | number = string | number> {
 		this.name = data.name;
 	}
 
-	async getCurrentValue(): Promise<T | null> {
+	async getCurrentValue<T extends string | number>(): Promise<T | null> {
 		const query = `SELECT last_value FROM ${this.name}`;
 		const { rows: [result] } = await this.pool.query<{ last_value: T; }>(query);
 
 		return result ? result.last_value : null;
 	}
 
-	async getNextValue(): Promise<T> {
+	async getNextValue<T extends string | number>(): Promise<T> {
 		const query = `SELECT nextval('${this.name}')`;
 		const { rows: [result] } = await this.pool.query<{ nextval: T; }>(query);
 
@@ -35,19 +35,19 @@ export class BaseSequenceModel<T extends string | number = string | number> {
 		return result.nextval;
 	}
 
-	async setValue(value: T): Promise<void> {
+	async setValue<T extends string | number>(value: T): Promise<void> {
 		const query = `SELECT setval('${this.name}', $1)`;
 
 		await this.pool.query(query, [value]);
 	}
 
-	async incrementBy(value: T): Promise<void> {
+	async incrementBy<T extends string | number>(value: T): Promise<void> {
 		const query = `SELECT setval('${this.name}', nextval('${this.name}') + $1)`;
 
 		await this.pool.query(query, [value]);
 	}
 
-	async restartWith(value: T): Promise<void> {
+	async restartWith<T extends string | number>(value: T): Promise<void> {
 		const query = `ALTER SEQUENCE ${this.name} RESTART WITH ${Number(value)}`;
 
 		await this.pool.query(query);

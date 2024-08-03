@@ -10,7 +10,7 @@ import queries from "./queries.js";
 /**
  * @experimental
  */
-export class BaseMaterializedViewModel {
+export class BaseMaterializedView {
 	#sortingOrders = new Set(["ASC", "DESC"]);
 
 	pool: pg.Pool;
