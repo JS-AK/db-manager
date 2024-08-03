@@ -1,6 +1,6 @@
 import * as SharedTypes from "../../../shared-types/index.js";
 import * as Types from "./types.js";
-import { BaseTableModel } from "../model/index.js";
+import { BaseTable as Model } from "../model/index.js";
 
 export type BaseTableGeneric = {
 	CreateFields?: SharedTypes.TRawParams;
@@ -9,7 +9,7 @@ export type BaseTableGeneric = {
 };
 
 export class BaseTable<
-	BTM extends BaseTableModel = BaseTableModel,
+	M extends Model = Model,
 	BTG extends BaseTableGeneric = BaseTableGeneric
 > {
 	#createField;
@@ -20,9 +20,9 @@ export class BaseTable<
 
 	model;
 
-	constructor(data: Types.TDomain<BTM>) {
-		if (!(data.model instanceof BaseTableModel)) {
-			throw new Error("You need pass extended of BaseTableModel");
+	constructor(data: Types.TDomain<M>) {
+		if (!(data.model instanceof Model)) {
+			throw new Error("You need pass data.model extended of PG.Model.BaseTable");
 		}
 
 		this.model = data.model;

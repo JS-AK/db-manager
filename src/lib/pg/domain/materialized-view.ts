@@ -1,6 +1,6 @@
 import * as SharedTypes from "../../../shared-types/index.js";
 import * as Types from "./types.js";
-import { BaseMaterializedViewModel } from "../model/index.js";
+import { BaseMaterializedView as Model } from "../model/index.js";
 
 export type BaseMaterializedViewGeneric = {
 	CoreFields: SharedTypes.TRawParams;
@@ -9,8 +9,8 @@ export type BaseMaterializedViewGeneric = {
 /**
  * @experimental
  */
-export class BaseMaterializedViewDomain<
-	BMVM extends BaseMaterializedViewModel = BaseMaterializedViewModel,
+export class BaseMaterializedView<
+	M extends Model = Model,
 	BMVG extends BaseMaterializedViewGeneric = BaseMaterializedViewGeneric
 > {
 	#name;
@@ -18,9 +18,9 @@ export class BaseMaterializedViewDomain<
 
 	model;
 
-	constructor(data: Types.TDomain<BMVM>) {
-		if (!(data.model instanceof BaseMaterializedViewModel)) {
-			throw new Error("You need pass extended of BaseMaterializedViewDomain");
+	constructor(data: Types.TDomain<M>) {
+		if (!(data.model instanceof Model)) {
+			throw new Error("You need pass data.model extended of PG.Model.BaseMaterializedView");
 		}
 
 		this.model = data.model;

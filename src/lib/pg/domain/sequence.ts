@@ -1,22 +1,22 @@
 import * as Types from "./types.js";
-import { BaseSequenceModel } from "../model/index.js";
+import { BaseSequence as Model } from "../model/index.js";
 
 type BaseSequenceGeneric = string | number;
 
 /**
  * @experimental
  */
-export class BaseSequenceDomain<
-	BSM extends BaseSequenceModel = BaseSequenceModel,
+export class BaseSequence<
+	M extends Model = Model,
 	BSG extends BaseSequenceGeneric = BaseSequenceGeneric,
 > {
 	#name;
 
 	model;
 
-	constructor(data: Types.TDomain<BSM>) {
-		if (!(data.model instanceof BaseSequenceModel)) {
-			throw new Error("You need pass extended of BaseSequenceDomain");
+	constructor(data: Types.TDomain<M>) {
+		if (!(data.model instanceof Model)) {
+			throw new Error("You need pass data.model extended of PG.Model.BaseSequence");
 		}
 
 		this.model = data.model;
