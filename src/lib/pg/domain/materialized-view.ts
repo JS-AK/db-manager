@@ -3,6 +3,7 @@ import * as Types from "./types.js";
 import { BaseMaterializedView as Model } from "../model/index.js";
 
 export type BaseMaterializedViewGeneric = {
+	AdditionalSortingFields?: string;
 	CoreFields: SharedTypes.TRawParams;
 };
 
@@ -43,7 +44,10 @@ export class BaseMaterializedView<
 			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<BMVG["CoreFields"]>>>;
 			selected?: [T, ...T[]];
 			pagination?: SharedTypes.TPagination;
-			order?: { orderBy: Extract<keyof BMVG["CoreFields"], string>; ordering: SharedTypes.TOrdering; }[];
+			order?: {
+				orderBy: Extract<keyof BMVG["CoreFields"], string> | (BMVG["AdditionalSortingFields"] extends string ? BMVG["AdditionalSortingFields"] : never);
+				ordering: SharedTypes.TOrdering;
+			}[];
 		}) => this.model.compareQuery.getArrByParams({ $and: options.params, $or: options.paramsOr }, options.selected as string[], options.pagination, options.order),
 		getCountByParams: (options: {
 			params: Types.TSearchParams<Partial<BMVG["CoreFields"]>>;
@@ -61,7 +65,10 @@ export class BaseMaterializedView<
 		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<BMVG["CoreFields"]>>>;
 		selected?: [T, ...T[]];
 		pagination?: SharedTypes.TPagination;
-		order?: { orderBy: Extract<keyof BMVG["CoreFields"], string>; ordering: SharedTypes.TOrdering; }[];
+		order?: {
+			orderBy: Extract<keyof BMVG["CoreFields"], string> | (BMVG["AdditionalSortingFields"] extends string ? BMVG["AdditionalSortingFields"] : never);
+			ordering: SharedTypes.TOrdering;
+		}[];
 	}): Promise<Array<Pick<BMVG["CoreFields"], T>>> {
 		return this.model.getArrByParams(
 			{ $and: options.params, $or: options.paramsOr },

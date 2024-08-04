@@ -12,18 +12,24 @@ import queries from "./queries.js";
  */
 export class BaseView {
 	#sortingOrders = new Set(["ASC", "DESC"]);
+	#coreFieldsSet;
 
 	pool: pg.Pool;
 	name;
 	coreFields;
 
 	constructor(
-		data: { coreFields: string[]; name: string; },
+		data: { additionalSortingFields?: string[]; coreFields: string[]; name: string; },
 		dbCreds: Types.TDBCreds,
 	) {
 		this.pool = connection.getStandardPool(dbCreds);
 		this.name = data.name;
 		this.coreFields = data.coreFields;
+
+		this.#coreFieldsSet = new Set([
+			...this.coreFields,
+			...(data.additionalSortingFields || []),
+		] as const);
 	}
 
 	compareFields = Helpers.compareFields;
@@ -38,6 +44,12 @@ export class BaseView {
 		): { query: string; values: unknown[]; } => {
 			if (order?.length) {
 				for (const o of order) {
+					if (!this.#coreFieldsSet.has(o.orderBy)) {
+						const allowedFields = Array.from(this.#coreFieldsSet).join(", ");
+
+						throw new Error(`Invalid orderBy: ${o.orderBy}. Allowed fields are: ${allowedFields}`);
+					}
+					
 					if (!this.#sortingOrders.has(o.ordering)) { throw new Error("Invalid ordering"); }
 				}
 			}

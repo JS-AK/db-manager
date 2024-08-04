@@ -11,6 +11,7 @@ import queries from "./queries.js";
 export class BaseModel {
 	#insertOptions;
 	#sortingOrders = new Set(["ASC", "DESC"]);
+	#tableFieldsSet;
 
 	createField;
 	pool: pg.Pool;
@@ -20,18 +21,22 @@ export class BaseModel {
 	updateField;
 
 	constructor(
-		tableData: Types.TTable,
+		data: Types.TTable,
 		dbCreds: Types.TDBCreds,
 		options?: Types.TDBOptions,
 	) {
-		this.createField = tableData.createField;
+		this.createField = data.createField;
 		this.pool = connection.getStandardPool(dbCreds);
-		this.primaryKey = tableData.primaryKey;
-		this.tableName = tableData.tableName;
-		this.tableFields = tableData.tableFields;
-		this.updateField = tableData.updateField;
+		this.primaryKey = data.primaryKey;
+		this.tableName = data.tableName;
+		this.tableFields = data.tableFields;
+		this.updateField = data.updateField;
 
 		this.#insertOptions = options?.insertOptions;
+		this.#tableFieldsSet = new Set([
+			...this.tableFields,
+			...(data.additionalSortingFields || []),
+		] as const);
 	}
 
 	compareFields = Helpers.compareFields;
@@ -66,6 +71,12 @@ export class BaseModel {
 		): { query: string; values: unknown[]; } => {
 			if (order?.length) {
 				for (const o of order) {
+					if (!this.#tableFieldsSet.has(o.orderBy)) {
+						const allowedFields = Array.from(this.#tableFieldsSet).join(", ");
+
+						throw new Error(`Invalid orderBy: ${o.orderBy}. Allowed fields are: ${allowedFields}`);
+					}
+
 					if (!this.#sortingOrders.has(o.ordering)) { throw new Error("Invalid ordering"); }
 				}
 			}

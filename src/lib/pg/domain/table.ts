@@ -3,6 +3,7 @@ import * as Types from "./types.js";
 import { BaseTable as Model } from "../model/index.js";
 
 export type BaseTableGeneric = {
+	AdditionalSortingFields?: string;
 	CreateFields?: SharedTypes.TRawParams;
 	CoreFields: SharedTypes.TRawParams;
 	UpdateFields?: SharedTypes.TRawParams;
@@ -70,7 +71,10 @@ export class BaseTable<
 			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<BTG["CoreFields"]>>>;
 			selected?: [T, ...T[]];
 			pagination?: SharedTypes.TPagination;
-			order?: { orderBy: Extract<keyof BTG["CoreFields"], string>; ordering: SharedTypes.TOrdering; }[];
+			order?: {
+				orderBy: Extract<keyof BTG["CoreFields"], string> | (BTG["AdditionalSortingFields"] extends string ? BTG["AdditionalSortingFields"] : never);
+				ordering: SharedTypes.TOrdering;
+			}[];
 		}) => this.model.compareQuery.getArrByParams({ $and: options.params, $or: options.paramsOr }, options.selected as string[], options.pagination, options.order),
 		getCountByParams: (options: {
 			params: Types.TSearchParams<Partial<BTG["CoreFields"]>>;
@@ -133,12 +137,15 @@ export class BaseTable<
 		return this.model.deleteOneByPk<T>(pk);
 	}
 
-	async getArrByParams<T extends keyof BTG["CoreFields"]>(options: {
+	async getArrByParams<T extends keyof BTG["CoreFields"]>(this: BaseTable<M, BTG>, options: {
 		params: Types.TSearchParams<Partial<BTG["CoreFields"]>>;
 		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<BTG["CoreFields"]>>>;
 		selected?: [T, ...T[]];
 		pagination?: SharedTypes.TPagination;
-		order?: { orderBy: Extract<keyof BTG["CoreFields"], string>; ordering: SharedTypes.TOrdering; }[];
+		order?: {
+			orderBy: Extract<keyof BTG["CoreFields"], string> | (BTG["AdditionalSortingFields"] extends string ? BTG["AdditionalSortingFields"] : never);
+			ordering: SharedTypes.TOrdering;
+		}[];
 	}): Promise<Array<Pick<BTG["CoreFields"], T>>> {
 		return this.model.getArrByParams(
 			{ $and: options.params, $or: options.paramsOr },

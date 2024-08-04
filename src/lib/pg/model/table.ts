@@ -14,6 +14,7 @@ import queries from "./queries.js";
 export class BaseTable {
 	#insertOptions;
 	#sortingOrders = new Set(["ASC", "DESC"]);
+	#tableFieldsSet;
 
 	createField;
 	pool: pg.Pool;
@@ -35,6 +36,10 @@ export class BaseTable {
 		this.updateField = data.updateField;
 
 		this.#insertOptions = options?.insertOptions;
+		this.#tableFieldsSet = new Set([
+			...this.tableFields,
+			...(data.additionalSortingFields || []),
+		] as const);
 	}
 
 	compareFields = Helpers.compareFields;
@@ -69,6 +74,12 @@ export class BaseTable {
 		): { query: string; values: unknown[]; } => {
 			if (order?.length) {
 				for (const o of order) {
+					if (!this.#tableFieldsSet.has(o.orderBy)) {
+						const allowedFields = Array.from(this.#tableFieldsSet).join(", ");
+
+						throw new Error(`Invalid orderBy: ${o.orderBy}. Allowed fields are: ${allowedFields}`);
+					}
+
 					if (!this.#sortingOrders.has(o.ordering)) { throw new Error("Invalid ordering"); }
 				}
 			}

@@ -3,6 +3,7 @@ import * as Types from "./types.js";
 import { BaseModel } from "../model/index.js";
 
 export class BaseDomain<TC extends {
+	AdditionalSortingFields?: string;
 	Model: BaseModel;
 	CreateFields?: SharedTypes.TRawParams;
 	SearchFields?: Types.TDomainFields;
@@ -67,7 +68,10 @@ export class BaseDomain<TC extends {
 			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<TC["TableFields"]>>>;
 			selected?: [T, ...T[]];
 			pagination?: SharedTypes.TPagination;
-			order?: { orderBy: Extract<keyof TC["TableFields"], string>; ordering: SharedTypes.TOrdering; }[];
+			order?: {
+				orderBy: Extract<keyof TC["TableFields"], string> | (TC["AdditionalSortingFields"] extends string ? TC["AdditionalSortingFields"] : never);
+				ordering: SharedTypes.TOrdering;
+			}[];
 		}) => this.model.compareQuery.getArrByParams({ $and: options.params, $or: options.paramsOr }, options.selected as string[], options.pagination, options.order),
 		getCountByParams: (options: {
 			params: Types.TSearchParams<Partial<TC["TableFields"]>>;
@@ -135,7 +139,10 @@ export class BaseDomain<TC extends {
 		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<TC["TableFields"]>>>;
 		selected?: [T, ...T[]];
 		pagination?: SharedTypes.TPagination;
-		order?: { orderBy: Extract<keyof TC["TableFields"], string>; ordering: SharedTypes.TOrdering; }[];
+		order?: {
+			orderBy: Extract<keyof TC["TableFields"], string> | (TC["AdditionalSortingFields"] extends string ? TC["AdditionalSortingFields"] : never);
+			ordering: SharedTypes.TOrdering;
+		}[];
 	}): Promise<Array<Pick<TC["TableFields"], T>>> {
 		return this.model.getArrByParams(
 			{ $and: options.params, $or: options.paramsOr },
