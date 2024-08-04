@@ -2,11 +2,9 @@ import * as DbManager from "../../../index.js";
 
 import { Model, Types } from "./model/index.js";
 
-export class Domain extends DbManager.PG.BaseDomain<{
-	Model: Model;
+export class Domain extends DbManager.PG.Domain.BaseTable<Model, {
 	CreateFields: Types.CreateFields;
-	SearchFields: Types.SearchFields;
-	TableFields: Types.TableFields;
+	CoreFields: Types.TableFields;
 	UpdateFields: Types.UpdateFields;
 }> {
 

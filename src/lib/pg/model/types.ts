@@ -70,6 +70,7 @@ export type TSearchParamsWithOperator = {
 	"$?"?: string | string[];
 };
 export type TTable = {
+	additionalSortingFields?: string[];
 	createField: { title: string; type: "unix_timestamp" | "timestamp"; } | null;
 	primaryKey: string | null;
 	tableFields: string[];
