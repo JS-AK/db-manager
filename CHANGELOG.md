@@ -1,3 +1,10 @@
+## [3.31.1](https://github.com/JS-AK/db-manager/compare/v3.31.0...v3.31.1) (2024-08-04)
+
+
+### Bug Fixes
+
+* updated pg-core qb rawUpdate method ([0cd5312](https://github.com/JS-AK/db-manager/commit/0cd531203901c1cae7cb22247b6f279fc4dbc091))
+
 # [3.31.0](https://github.com/JS-AK/db-manager/compare/v3.30.0...v3.31.0) (2024-08-04)
 
 
