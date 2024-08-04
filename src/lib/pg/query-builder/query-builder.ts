@@ -88,7 +88,6 @@ export class QueryBuilder {
 	 * @param {unknown[]} [values] - An optional array of values to replace placeholders in the `data` string.
 	 *
 	 * @returns {QueryBuilder} The `QueryBuilder` instance to allow for method chaining.
-	 * @private
 	 */
 	rawInsert(data: string, values?: unknown[]): QueryBuilder {
 		this.#queryHandler.rawInsert(data, values);

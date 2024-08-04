@@ -312,8 +312,12 @@ export class QueryHandler {
 		this.#valuesOrder += v.length;
 	}
 
-	rawUpdate(data: string, values?: unknown[]) {
+	rawUpdate(data: string, values?: unknown[]): void {
 		if (!data) return;
+
+		const dataPrepared = values?.length
+			? this.#processDataWithValues(data, values)
+			: data;
 
 		if (!this.#mainQuery) {
 			const dataLowerCased = data.toLowerCase();
@@ -321,15 +325,15 @@ export class QueryHandler {
 			if (dataLowerCased.slice(0, 6) !== "UPDATE") {
 				this.#mainQuery = `UPDATE ${this.#dataSourceRaw} SET`;
 			}
+
+			this.#mainQuery += ` ${dataPrepared}`;
+
+			return;
 		}
 
-		const dataPrepared = values?.length
-			? this.#processDataWithValues(data, values)
-			: data;
+		this.#mainQuery += `, ${dataPrepared}`;
 
-		if (this.#mainQuery.at(-1) !== ",") this.#mainQuery += ",";
-
-		this.#mainQuery += ` ${dataPrepared}`;
+		return;
 	}
 
 	select(data: string[]) {
