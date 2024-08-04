@@ -1,3 +1,21 @@
+# [3.31.0](https://github.com/JS-AK/db-manager/compare/v3.30.0...v3.31.0) (2024-08-04)
+
+
+### Bug Fixes
+
+* updated experimental flags ([cd51239](https://github.com/JS-AK/db-manager/commit/cd51239bc81c22a8ae6356ef3bd41b440c653820))
+* updated pg-core domain and model generic types ([25667f1](https://github.com/JS-AK/db-manager/commit/25667f161270b0c75a896bfeb71e17ab83e9fec1))
+* updated pg-core domain and model generic types ([fc8b41d](https://github.com/JS-AK/db-manager/commit/fc8b41dd9ae47a7a11fac8ef27c3e0dc672081a0))
+* updated pg-core domain and model generic types ([717ded5](https://github.com/JS-AK/db-manager/commit/717ded5f3aed70364323f6e05420d046b1cf7033))
+* updated pg-core domain and model generic types ([d141368](https://github.com/JS-AK/db-manager/commit/d141368a668a5c1073e9be2849a013c59b02a230))
+* updated pg-core domain and model generic types ([494a5bd](https://github.com/JS-AK/db-manager/commit/494a5bd6b90635151b6851e65e13f778b680747a))
+* updated pg-core domain and model generic types ([b992715](https://github.com/JS-AK/db-manager/commit/b9927151a658278332d6cc285effa4f75a445e00))
+
+
+### Features
+
+* updated pg-core ([78d93f3](https://github.com/JS-AK/db-manager/commit/78d93f3087633f515b5c451649d28bc21dcc826e))
+
 # [3.30.0](https://github.com/JS-AK/db-manager/compare/v3.29.0...v3.30.0) (2024-07-11)
 
 
