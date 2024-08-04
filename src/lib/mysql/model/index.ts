@@ -9,6 +9,7 @@ import queries from "./queries.js";
 
 export class BaseModel {
 	#sortingOrders = new Set(["ASC", "DESC"]);
+	#tableFieldsSet;
 
 	createField;
 	isPKAutoIncremented;
@@ -18,16 +19,24 @@ export class BaseModel {
 	tableName;
 	updateField;
 
-	constructor(tableData: Types.TTable, dbCreds: Types.TDBCreds) {
-		this.createField = tableData.createField;
+	constructor(
+		data: Types.TTable,
+		dbCreds: Types.TDBCreds,
+	) {
+		this.createField = data.createField;
 		this.pool = connection.getStandardPool(dbCreds);
-		this.primaryKey = tableData.primaryKey;
-		this.isPKAutoIncremented = typeof tableData.isPKAutoIncremented === "boolean"
-			? tableData.isPKAutoIncremented
+		this.primaryKey = data.primaryKey;
+		this.isPKAutoIncremented = typeof data.isPKAutoIncremented === "boolean"
+			? data.isPKAutoIncremented
 			: true;
-		this.tableName = tableData.tableName;
-		this.tableFields = tableData.tableFields;
-		this.updateField = tableData.updateField;
+		this.tableName = data.tableName;
+		this.tableFields = data.tableFields;
+		this.updateField = data.updateField;
+
+		this.#tableFieldsSet = new Set([
+			...this.tableFields,
+			...(data.additionalSortingFields || []),
+		] as const);
 	}
 
 	compareFields = Helpers.compareFields;
@@ -55,6 +64,12 @@ export class BaseModel {
 	) {
 		if (order?.length) {
 			for (const o of order) {
+				if (!this.#tableFieldsSet.has(o.orderBy)) {
+					const allowedFields = Array.from(this.#tableFieldsSet).join(", ");
+
+					throw new Error(`Invalid orderBy: ${o.orderBy}. Allowed fields are: ${allowedFields}`);
+				}
+
 				if (!this.#sortingOrders.has(o.ordering)) {
 					throw new Error("Invalid ordering");
 				}

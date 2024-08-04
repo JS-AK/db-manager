@@ -48,6 +48,7 @@ export type TSearchParamsWithOperator = {
 	$nilike?: string;
 };
 export type TTable = {
+	additionalSortingFields?: string[];
 	createField: { title: string; type: "unix_timestamp" | "timestamp"; } | null;
 	isPKAutoIncremented?: boolean;
 	primaryKey: string | string[];
