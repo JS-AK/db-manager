@@ -2,9 +2,12 @@ import * as SharedTypes from "../../../shared-types/index.js";
 import * as Types from "./types.js";
 import { BaseView as Model } from "../model/index.js";
 
+type ConditionalDomainFieldsType<First, Second> = First extends Types.TDomainFields ? First : Partial<Second>;
+
 type BaseViewGeneric = {
 	AdditionalSortingFields?: string;
 	CoreFields: SharedTypes.TRawParams;
+	SearchFields?: Types.TDomainFields;
 };
 
 /**
@@ -40,8 +43,8 @@ export class BaseView<
 
 	compareQuery = {
 		getArrByParams: <T extends keyof BVG["CoreFields"]>(options: {
-			params: Types.TSearchParams<Partial<BVG["CoreFields"]>>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<BVG["CoreFields"]>>>;
+			params: Types.TSearchParams<ConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>;
+			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>>;
 			selected?: [T, ...T[]];
 			pagination?: SharedTypes.TPagination;
 			order?: {
@@ -50,19 +53,19 @@ export class BaseView<
 			}[];
 		}) => this.model.compareQuery.getArrByParams({ $and: options.params, $or: options.paramsOr }, options.selected as string[], options.pagination, options.order),
 		getCountByParams: (options: {
-			params: Types.TSearchParams<Partial<BVG["CoreFields"]>>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<BVG["CoreFields"]>>>;
+			params: Types.TSearchParams<ConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>;
+			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>>;
 		}) => this.model.compareQuery.getCountByParams({ $and: options.params, $or: options.paramsOr }),
 		getOneByParams: <T extends keyof BVG["CoreFields"]>(options: {
-			params: Types.TSearchParams<Partial<BVG["CoreFields"]>>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<BVG["CoreFields"]>>>;
+			params: Types.TSearchParams<ConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>;
+			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>>;
 			selected?: [T, ...T[]];
 		}) => this.model.compareQuery.getOneByParams({ $and: options.params, $or: options.paramsOr }, options.selected as string[]),
 	};
 
 	async getArrByParams<T extends keyof BVG["CoreFields"]>(options: {
-		params: Types.TSearchParams<Partial<BVG["CoreFields"]>>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<BVG["CoreFields"]>>>;
+		params: Types.TSearchParams<ConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>;
+		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>>;
 		selected?: [T, ...T[]];
 		pagination?: SharedTypes.TPagination; order?: {
 			orderBy: Extract<keyof BVG["CoreFields"], string> | (BVG["AdditionalSortingFields"] extends string ? BVG["AdditionalSortingFields"] : never);
@@ -78,15 +81,15 @@ export class BaseView<
 	}
 
 	async getCountByParams(options: {
-		params: Types.TSearchParams<Partial<BVG["CoreFields"]>>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<BVG["CoreFields"]>>>;
+		params: Types.TSearchParams<ConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>;
+		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>>;
 	}): Promise<number> {
 		return this.model.getCountByParams({ $and: options.params, $or: options.paramsOr });
 	}
 
 	async getOneByParams<T extends keyof BVG["CoreFields"]>(options: {
-		params: Types.TSearchParams<Partial<BVG["CoreFields"]>>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<BVG["CoreFields"]>>>;
+		params: Types.TSearchParams<ConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>;
+		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>>;
 		selected?: [T, ...T[]];
 	}): Promise<{ message?: string; one?: Pick<BVG["CoreFields"], T>; }> {
 		const one = await this.model.getOneByParams(

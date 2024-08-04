@@ -2,9 +2,12 @@ import * as SharedTypes from "../../../shared-types/index.js";
 import * as Types from "./types.js";
 import { BaseMaterializedView as Model } from "../model/index.js";
 
+type ConditionalDomainFieldsType<First, Second> = First extends Types.TDomainFields ? First : Partial<Second>;
+
 export type BaseMaterializedViewGeneric = {
 	AdditionalSortingFields?: string;
 	CoreFields: SharedTypes.TRawParams;
+	SearchFields?: Types.TDomainFields;
 };
 
 /**
@@ -40,8 +43,8 @@ export class BaseMaterializedView<
 
 	compareQuery = {
 		getArrByParams: <T extends keyof BMVG["CoreFields"]>(options: {
-			params: Types.TSearchParams<Partial<BMVG["CoreFields"]>>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<BMVG["CoreFields"]>>>;
+			params: Types.TSearchParams<ConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>;
+			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>>;
 			selected?: [T, ...T[]];
 			pagination?: SharedTypes.TPagination;
 			order?: {
@@ -50,19 +53,19 @@ export class BaseMaterializedView<
 			}[];
 		}) => this.model.compareQuery.getArrByParams({ $and: options.params, $or: options.paramsOr }, options.selected as string[], options.pagination, options.order),
 		getCountByParams: (options: {
-			params: Types.TSearchParams<Partial<BMVG["CoreFields"]>>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<BMVG["CoreFields"]>>>;
+			params: Types.TSearchParams<ConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>;
+			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>>;
 		}) => this.model.compareQuery.getCountByParams({ $and: options.params, $or: options.paramsOr }),
 		getOneByParams: <T extends keyof BMVG["CoreFields"]>(options: {
-			params: Types.TSearchParams<Partial<BMVG["CoreFields"]>>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<BMVG["CoreFields"]>>>;
+			params: Types.TSearchParams<ConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>;
+			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>>;
 			selected?: [T, ...T[]];
 		}) => this.model.compareQuery.getOneByParams({ $and: options.params, $or: options.paramsOr }, options.selected as string[]),
 	};
 
 	async getArrByParams<T extends keyof BMVG["CoreFields"]>(options: {
-		params: Types.TSearchParams<Partial<BMVG["CoreFields"]>>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<BMVG["CoreFields"]>>>;
+		params: Types.TSearchParams<ConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>;
+		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>>;
 		selected?: [T, ...T[]];
 		pagination?: SharedTypes.TPagination;
 		order?: {
@@ -79,15 +82,15 @@ export class BaseMaterializedView<
 	}
 
 	async getCountByParams(options: {
-		params: Types.TSearchParams<Partial<BMVG["CoreFields"]>>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<BMVG["CoreFields"]>>>;
+		params: Types.TSearchParams<ConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>;
+		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>>;
 	}): Promise<number> {
 		return this.model.getCountByParams({ $and: options.params, $or: options.paramsOr });
 	}
 
 	async getOneByParams<T extends keyof BMVG["CoreFields"]>(options: {
-		params: Types.TSearchParams<Partial<BMVG["CoreFields"]>>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<BMVG["CoreFields"]>>>;
+		params: Types.TSearchParams<ConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>;
+		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>>;
 		selected?: [T, ...T[]];
 	}): Promise<{ message?: string; one?: Pick<BMVG["CoreFields"], T>; }> {
 		const one = await this.model.getOneByParams(

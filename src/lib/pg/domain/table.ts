@@ -2,10 +2,14 @@ import * as SharedTypes from "../../../shared-types/index.js";
 import * as Types from "./types.js";
 import { BaseTable as Model } from "../model/index.js";
 
+type ConditionalRawParamsType<First, Second> = First extends SharedTypes.TRawParams ? First : Partial<Second>;
+type ConditionalDomainFieldsType<First, Second> = First extends Types.TDomainFields ? First : Partial<Second>;
+
 export type BaseTableGeneric = {
 	AdditionalSortingFields?: string;
 	CreateFields?: SharedTypes.TRawParams;
 	CoreFields: SharedTypes.TRawParams;
+	SearchFields?: Types.TDomainFields;
 	UpdateFields?: SharedTypes.TRawParams;
 };
 
@@ -57,18 +61,18 @@ export class BaseTable<
 
 	compareQuery = {
 		createOne: (
-			recordParams: BTG["CreateFields"] extends SharedTypes.TRawParams ? BTG["CreateFields"] : Partial<BTG["CoreFields"]>,
+			recordParams: ConditionalRawParamsType<BTG["CreateFields"], BTG["CoreFields"]>,
 			saveOptions?: { returningFields?: Extract<keyof BTG["CoreFields"], string>[]; },
 		) => this.model.compareQuery.save(recordParams, saveOptions),
 		deleteAll: () => this.model.compareQuery.deleteAll(),
 		deleteByParams: (options: {
-			params: Types.TSearchParams<Partial<BTG["CoreFields"]>>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<BTG["CoreFields"]>>>;
+			params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
+			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
 		}) => this.model.compareQuery.deleteByParams({ $and: options.params, $or: options.paramsOr }),
 		deleteOneByPk: <T = string | number>(pk: T) => this.model.compareQuery.deleteOneByPk(pk),
 		getArrByParams: <T extends keyof BTG["CoreFields"]>(options: {
-			params: Types.TSearchParams<Partial<BTG["CoreFields"]>>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<BTG["CoreFields"]>>>;
+			params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
+			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
 			selected?: [T, ...T[]];
 			pagination?: SharedTypes.TPagination;
 			order?: {
@@ -77,40 +81,40 @@ export class BaseTable<
 			}[];
 		}) => this.model.compareQuery.getArrByParams({ $and: options.params, $or: options.paramsOr }, options.selected as string[], options.pagination, options.order),
 		getCountByParams: (options: {
-			params: Types.TSearchParams<Partial<BTG["CoreFields"]>>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<BTG["CoreFields"]>>>;
+			params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
+			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
 		}) => this.model.compareQuery.getCountByParams({ $and: options.params, $or: options.paramsOr }),
 		getCountByPks: <T = string | number>(pks: T[]) => this.model.compareQuery.getCountByPks(pks),
 		getCountByPksAndParams: <T = string | number>(
 			pks: T[],
 			options: {
-				params: Types.TSearchParams<Partial<BTG["CoreFields"]>>;
-				paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<BTG["CoreFields"]>>>;
+				params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
+				paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
 			},
 		) => this.model.compareQuery.getCountByPksAndParams(pks, { $and: options.params, $or: options.paramsOr }),
 		getOneByParams: <T extends keyof BTG["CoreFields"]>(options: {
-			params: Types.TSearchParams<Partial<BTG["CoreFields"]>>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<BTG["CoreFields"]>>>;
+			params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
+			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
 			selected?: [T, ...T[]];
 		}) => this.model.compareQuery.getOneByParams({ $and: options.params, $or: options.paramsOr }, options.selected as string[]),
 		getOneByPk: <T = string | number>(pk: T) => this.model.compareQuery.getOneByPk(pk),
 		updateByParams: <T extends Extract<keyof BTG["CoreFields"], string>[] = Extract<keyof BTG["CoreFields"], string>[]>(
 			queryConditions: {
-				params: Types.TSearchParams<Partial<BTG["CoreFields"]>>;
-				paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<BTG["CoreFields"]>>>;
+				params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
+				paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
 				returningFields?: T;
 			},
-			updateFields: BTG["UpdateFields"] extends SharedTypes.TRawParams ? BTG["UpdateFields"] : Partial<BTG["CoreFields"]>,
+			updateFields: ConditionalRawParamsType<BTG["UpdateFields"], BTG["CoreFields"]>,
 		) => this.model.compareQuery.updateByParams({ $and: queryConditions.params, $or: queryConditions.paramsOr, returningFields: queryConditions.returningFields }, updateFields),
 		updateOneByPk: <T extends string | number = string | number, R extends Extract<keyof BTG["CoreFields"], string>[] = Extract<keyof BTG["CoreFields"], string>[]>(
 			primaryKeyValue: T,
-			updateFields: BTG["UpdateFields"] extends SharedTypes.TRawParams ? BTG["UpdateFields"] : Partial<BTG["CoreFields"]>,
+			updateFields: ConditionalRawParamsType<BTG["UpdateFields"], BTG["CoreFields"]>,
 			updateOptions?: { returningFields?: R; },
 		) => this.model.compareQuery.updateOneByPk(primaryKeyValue, updateFields, updateOptions),
 	};
 
 	async createOne<T extends Extract<keyof BTG["CoreFields"], string>[] = Extract<keyof BTG["CoreFields"], string>[]>(
-		recordParams: BTG["CreateFields"] extends SharedTypes.TRawParams ? BTG["CreateFields"] : Partial<BTG["CoreFields"]>,
+		recordParams: ConditionalRawParamsType<BTG["CreateFields"], BTG["CoreFields"]>,
 		saveOptions?: { returningFields?: T; },
 	): Promise<T extends undefined ? BTG["CoreFields"] : Pick<BTG["CoreFields"], T[0]>> {
 		const res = await this.model.save(recordParams, saveOptions);
@@ -125,8 +129,8 @@ export class BaseTable<
 	}
 
 	async deleteByParams(options: {
-		params: Types.TSearchParams<Partial<BTG["CoreFields"]>>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<BTG["CoreFields"]>>>;
+		params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
+		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
 	}): Promise<null> {
 		return this.model.deleteByParams(
 			{ $and: options.params, $or: options.paramsOr },
@@ -138,8 +142,8 @@ export class BaseTable<
 	}
 
 	async getArrByParams<T extends keyof BTG["CoreFields"]>(this: BaseTable<M, BTG>, options: {
-		params: Types.TSearchParams<Partial<BTG["CoreFields"]>>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<BTG["CoreFields"]>>>;
+		params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
+		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
 		selected?: [T, ...T[]];
 		pagination?: SharedTypes.TPagination;
 		order?: {
@@ -162,8 +166,8 @@ export class BaseTable<
 	async getCountByPksAndParams<T = string | number>(
 		pks: T[],
 		options: {
-			params: Types.TSearchParams<Partial<BTG["CoreFields"]>>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<BTG["CoreFields"]>>>;
+			params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
+			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
 		},
 	): Promise<number> {
 		return this.model.getCountByPksAndParams(
@@ -173,15 +177,15 @@ export class BaseTable<
 	}
 
 	async getCountByParams(options: {
-		params: Types.TSearchParams<Partial<BTG["CoreFields"]>>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<BTG["CoreFields"]>>>;
+		params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
+		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
 	}): Promise<number> {
 		return this.model.getCountByParams({ $and: options.params, $or: options.paramsOr });
 	}
 
 	async getOneByParams<T extends keyof BTG["CoreFields"]>(options: {
-		params: Types.TSearchParams<Partial<BTG["CoreFields"]>>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<BTG["CoreFields"]>>>;
+		params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
+		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
 		selected?: [T, ...T[]];
 	}): Promise<{ message?: string; one?: Pick<BTG["CoreFields"], T>; }> {
 		const one = await this.model.getOneByParams(
@@ -204,18 +208,18 @@ export class BaseTable<
 
 	async updateByParams<T extends Extract<keyof BTG["CoreFields"], string>[] = Extract<keyof BTG["CoreFields"], string>[]>(
 		queryConditions: {
-			params: Types.TSearchParams<Partial<BTG["CoreFields"]>>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Partial<BTG["CoreFields"]>>>;
+			params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
+			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
 			returningFields?: T;
 		},
-		updateFields: BTG["UpdateFields"] extends SharedTypes.TRawParams ? BTG["UpdateFields"] : Partial<BTG["CoreFields"]>,
+		updateFields: ConditionalRawParamsType<BTG["UpdateFields"], BTG["CoreFields"]>,
 	): Promise<BTG["CoreFields"][]> {
 		return this.model.updateByParams({ $and: queryConditions.params, $or: queryConditions.paramsOr, returningFields: queryConditions.returningFields }, updateFields);
 	}
 
 	async updateOneByPk<T extends string | number = string | number, R extends Extract<keyof BTG["CoreFields"], string>[] = Extract<keyof BTG["CoreFields"], string>[]>(
 		primaryKeyValue: T,
-		updateFields: BTG["UpdateFields"] extends SharedTypes.TRawParams ? BTG["UpdateFields"] : Partial<BTG["CoreFields"]>,
+		updateFields: ConditionalRawParamsType<BTG["UpdateFields"], BTG["CoreFields"]>,
 		updateOptions?: { returningFields?: R; },
 	): Promise<BTG["CoreFields"]> {
 		return this.model.updateOneByPk(primaryKeyValue, updateFields, updateOptions);

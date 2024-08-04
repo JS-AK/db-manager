@@ -1,12 +1,17 @@
 import mysql from "mysql2/promise";
 
+type ClearDate = Omit<Date, Extract<keyof Date, string>>;
+type ClearString = Omit<string, Extract<keyof string, string>>;
+type ClearNumber = Omit<number, Extract<keyof number, string>>;
+type ClearBoolean = Omit<boolean, Extract<keyof boolean, string>>;
+
 export type ResultSetHeader = mysql.ResultSetHeader;
 export type RowDataPacket = mysql.RowDataPacket;
 
-export type SND = string | number | Date;
-export type SNDArray = string[] | number[] | Date[];
-export type SNDB = SND | boolean;
-export type SNDBArray = SNDArray | boolean[];
+export type SND = ClearString | ClearNumber | ClearDate;
+export type SNDArray = ClearString[] | ClearNumber[] | ClearDate[];
+export type SNDB = SND | ClearBoolean;
+export type SNDBArray = SNDArray | ClearBoolean[];
 export type TDBCreds = mysql.PoolOptions & { database: string; host: string; password: string; port: number; user: string; };
 export type TField = { key: string; sign?: string; operator: TOperator; };
 export type TOperator =
@@ -33,9 +38,9 @@ export type TSearchParams = {
 	| undefined;
 };
 export type TSearchParamsWithOperator = {
-	$eq?: SNDB | null;
-	$ne?: SNDB | null;
-	$custom?: { sign: string; value: string | number; };
+	$eq?: SNDB | SNDBArray | null | object;
+	$ne?: SNDB | null | object;
+	$custom?: { sign: string; value: SNDB; };
 	$gt?: SND;
 	$gte?: SND;
 	$lt?: SND;
