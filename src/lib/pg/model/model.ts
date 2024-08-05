@@ -7,11 +7,15 @@ import * as Types from "./types.js";
 import * as connection from "../connection.js";
 import { QueryBuilder } from "../query-builder/index.js";
 import queries from "./queries.js";
+import { queryLogged } from "../helpers/index.js";
 
 export class BaseModel {
 	#insertOptions;
 	#sortingOrders = new Set(["ASC", "DESC"]);
 	#tableFieldsSet;
+	#isLoggerEnabled?: boolean;
+	#logger?: SharedTypes.TLogger;
+	#executeSql;
 
 	createField;
 	pool: pg.Pool;
@@ -32,11 +36,32 @@ export class BaseModel {
 		this.tableFields = data.tableFields;
 		this.updateField = data.updateField;
 
-		this.#insertOptions = options?.insertOptions;
 		this.#tableFieldsSet = new Set([
 			...this.tableFields,
 			...(data.additionalSortingFields || []),
 		] as const);
+
+		const { insertOptions, isLoggerEnabled, logger } = options || {};
+
+		this.#insertOptions = insertOptions;
+		this.#isLoggerEnabled = isLoggerEnabled;
+
+		if (isLoggerEnabled) {
+			// eslint-disable-next-line no-console
+			const resultLogger = logger || { error: console.error, info: console.log };
+
+			this.#logger = resultLogger;
+
+			this.#executeSql = async <T extends pg.QueryResultRow>(sql: {
+				query: string;
+				values: unknown[];
+			}) => (await (queryLogged<T>).bind({ client: this.pool, logger: resultLogger })(sql.query, sql.values));
+		} else {
+			this.#executeSql = async <T extends pg.QueryResultRow>(sql: {
+				query: string;
+				values: unknown[];
+			}) => (await this.pool.query<T>(sql.query, sql.values));
+		}
 	}
 
 	compareFields = Helpers.compareFields;
@@ -197,7 +222,7 @@ export class BaseModel {
 	async deleteAll(): Promise<void> {
 		const sql = this.compareQuery.deleteAll();
 
-		await this.pool.query(sql.query, sql.values);
+		await this.#executeSql(sql);
 
 		return;
 	}
@@ -216,19 +241,19 @@ export class BaseModel {
 	): Promise<null> {
 		const sql = this.compareQuery.deleteByParams(params);
 
-		await this.pool.query(sql.query, sql.values);
+		await this.#executeSql(sql);
 
 		return null;
 	}
 
-	async getArrByParams(
+	async getArrByParams<T extends pg.QueryResultRow>(
 		params: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
 		selected = ["*"],
 		pagination?: SharedTypes.TPagination,
 		order?: { orderBy: string; ordering: SharedTypes.TOrdering; }[],
 	) {
 		const sql = this.compareQuery.getArrByParams(params, selected, pagination, order);
-		const { rows } = await this.pool.query(sql.query, sql.values);
+		const { rows } = await this.#executeSql<T>(sql);
 
 		return rows;
 	}
@@ -237,7 +262,7 @@ export class BaseModel {
 		if (!this.primaryKey) { throw new Error("Primary key not specified"); }
 
 		const sql = this.compareQuery.getCountByPks(pks);
-		const { rows: [entity] } = await this.pool.query<{ count: string; }>(sql.query, sql.values);
+		const { rows: [entity] } = await this.#executeSql(sql);
 
 		return Number(entity?.count) || 0;
 	}
@@ -249,24 +274,24 @@ export class BaseModel {
 		if (!this.primaryKey) { throw new Error("Primary key not specified"); }
 
 		const sql = this.compareQuery.getCountByPksAndParams(pks, params);
-		const { rows: [entity] } = await this.pool.query<{ count: string; }>(sql.query, sql.values);
+		const { rows: [entity] } = await this.#executeSql(sql);
 
 		return Number(entity?.count) || 0;
 	}
 
 	async getCountByParams(params: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; }) {
 		const sql = this.compareQuery.getCountByParams(params);
-		const { rows: [entity] } = await this.pool.query<{ count: string; }>(sql.query, sql.values);
+		const { rows: [entity] } = await this.#executeSql(sql);
 
 		return Number(entity?.count) || 0;
 	}
 
-	async getOneByParams(
+	async getOneByParams<T extends pg.QueryResultRow>(
 		params: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
 		selected = ["*"],
 	) {
 		const sql = this.compareQuery.getOneByParams(params, selected);
-		const { rows: [entity] } = await this.pool.query(sql.query, sql.values);
+		const { rows: [entity] } = await this.#executeSql<T>(sql);
 
 		return entity;
 	}
@@ -275,17 +300,17 @@ export class BaseModel {
 		if (!this.primaryKey) { throw new Error("Primary key not specified"); }
 
 		const sql = this.compareQuery.getOneByPk(pk);
-		const { rows: [entity] } = await this.pool.query(sql.query, sql.values);
+		const { rows: [entity] } = await this.#executeSql(sql);
 
 		return entity;
 	}
 
-	async save(
+	async save<T extends pg.QueryResultRow>(
 		recordParams = {},
 		saveOptions?: { returningFields?: string[]; },
 	) {
 		const sql = this.compareQuery.save(recordParams, saveOptions);
-		const { rows: [entity] } = await this.pool.query(sql.query, sql.values);
+		const { rows: [entity] } = await this.#executeSql<T>(sql);
 
 		return entity;
 	}
@@ -295,12 +320,12 @@ export class BaseModel {
 		updateFields: SharedTypes.TRawParams = {},
 	) {
 		const sql = this.compareQuery.updateByParams(queryConditions, updateFields);
-		const { rows } = await this.pool.query(sql.query, sql.values);
+		const { rows } = await this.#executeSql(sql);
 
 		return rows;
 	}
 
-	async updateOneByPk<T extends string | number = string | number>(
+	async updateOneByPk<Q extends pg.QueryResultRow, T extends string | number = string | number>(
 		primaryKeyValue: T,
 		updateFields: SharedTypes.TRawParams = {},
 		updateOptions?: { returningFields?: string[]; },
@@ -308,7 +333,7 @@ export class BaseModel {
 		if (!this.primaryKey) { throw new Error("Primary key not specified"); }
 
 		const sql = this.compareQuery.updateOneByPk(primaryKeyValue, updateFields, updateOptions);
-		const { rows: [entity] } = await this.pool.query(sql.query, sql.values);
+		const { rows: [entity] } = await this.#executeSql<Q>(sql);
 
 		return entity;
 	}
@@ -322,7 +347,11 @@ export class BaseModel {
 	}) {
 		const { client, tableName } = options || {};
 
-		return new QueryBuilder(tableName || this.tableName, client || this.pool);
+		return new QueryBuilder(
+			tableName ?? this.tableName,
+			client ?? this.pool,
+			{ isLoggerEnabled: this.#isLoggerEnabled, logger: this.#logger },
+		);
 	}
 
 	// STATIC METHODS

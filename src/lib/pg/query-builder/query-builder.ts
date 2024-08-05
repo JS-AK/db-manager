@@ -4,6 +4,7 @@ import * as DomainTypes from "../domain/types.js";
 import * as ModelTypes from "../model/types.js";
 import * as SharedTypes from "../../../shared-types/index.js";
 import { QueryHandler } from "./query-handler.js";
+import { queryLogged } from "../helpers/index.js";
 
 export class QueryBuilder {
 	#dataSourceRaw;
@@ -11,11 +12,17 @@ export class QueryBuilder {
 
 	#client;
 	#queryHandler;
+	#logger?: SharedTypes.TLogger;
+	#executeSql;
 
 	constructor(
 		dataSource: string,
 		client: pg.Pool | pg.PoolClient,
-		queryHandler?: QueryHandler,
+		options?: {
+			isLoggerEnabled?: boolean;
+			logger?: SharedTypes.TLogger;
+			queryHandler?: QueryHandler;
+		},
 	) {
 		this.#dataSourceRaw = dataSource;
 
@@ -28,18 +35,37 @@ export class QueryBuilder {
 			this.#dataSourcePrepared = dataSource;
 		}
 
+		const { isLoggerEnabled, logger, queryHandler } = options || {};
+
 		this.#queryHandler = queryHandler || new QueryHandler({
 			dataSourcePrepared: this.#dataSourcePrepared,
 			dataSourceRaw: this.#dataSourceRaw,
 		});
 
 		this.#client = client;
+
+		if (isLoggerEnabled) {
+			// eslint-disable-next-line no-console
+			const resultLogger = logger || { error: console.error, info: console.log };
+
+			this.#logger = resultLogger;
+
+			this.#executeSql = async <T extends pg.QueryResultRow>(sql: {
+				query: string;
+				values: unknown[];
+			}) => (await (queryLogged<T>).bind({ client: this.#client, logger: resultLogger })(sql.query, sql.values));
+		} else {
+			this.#executeSql = async <T extends pg.QueryResultRow>(sql: {
+				query: string;
+				values: unknown[];
+			}) => (await this.#client.query<T>(sql.query, sql.values));
+		}
 	}
 
 	clone() {
-		const main = new QueryHandler(this.#queryHandler.optionsToClone);
+		const queryHandler = new QueryHandler(this.#queryHandler.optionsToClone);
 
-		return new QueryBuilder(this.#dataSourceRaw, this.#client, main);
+		return new QueryBuilder(this.#dataSourceRaw, this.#client, { logger: this.#logger, queryHandler });
 	}
 
 	compareQuery(): { query: string; values: unknown[]; } {
@@ -298,6 +324,6 @@ export class QueryBuilder {
 	async execute<T extends pg.QueryResultRow>() {
 		const sql = this.compareQuery();
 
-		return (await this.#client.query<T>(sql.query, sql.values)).rows;
+		return (await this.#executeSql<T>(sql)).rows;
 	}
 }
