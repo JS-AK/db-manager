@@ -8,7 +8,7 @@ import { QueryBuilder } from "./query-builder.js";
  */
 export class QueryBuilderFactory {
 	#client: pg.Pool | pg.PoolClient;
-	#isLoggerEnabled?: boolean;
+	#isLoggerEnabled;
 	#logger?: SharedTypes.TLogger;
 
 	/**
@@ -19,7 +19,7 @@ export class QueryBuilderFactory {
 	constructor(
 		client: pg.Pool | pg.PoolClient,
 		options?: {
-			isLoggerEnabled?: boolean;
+			isLoggerEnabled?: true;
 			logger?: SharedTypes.TLogger;
 		},
 	) {

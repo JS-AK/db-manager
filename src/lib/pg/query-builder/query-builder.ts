@@ -19,7 +19,7 @@ export class QueryBuilder {
 		dataSource: string,
 		client: pg.Pool | pg.PoolClient,
 		options?: {
-			isLoggerEnabled?: boolean;
+			isLoggerEnabled?: true;
 			logger?: SharedTypes.TLogger;
 			queryHandler?: QueryHandler;
 		},

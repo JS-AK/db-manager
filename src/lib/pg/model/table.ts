@@ -16,7 +16,7 @@ export class BaseTable {
 	#insertOptions;
 	#sortingOrders = new Set(["ASC", "DESC"]);
 	#tableFieldsSet;
-	#isLoggerEnabled?: boolean;
+	#isLoggerEnabled;
 	#logger?: SharedTypes.TLogger;
 	#executeSql;
 

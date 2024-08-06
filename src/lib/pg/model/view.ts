@@ -6,6 +6,7 @@ import * as Types from "./types.js";
 import * as connection from "../connection.js";
 import { QueryBuilder } from "../query-builder/index.js";
 import queries from "./queries.js";
+import { queryLogged } from "../helpers/index.js";
 
 /**
  * @experimental
@@ -13,6 +14,9 @@ import queries from "./queries.js";
 export class BaseView {
 	#sortingOrders = new Set(["ASC", "DESC"]);
 	#coreFieldsSet;
+	#isLoggerEnabled;
+	#logger?: SharedTypes.TLogger;
+	#executeSql;
 
 	pool: pg.Pool;
 	name;
@@ -21,6 +25,7 @@ export class BaseView {
 	constructor(
 		data: { additionalSortingFields?: string[]; coreFields: string[]; name: string; },
 		dbCreds: Types.TDBCreds,
+		options?: Types.TVOptions,
 	) {
 		this.pool = connection.getStandardPool(dbCreds);
 		this.name = data.name;
@@ -30,6 +35,27 @@ export class BaseView {
 			...this.coreFields,
 			...(data.additionalSortingFields || []),
 		] as const);
+
+		const { isLoggerEnabled, logger } = options || {};
+
+		this.#isLoggerEnabled = isLoggerEnabled;
+
+		if (isLoggerEnabled) {
+			// eslint-disable-next-line no-console
+			const resultLogger = logger || { error: console.error, info: console.log };
+
+			this.#logger = resultLogger;
+
+			this.#executeSql = async <T extends pg.QueryResultRow>(sql: {
+				query: string;
+				values: unknown[];
+			}) => (await (queryLogged<T>).bind({ client: this.pool, logger: resultLogger })(sql.query, sql.values));
+		} else {
+			this.#executeSql = async <T extends pg.QueryResultRow>(sql: {
+				query: string;
+				values: unknown[];
+			}) => (await this.pool.query<T>(sql.query, sql.values));
+		}
 	}
 
 	compareFields = Helpers.compareFields;
@@ -49,7 +75,7 @@ export class BaseView {
 
 						throw new Error(`Invalid orderBy: ${o.orderBy}. Allowed fields are: ${allowedFields}`);
 					}
-					
+
 					if (!this.#sortingOrders.has(o.ordering)) { throw new Error("Invalid ordering"); }
 				}
 			}
@@ -97,14 +123,14 @@ export class BaseView {
 		},
 	};
 
-	async getArrByParams(
+	async getArrByParams<T extends pg.QueryResultRow>(
 		params: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
 		selected = ["*"],
 		pagination?: SharedTypes.TPagination,
 		order?: { orderBy: string; ordering: SharedTypes.TOrdering; }[],
 	) {
 		const sql = this.compareQuery.getArrByParams(params, selected, pagination, order);
-		const { rows } = await this.pool.query(sql.query, sql.values);
+		const { rows } = await this.#executeSql<T>(sql);
 
 		return rows;
 	}
@@ -116,12 +142,12 @@ export class BaseView {
 		return Number(entity?.count) || 0;
 	}
 
-	async getOneByParams(
+	async getOneByParams<T extends pg.QueryResultRow>(
 		params: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
 		selected = ["*"],
 	) {
 		const sql = this.compareQuery.getOneByParams(params, selected);
-		const { rows: [entity] } = await this.pool.query(sql.query, sql.values);
+		const { rows: [entity] } = await this.#executeSql<T>(sql);
 
 		return entity;
 	}
@@ -132,7 +158,11 @@ export class BaseView {
 	}) {
 		const { client, name } = options || {};
 
-		return new QueryBuilder(name || this.name, client || this.pool);
+		return new QueryBuilder(
+			name ?? this.name,
+			client ?? this.pool,
+			{ isLoggerEnabled: this.#isLoggerEnabled, logger: this.#logger },
+		);
 	}
 
 	// STATIC METHODS

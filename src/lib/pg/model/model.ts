@@ -13,7 +13,7 @@ export class BaseModel {
 	#insertOptions;
 	#sortingOrders = new Set(["ASC", "DESC"]);
 	#tableFieldsSet;
-	#isLoggerEnabled?: boolean;
+	#isLoggerEnabled;
 	#logger?: SharedTypes.TLogger;
 	#executeSql;
 
