@@ -903,12 +903,12 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						async () => {
 							const entity = await testTable.updateOneByPk(id, updatedParams);
 
-							assert.equal(entity.description, updatedParams.description);
-							assert.equal(entity.meta.firstName, updatedParams.meta.firstName);
-							assert.equal(entity.meta.lastName, updatedParams.meta.lastName);
-							assert.equal(entity.number_key, updatedParams.number_key);
-							assert.equal(entity.number_range, updatedParams.number_range);
-							assert.equal(entity.title, updatedParams.title);
+							assert.equal(entity?.description, updatedParams.description);
+							assert.equal(entity?.meta.firstName, updatedParams.meta.firstName);
+							assert.equal(entity?.meta.lastName, updatedParams.meta.lastName);
+							assert.equal(entity?.number_key, updatedParams.number_key);
+							assert.equal(entity?.number_range, updatedParams.number_range);
+							assert.equal(entity?.title, updatedParams.title);
 						},
 					);
 				}

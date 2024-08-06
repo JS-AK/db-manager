@@ -1,5 +1,7 @@
 import pg from "pg";
 
+import * as SharedTypes from "../../../shared-types/index.js";
+
 type ClearDate = Omit<Date, Extract<keyof Date, string>>;
 type ClearString = Omit<string, Extract<keyof string, string>>;
 type ClearNumber = Omit<number, Extract<keyof number, string>>;
@@ -10,8 +12,12 @@ export type SNDArray = ClearString[] | ClearNumber[] | ClearDate[];
 export type SNDB = SND | ClearBoolean;
 export type SNDBArray = SNDArray | ClearBoolean[];
 export type TDBCreds = pg.PoolConfig & { database: string; host: string; password: string; port: number; user: string; };
-export type TDBOptions = { insertOptions?: { onConflict: string; }; };
+export type TDBOptions = TMVOptions & { insertOptions?: { onConflict: string; }; };
 export type TField = { key: string; sign?: string; operator: TOperator; };
+export type TMVOptions = {
+	isLoggerEnabled?: true;
+	logger?: SharedTypes.TLogger;
+};
 export type TOperator =
 	| "="
 	| "<>"
@@ -36,6 +42,7 @@ export type TOperator =
 	| "$nilike"
 	| "$nin"
 	| "$withoutParameters";
+export type TSOptions = TMVOptions;
 export type TSearchParams = {
 	[key: string]:
 	| TSearchParamsWithOperator
@@ -77,3 +84,4 @@ export type TTable = {
 	tableName: string;
 	updateField: { title: string; type: "unix_timestamp" | "timestamp"; } | null;
 };
+export type TVOptions = TMVOptions;

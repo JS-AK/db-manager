@@ -117,7 +117,7 @@ export class BaseTable<
 		recordParams: ConditionalRawParamsType<BTG["CreateFields"], BTG["CoreFields"]>,
 		saveOptions?: { returningFields?: T; },
 	): Promise<T extends undefined ? BTG["CoreFields"] : Pick<BTG["CoreFields"], T[0]>> {
-		const res = await this.model.save(recordParams, saveOptions);
+		const res = await this.model.save<T extends undefined ? BTG["CoreFields"] : Pick<BTG["CoreFields"], T[0]>>(recordParams, saveOptions);
 
 		if (!res) throw new Error(`Save to ${this.model.tableName} table error`);
 
@@ -151,7 +151,7 @@ export class BaseTable<
 			ordering: SharedTypes.TOrdering;
 		}[];
 	}): Promise<Array<Pick<BTG["CoreFields"], T>>> {
-		return this.model.getArrByParams(
+		return this.model.getArrByParams<Pick<BTG["CoreFields"], T>>(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 			options.pagination,
@@ -188,7 +188,7 @@ export class BaseTable<
 		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
 		selected?: [T, ...T[]];
 	}): Promise<{ message?: string; one?: Pick<BTG["CoreFields"], T>; }> {
-		const one = await this.model.getOneByParams(
+		const one = await this.model.getOneByParams<Pick<BTG["CoreFields"], T>>(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 		);
@@ -221,7 +221,9 @@ export class BaseTable<
 		primaryKeyValue: T,
 		updateFields: ConditionalRawParamsType<BTG["UpdateFields"], BTG["CoreFields"]>,
 		updateOptions?: { returningFields?: R; },
-	): Promise<BTG["CoreFields"]> {
-		return this.model.updateOneByPk(primaryKeyValue, updateFields, updateOptions);
+	): Promise<BTG["CoreFields"] | undefined> {
+		const one = await this.model.updateOneByPk<BTG["CoreFields"]>(primaryKeyValue, updateFields, updateOptions);
+
+		return one;
 	}
 }

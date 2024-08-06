@@ -113,7 +113,7 @@ export class BaseDomain<TC extends {
 		recordParams: ConditionalRawParamsType<TC["CreateFields"], TC["TableFields"]>,
 		saveOptions?: { returningFields?: T; },
 	): Promise<T extends undefined ? TC["TableFields"] : Pick<TC["TableFields"], T[0]>> {
-		const res = await this.model.save(recordParams, saveOptions);
+		const res = await this.model.save<T extends undefined ? TC["TableFields"] : Pick<TC["TableFields"], T[0]>>(recordParams, saveOptions);
 
 		if (!res) throw new Error(`Save to ${this.model.tableName} table error`);
 
@@ -147,7 +147,7 @@ export class BaseDomain<TC extends {
 			ordering: SharedTypes.TOrdering;
 		}[];
 	}): Promise<Array<Pick<TC["TableFields"], T>>> {
-		return this.model.getArrByParams(
+		return this.model.getArrByParams<Pick<TC["TableFields"], T>>(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 			options.pagination,
@@ -187,10 +187,14 @@ export class BaseDomain<TC extends {
 		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>>;
 		selected?: [T, ...T[]];
 	}): Promise<Pick<TC["TableFields"], T>> {
-		return this.model.getOneByParams(
+		const one = await this.model.getOneByParams<Pick<TC["TableFields"], T>>(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 		);
+
+		if (!one) throw new Error("Could not find guaranteed one by params");
+
+		return one;
 	}
 
 	async getOneByParams<T extends keyof TC["TableFields"]>(options: {
@@ -198,7 +202,7 @@ export class BaseDomain<TC extends {
 		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>>;
 		selected?: [T, ...T[]];
 	}): Promise<{ message?: string; one?: Pick<TC["TableFields"], T>; }> {
-		const one = await this.model.getOneByParams(
+		const one = await this.model.getOneByParams<Pick<TC["TableFields"], T>>(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 		);
@@ -231,7 +235,9 @@ export class BaseDomain<TC extends {
 		primaryKeyValue: T,
 		updateFields: ConditionalRawParamsType<TC["UpdateFields"], TC["TableFields"]>,
 		updateOptions?: { returningFields?: R; },
-	): Promise<TC["TableFields"]> {
-		return this.model.updateOneByPk(primaryKeyValue, updateFields, updateOptions);
+	): Promise<TC["TableFields"] | undefined> {
+		const one = await this.model.updateOneByPk<TC["TableFields"]>(primaryKeyValue, updateFields, updateOptions);
+
+		return one;
 	}
 }

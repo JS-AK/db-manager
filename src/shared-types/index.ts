@@ -1,3 +1,4 @@
+export type TLogger = { error: (str: string) => void; info: (str: string) => void; };
 export type TOrdering = "ASC" | "DESC";
 export type TPagination = { limit: number; offset: number; };
 export type TPrimaryKeyField = string | string[];
