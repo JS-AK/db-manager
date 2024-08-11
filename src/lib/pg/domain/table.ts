@@ -1,3 +1,5 @@
+import pg from "pg";
+
 import * as SharedTypes from "../../../shared-types/index.js";
 import * as Types from "./types.js";
 import { BaseTable as Model } from "../model/index.js";
@@ -23,7 +25,9 @@ export class BaseTable<
 	#tableFields;
 	#updateField;
 
-	model;
+	#initialArgs;
+
+	model: M;
 
 	constructor(data: Types.TDomain<M>) {
 		if (!(data.model instanceof Model)) {
@@ -37,6 +41,8 @@ export class BaseTable<
 		this.#tableName = this.model.tableName;
 		this.#tableFields = this.model.tableFields;
 		this.#updateField = this.model.updateField;
+
+		this.#initialArgs = { data };
 	}
 
 	get createField() {
@@ -63,7 +69,7 @@ export class BaseTable<
 		createOne: (
 			recordParams: ConditionalRawParamsType<BTG["CreateFields"], BTG["CoreFields"]>,
 			saveOptions?: { returningFields?: Extract<keyof BTG["CoreFields"], string>[]; },
-		) => this.model.compareQuery.save(recordParams, saveOptions),
+		) => this.model.compareQuery.createOne(recordParams, saveOptions),
 		deleteAll: () => this.model.compareQuery.deleteAll(),
 		deleteByParams: (options: {
 			params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
@@ -113,11 +119,37 @@ export class BaseTable<
 		) => this.model.compareQuery.updateOneByPk(primaryKeyValue, updateFields, updateOptions),
 	};
 
+	/**
+	 * @experimental
+	 */
+	setPoolClient(client: pg.PoolClient): BaseTable<M, BTG> {
+		const baseTable = new BaseTable<M, BTG>(this.#initialArgs.data);
+
+		baseTable.model = baseTable.model.setPoolClient(client) as M;
+
+		return baseTable;
+	}
+
 	async createOne<T extends Extract<keyof BTG["CoreFields"], string>[] = Extract<keyof BTG["CoreFields"], string>[]>(
 		recordParams: ConditionalRawParamsType<BTG["CreateFields"], BTG["CoreFields"]>,
 		saveOptions?: { returningFields?: T; },
 	): Promise<T extends undefined ? BTG["CoreFields"] : Pick<BTG["CoreFields"], T[0]>> {
-		const res = await this.model.save<T extends undefined ? BTG["CoreFields"] : Pick<BTG["CoreFields"], T[0]>>(recordParams, saveOptions);
+		const res = await this.model.createOne<T extends undefined ? BTG["CoreFields"] : Pick<BTG["CoreFields"], T[0]>>(recordParams, saveOptions);
+
+		if (!res) throw new Error(`Save to ${this.model.tableName} table error`);
+
+		return res;
+	}
+
+	async createMany<T extends Extract<keyof BTG["CoreFields"], string>[] = Extract<keyof BTG["CoreFields"], string>[]>(
+		recordParams: ConditionalRawParamsType<BTG["CreateFields"], BTG["CoreFields"]>[],
+		saveOptions?: { returningFields?: T; },
+	): Promise<(T extends undefined ? BTG["CoreFields"][] : Pick<BTG["CoreFields"], T[0]>[])[]> {
+		const res = await this.model.createMany<
+			T extends undefined
+				? BTG["CoreFields"][]
+				: Pick<BTG["CoreFields"], T[0]>[]
+		>(recordParams, saveOptions);
 
 		if (!res) throw new Error(`Save to ${this.model.tableName} table error`);
 

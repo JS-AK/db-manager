@@ -1,4 +1,50 @@
 export default {
+	createMany(data: {
+		fields: string[][];
+		headers: string[];
+		onConflict: string;
+		returning?: string[];
+		tableName: string;
+	}) {
+		let idx = 0;
+
+		return `INSERT INTO ${data.tableName} (${data.headers.join(",")}) VALUES (${data.fields.map((e) => e.map(() => "$" + ++idx)).join("),(")}) ${data.onConflict} RETURNING ${data.returning?.length ? data.returning.join(",") : "*"};`;
+	},
+
+	createOne(
+		tableName: string,
+		fields: string[],
+		createField: { title: string; type: "unix_timestamp" | "timestamp"; } | null,
+		onConflict: string,
+		returning?: string[],
+	) {
+		const intoFields = [];
+		const valuesFields = [];
+
+		for (const [idx, field] of fields.entries()) {
+			intoFields.push(field);
+			valuesFields.push(`$${idx + 1}`);
+		}
+
+		if (createField) {
+			intoFields.push(createField.title);
+
+			switch (createField.type) {
+				case "timestamp":
+					valuesFields.push("NOW()");
+					break;
+				case "unix_timestamp":
+					valuesFields.push("ROUND((EXTRACT(EPOCH FROM NOW()) * (1000)::NUMERIC))");
+					break;
+
+				default:
+					throw new Error("Invalid type: " + createField.type);
+			}
+		}
+
+		return `INSERT INTO ${tableName} (${intoFields.join(",")}) VALUES (${valuesFields.join(",")}) ${onConflict} RETURNING ${returning?.length ? returning.join(",") : "*"};`;
+	},
+
 	deleteAll(tableName: string) {
 		return `DELETE FROM ${tableName};`;
 	},
@@ -46,40 +92,6 @@ export default {
 
 	getOneByPk(tableName: string, primaryKeyField: string) {
 		return `SELECT * FROM ${tableName} WHERE ${primaryKeyField} = $1 LIMIT 1;`;
-	},
-
-	save(
-		tableName: string,
-		fields: string[],
-		createField: { title: string; type: "unix_timestamp" | "timestamp"; } | null,
-		onConflict: string,
-		returning?: string[],
-	) {
-		const intoFields = [];
-		const valuesFields = [];
-
-		for (const [idx, field] of fields.entries()) {
-			intoFields.push(field);
-			valuesFields.push(`$${idx + 1}`);
-		}
-
-		if (createField) {
-			intoFields.push(createField.title);
-
-			switch (createField.type) {
-				case "timestamp":
-					valuesFields.push("NOW()");
-					break;
-				case "unix_timestamp":
-					valuesFields.push("ROUND((EXTRACT(EPOCH FROM NOW()) * (1000)::NUMERIC))");
-					break;
-
-				default:
-					throw new Error("Invalid type: " + createField.type);
-			}
-		}
-
-		return `INSERT INTO ${tableName} (${intoFields.join(",")}) VALUES (${valuesFields.join(",")}) ${onConflict} RETURNING ${returning?.length ? returning.join(",") : "*"};`;
 	},
 
 	updateByParams(

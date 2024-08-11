@@ -2,7 +2,7 @@ import pg from "pg";
 
 import * as SharedTypes from "../../../shared-types/index.js";
 
-export async function queryLogged<T extends pg.QueryResultRow>(
+async function queryLogged<T extends pg.QueryResultRow>(
 	this: {
 		client: pg.Pool | pg.PoolClient;
 		logger: SharedTypes.TLogger;
@@ -25,5 +25,37 @@ export async function queryLogged<T extends pg.QueryResultRow>(
 		this.logger.error(`Query failed in ${execTime} ms. QUERY: ${query} VALUES: ${JSON.stringify(values)}`);
 
 		throw error;
+	}
+}
+
+export function setLoggerAndExecutor(
+	pool: pg.Pool | pg.PoolClient,
+	options?: {
+		isLoggerEnabled?: true;
+		logger?: SharedTypes.TLogger;
+	},
+) {
+	const { isLoggerEnabled, logger } = options || {};
+
+	if (isLoggerEnabled) {
+		// eslint-disable-next-line no-console
+		const resultLogger = logger || { error: console.error, info: console.log };
+
+		return {
+			executeSql: async <T extends pg.QueryResultRow>(sql: {
+				query: string;
+				values: unknown[];
+			}) => (await (queryLogged<T>).bind({ client: pool, logger: resultLogger })(sql.query, sql.values)),
+			isLoggerEnabled,
+			logger: resultLogger,
+		};
+	} else {
+		return {
+			executeSql: async <T extends pg.QueryResultRow>(sql: {
+				query: string;
+				values: unknown[];
+			}) => (await pool.query<T>(sql.query, sql.values)),
+			isLoggerEnabled,
+		};
 	}
 }

@@ -7,11 +7,8 @@ import * as Types from "./types.js";
 import * as connection from "../connection.js";
 import { QueryBuilder } from "../query-builder/index.js";
 import queries from "./queries.js";
-import { queryLogged } from "../helpers/index.js";
+import { setLoggerAndExecutor } from "../helpers/index.js";
 
-/**
- * @experimental
- */
 export class BaseTable {
 	#insertOptions;
 	#sortingOrders = new Set(["ASC", "DESC"]);
@@ -20,8 +17,10 @@ export class BaseTable {
 	#logger?: SharedTypes.TLogger;
 	#executeSql;
 
+	#initialArgs;
+
 	createField;
-	pool: pg.Pool;
+	pool: pg.Pool | pg.PoolClient;
 	primaryKey;
 	tableName;
 	tableFields;
@@ -44,33 +43,121 @@ export class BaseTable {
 			...(data.additionalSortingFields || []),
 		] as const);
 
+		this.#initialArgs = { data, dbCreds, options };
+
 		const { insertOptions, isLoggerEnabled, logger } = options || {};
 
+		const preparedOptions = setLoggerAndExecutor(
+			this.pool,
+			{ isLoggerEnabled, logger },
+		);
+
 		this.#insertOptions = insertOptions;
-		this.#isLoggerEnabled = isLoggerEnabled;
+		this.#executeSql = preparedOptions.executeSql;
+		this.#isLoggerEnabled = preparedOptions.isLoggerEnabled;
+		this.#logger = preparedOptions.logger;
+	}
 
-		if (isLoggerEnabled) {
-			// eslint-disable-next-line no-console
-			const resultLogger = logger || { error: console.error, info: console.log };
+	/**
+	 * @experimental
+	 */
+	setPoolClient(client: pg.PoolClient): BaseTable {
+		const baseTable = new BaseTable({ ...this.#initialArgs.data }, { ...this.#initialArgs.dbCreds }, { ...this.#initialArgs.options });
 
-			this.#logger = resultLogger;
+		baseTable.pool = client;
 
-			this.#executeSql = async <T extends pg.QueryResultRow>(sql: {
-				query: string;
-				values: unknown[];
-			}) => (await (queryLogged<T>).bind({ client: this.pool, logger: resultLogger })(sql.query, sql.values));
-		} else {
-			this.#executeSql = async <T extends pg.QueryResultRow>(sql: {
-				query: string;
-				values: unknown[];
-			}) => (await this.pool.query<T>(sql.query, sql.values));
-		}
+		return baseTable;
 	}
 
 	compareFields = Helpers.compareFields;
 	getFieldsToSearch = Helpers.getFieldsToSearch;
 
 	compareQuery = {
+		createMany: (
+			recordParams: SharedTypes.TRawParams[],
+			saveOptions?: { returningFields?: string[]; },
+		): { query: string; values: unknown[]; } => {
+			const v = [];
+			const k = [];
+			const headers = new Set<string>();
+
+			const [example] = recordParams;
+
+			if (!example) throw new Error("Invalid recordParams");
+
+			const params = SharedHelpers.clearUndefinedFields(example);
+
+			Object.keys(params).forEach((e) => headers.add(e));
+
+			if (this.createField) {
+				headers.add(this.createField.title);
+			}
+
+			for (const pR of recordParams) {
+				const params = SharedHelpers.clearUndefinedFields(pR);
+				const keys = new Set(Object.keys(params));
+				const paramsPrepared = [...Object.values(params)];
+
+				if (this.createField) {
+					if (!keys.has(this.createField.title)) {
+						keys.add(this.createField.title);
+
+						switch (this.createField.type) {
+							case "timestamp":
+								paramsPrepared.push(new Date().toISOString());
+								break;
+							case "unix_timestamp":
+								paramsPrepared.push(Date.now());
+								break;
+
+							default:
+								throw new Error("Invalid type: " + this.createField.type);
+						}
+					}
+				}
+
+				k.push([...keys]);
+				v.push(...paramsPrepared);
+
+				if (!k.length) {
+					throw new Error(`Invalid params, all fields are undefined - ${Object.keys(recordParams).join(", ")}`);
+				}
+
+				for (const key of keys) {
+					if (!headers.has(key)) {
+						throw new Error(`Invalid params, all fields are undefined - ${Object.keys(pR).join(", ")}`);
+					}
+				}
+			}
+
+			const onConflict = this.#insertOptions?.onConflict || "";
+
+			return {
+				query: queries.createMany({
+					fields: k,
+					headers: [...headers],
+					onConflict,
+					returning: saveOptions?.returningFields,
+					tableName: this.tableName,
+				}),
+				values: v,
+			};
+		},
+		createOne: (
+			recordParams = {},
+			saveOptions?: { returningFields?: string[]; },
+		): { query: string; values: unknown[]; } => {
+			const clearedParams = SharedHelpers.clearUndefinedFields(recordParams);
+			const fields = Object.keys(clearedParams);
+			const onConflict = this.#insertOptions?.onConflict || "";
+
+			if (!fields.length) { throw new Error("No one save field arrived"); }
+
+			return {
+				query: queries.createOne(this.tableName, fields, this.createField, onConflict, saveOptions?.returningFields),
+				values: Object.values(clearedParams),
+			};
+		},
 		deleteAll: (): { query: string; values: unknown[]; } => {
 			return { query: queries.deleteAll(this.tableName), values: [] };
 		},
@@ -172,21 +259,6 @@ export class BaseTable {
 			return {
 				query: queries.getOneByPk(this.tableName, this.primaryKey as string),
 				values: [pk],
-			};
-		},
-		save: (
-			recordParams = {},
-			saveOptions?: { returningFields?: string[]; },
-		): { query: string; values: unknown[]; } => {
-			const clearedParams = SharedHelpers.clearUndefinedFields(recordParams);
-			const fields = Object.keys(clearedParams);
-			const onConflict = this.#insertOptions?.onConflict || "";
-
-			if (!fields.length) { throw new Error("No one save field arrived"); }
-
-			return {
-				query: queries.save(this.tableName, fields, this.createField, onConflict, saveOptions?.returningFields),
-				values: Object.values(clearedParams),
 			};
 		},
 		updateByParams: (
@@ -308,14 +380,24 @@ export class BaseTable {
 		return entity;
 	}
 
-	async save<T extends pg.QueryResultRow>(
+	async createOne<T extends pg.QueryResultRow>(
 		recordParams = {},
 		saveOptions?: { returningFields?: string[]; },
-	) {
-		const sql = this.compareQuery.save(recordParams, saveOptions);
+	): Promise<T | undefined> {
+		const sql = this.compareQuery.createOne(recordParams, saveOptions);
 		const { rows: [entity] } = await this.#executeSql<T>(sql);
 
 		return entity;
+	}
+
+	async createMany<T extends pg.QueryResultRow>(
+		recordParams: SharedTypes.TRawParams[],
+		saveOptions?: { returningFields?: string[]; },
+	): Promise<T[]> {
+		const sql = this.compareQuery.createMany(recordParams, saveOptions);
+		const { rows: entities } = await this.#executeSql<T>(sql);
+
+		return entities;
 	}
 
 	async updateByParams(
