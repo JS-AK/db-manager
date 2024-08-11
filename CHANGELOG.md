@@ -1,3 +1,10 @@
+# [3.32.0-next.2](https://github.com/JS-AK/db-manager/compare/v3.32.0-next.1...v3.32.0-next.2) (2024-08-11)
+
+
+### Bug Fixes
+
+* refactored pg-core ([2da46af](https://github.com/JS-AK/db-manager/commit/2da46af61eddc6aebd01ac86aee4fb2a33bbf52d))
+
 # [3.32.0-next.1](https://github.com/JS-AK/db-manager/compare/v3.31.1...v3.32.0-next.1) (2024-08-06)
 
 
