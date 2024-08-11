@@ -2,11 +2,10 @@ import { PG } from "../../../index.js";
 
 import { Model, Types } from "./model/index.js";
 
-export class Domain extends PG.BaseDomain<{
-	Model: Model;
+export class Domain extends PG.Domain.BaseTable<Model, {
 	CreateFields: Types.CreateFields;
 	SearchFields: Types.SearchFields;
-	TableFields: Types.TableFields;
+	CoreFields: Types.TableFields;
 	UpdateFields: Types.UpdateFields;
 }> {
 
@@ -29,10 +28,6 @@ export class Domain extends PG.BaseDomain<{
 			title: `title ${e}`,
 			updated_at: undefined,
 		})));
-	}
-
-	async clearAll(): Promise<void> {
-		await super.deleteAll();
 	}
 
 	async test(): Promise<boolean> {

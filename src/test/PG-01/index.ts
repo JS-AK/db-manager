@@ -39,7 +39,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 		await testContext.test(
 			"deleteAll",
 			async () => {
-				await testTable.clearAll();
+				await testTable.deleteAll();
 				const entities = await testTable.getArrByParams({ params: {} });
 
 				assert.equal(entities.length, 0);
@@ -62,7 +62,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 				assert.equal(entity.meta.lastName, params.meta.lastName);
 				assert.equal(entity.title, params.title);
 
-				await testTable.clearAll();
+				await testTable.deleteAll();
 			},
 		);
 
@@ -89,6 +89,10 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 
 					const { rows: [entity] } = (await client.query<{ id: string; }>(query, values));
 
+					/* const entity = await testTable
+						.setPoolClient(client)
+						.createOne(params, { returningFields: ["id"] }); */
+
 					if (!entity) throw new Error("Entity not found");
 
 					assert.equal(typeof entity.id, "string");
@@ -114,6 +118,10 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						});
 
 						const { rows: entities } = (await client.query<{ id: string; }>(query, values));
+
+						/* const entities = await testTable
+							.setPoolClient(client)
+							.createMany(params, { returningFields: ["id"] }); */
 
 						assert.equal(entities.length, params.length);
 					}
@@ -193,7 +201,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 
 				assert.equal(count, 5);
 
-				await testTable.clearAll();
+				await testTable.deleteAll();
 			},
 		);
 
@@ -207,7 +215,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 
 				assert.equal(count, 5);
 
-				await testTable.clearAll();
+				await testTable.deleteAll();
 			},
 		);
 
@@ -224,7 +232,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 
 				assert.equal(count, 1);
 
-				await testTable.clearAll();
+				await testTable.deleteAll();
 			},
 		);
 
@@ -573,7 +581,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 					);
 				}
 
-				await testTable.clearAll();
+				await testTable.deleteAll();
 			},
 		);
 
@@ -824,7 +832,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 					);
 				}
 
-				await testTable.clearAll();
+				await testTable.deleteAll();
 			},
 		);
 
@@ -951,7 +959,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 					);
 				}
 
-				await testTable.clearAll();
+				await testTable.deleteAll();
 			},
 		);
 
@@ -966,7 +974,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 
 				assert.equal(result.length, 3);
 
-				await testTable.clearAll();
+				await testTable.deleteAll();
 			},
 		);
 
@@ -984,7 +992,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 
 				assert.equal(result.length, 2);
 
-				await testTable.clearAll();
+				await testTable.deleteAll();
 			},
 		);
 

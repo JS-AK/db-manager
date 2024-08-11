@@ -7,7 +7,7 @@ import * as Types from "./types.js";
 import * as connection from "../connection.js";
 import { QueryBuilder } from "../query-builder/index.js";
 import queries from "./queries.js";
-import { queryLogged } from "../helpers/index.js";
+import { setLoggerAndExecutor } from "../helpers/index.js";
 
 export class BaseModel {
 	#insertOptions;
@@ -43,25 +43,15 @@ export class BaseModel {
 
 		const { insertOptions, isLoggerEnabled, logger } = options || {};
 
+		const preparedOptions = setLoggerAndExecutor(
+			this.pool,
+			{ isLoggerEnabled, logger },
+		);
+
 		this.#insertOptions = insertOptions;
-		this.#isLoggerEnabled = isLoggerEnabled;
-
-		if (isLoggerEnabled) {
-			// eslint-disable-next-line no-console
-			const resultLogger = logger || { error: console.error, info: console.log };
-
-			this.#logger = resultLogger;
-
-			this.#executeSql = async <T extends pg.QueryResultRow>(sql: {
-				query: string;
-				values: unknown[];
-			}) => (await (queryLogged<T>).bind({ client: this.pool, logger: resultLogger })(sql.query, sql.values));
-		} else {
-			this.#executeSql = async <T extends pg.QueryResultRow>(sql: {
-				query: string;
-				values: unknown[];
-			}) => (await this.pool.query<T>(sql.query, sql.values));
-		}
+		this.#executeSql = preparedOptions.executeSql;
+		this.#isLoggerEnabled = preparedOptions.isLoggerEnabled;
+		this.#logger = preparedOptions.logger;
 	}
 
 	compareFields = Helpers.compareFields;
@@ -182,7 +172,7 @@ export class BaseModel {
 			if (!fields.length) { throw new Error("No one save field arrived"); }
 
 			return {
-				query: queries.save(this.tableName, fields, this.createField, onConflict, saveOptions?.returningFields),
+				query: queries.createOne(this.tableName, fields, this.createField, onConflict, saveOptions?.returningFields),
 				values: Object.values(clearedParams),
 			};
 		},

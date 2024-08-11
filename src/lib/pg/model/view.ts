@@ -6,7 +6,7 @@ import * as Types from "./types.js";
 import * as connection from "../connection.js";
 import { QueryBuilder } from "../query-builder/index.js";
 import queries from "./queries.js";
-import { queryLogged } from "../helpers/index.js";
+import { setLoggerAndExecutor } from "../helpers/index.js";
 
 /**
  * @experimental
@@ -36,26 +36,11 @@ export class BaseView {
 			...(data.additionalSortingFields || []),
 		] as const);
 
-		const { isLoggerEnabled, logger } = options || {};
+		const { executeSql, isLoggerEnabled, logger } = setLoggerAndExecutor(this.pool, options);
 
+		this.#executeSql = executeSql;
 		this.#isLoggerEnabled = isLoggerEnabled;
-
-		if (isLoggerEnabled) {
-			// eslint-disable-next-line no-console
-			const resultLogger = logger || { error: console.error, info: console.log };
-
-			this.#logger = resultLogger;
-
-			this.#executeSql = async <T extends pg.QueryResultRow>(sql: {
-				query: string;
-				values: unknown[];
-			}) => (await (queryLogged<T>).bind({ client: this.pool, logger: resultLogger })(sql.query, sql.values));
-		} else {
-			this.#executeSql = async <T extends pg.QueryResultRow>(sql: {
-				query: string;
-				values: unknown[];
-			}) => (await this.pool.query<T>(sql.query, sql.values));
-		}
+		this.#logger = logger;
 	}
 
 	compareFields = Helpers.compareFields;

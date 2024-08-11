@@ -4,7 +4,7 @@ import { PG } from "../../../../index.js";
 import { TableKeys } from "./types.js";
 
 // ----- Class ------------------------------
-export class Model extends PG.BaseModel {
+export class Model extends PG.Model.BaseTable {
 	constructor(creds: PG.ModelTypes.TDBCreds, options?: PG.ModelTypes.TDBOptions) {
 		super(
 			{

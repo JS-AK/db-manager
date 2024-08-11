@@ -4,7 +4,7 @@ import * as DomainTypes from "../domain/types.js";
 import * as ModelTypes from "../model/types.js";
 import * as SharedTypes from "../../../shared-types/index.js";
 import { QueryHandler } from "./query-handler.js";
-import { queryLogged } from "../helpers/index.js";
+import { setLoggerAndExecutor } from "../helpers/index.js";
 
 export class QueryBuilder {
 	#dataSourceRaw;
@@ -25,6 +25,7 @@ export class QueryBuilder {
 		},
 	) {
 		this.#dataSourceRaw = dataSource;
+		this.#client = client;
 
 		const chunks = dataSource.toLowerCase().split(" ").filter((e) => e && e !== "as");
 		const as = chunks[1]?.trim();
@@ -42,24 +43,13 @@ export class QueryBuilder {
 			dataSourceRaw: this.#dataSourceRaw,
 		});
 
-		this.#client = client;
+		const preparedOptions = setLoggerAndExecutor(
+			this.#client,
+			{ isLoggerEnabled, logger },
+		);
 
-		if (isLoggerEnabled) {
-			// eslint-disable-next-line no-console
-			const resultLogger = logger || { error: console.error, info: console.log };
-
-			this.#logger = resultLogger;
-
-			this.#executeSql = async <T extends pg.QueryResultRow>(sql: {
-				query: string;
-				values: unknown[];
-			}) => (await (queryLogged<T>).bind({ client: this.#client, logger: resultLogger })(sql.query, sql.values));
-		} else {
-			this.#executeSql = async <T extends pg.QueryResultRow>(sql: {
-				query: string;
-				values: unknown[];
-			}) => (await this.#client.query<T>(sql.query, sql.values));
-		}
+		this.#executeSql = preparedOptions.executeSql;
+		this.#logger = preparedOptions.logger;
 	}
 
 	clone() {
