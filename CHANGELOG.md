@@ -1,3 +1,17 @@
+# [3.32.0](https://github.com/JS-AK/db-manager/compare/v3.31.1...v3.32.0) (2024-08-13)
+
+
+### Bug Fixes
+
+* refactored pg-core ([2da46af](https://github.com/JS-AK/db-manager/commit/2da46af61eddc6aebd01ac86aee4fb2a33bbf52d))
+
+
+### Features
+
+* updated pg-core added isLoggerEnabled option ([457ef9a](https://github.com/JS-AK/db-manager/commit/457ef9ac57a50323cf3d9ce65d5ae904f009f29b))
+* updated pg-core added isLoggerEnabled option ([eeda7d1](https://github.com/JS-AK/db-manager/commit/eeda7d1ff54ad475148027c649dc3d00ba94a72b))
+* updated pg-core domain methods ([31f42d4](https://github.com/JS-AK/db-manager/commit/31f42d4edee531794c18a2defe5669990f7b4425))
+
 ## [3.31.1](https://github.com/JS-AK/db-manager/compare/v3.31.0...v3.31.1) (2024-08-04)
 
 
