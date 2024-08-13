@@ -7,7 +7,7 @@ import * as TestTable from "./test-table-01/index.js";
 import { isHasFields } from "../../shared-helpers/index.js";
 
 export const start = async (creds: PG.ModelTypes.TDBCreds) => {
-	const testTable = new TestTable.Domain(creds);
+	const testTable = TestTable.initDomain(creds);
 
 	return test("PG-01", async (testContext) => {
 		await testContext.test(
@@ -39,7 +39,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 		await testContext.test(
 			"deleteAll",
 			async () => {
-				await testTable.clearAll();
+				await testTable.deleteAll();
 				const entities = await testTable.getArrByParams({ params: {} });
 
 				assert.equal(entities.length, 0);
@@ -62,7 +62,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 				assert.equal(entity.meta.lastName, params.meta.lastName);
 				assert.equal(entity.title, params.title);
 
-				await testTable.clearAll();
+				await testTable.deleteAll();
 			},
 		);
 
@@ -193,7 +193,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 
 				assert.equal(count, 5);
 
-				await testTable.clearAll();
+				await testTable.deleteAll();
 			},
 		);
 
@@ -207,7 +207,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 
 				assert.equal(count, 5);
 
-				await testTable.clearAll();
+				await testTable.deleteAll();
 			},
 		);
 
@@ -224,7 +224,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 
 				assert.equal(count, 1);
 
-				await testTable.clearAll();
+				await testTable.deleteAll();
 			},
 		);
 
@@ -573,7 +573,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 					);
 				}
 
-				await testTable.clearAll();
+				await testTable.deleteAll();
 			},
 		);
 
@@ -824,7 +824,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 					);
 				}
 
-				await testTable.clearAll();
+				await testTable.deleteAll();
 			},
 		);
 
@@ -903,12 +903,12 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						async () => {
 							const entity = await testTable.updateOneByPk(id, updatedParams);
 
-							assert.equal(entity.description, updatedParams.description);
-							assert.equal(entity.meta.firstName, updatedParams.meta.firstName);
-							assert.equal(entity.meta.lastName, updatedParams.meta.lastName);
-							assert.equal(entity.number_key, updatedParams.number_key);
-							assert.equal(entity.number_range, updatedParams.number_range);
-							assert.equal(entity.title, updatedParams.title);
+							assert.equal(entity?.description, updatedParams.description);
+							assert.equal(entity?.meta.firstName, updatedParams.meta.firstName);
+							assert.equal(entity?.meta.lastName, updatedParams.meta.lastName);
+							assert.equal(entity?.number_key, updatedParams.number_key);
+							assert.equal(entity?.number_range, updatedParams.number_range);
+							assert.equal(entity?.title, updatedParams.title);
 						},
 					);
 				}
@@ -951,7 +951,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 					);
 				}
 
-				await testTable.clearAll();
+				await testTable.deleteAll();
 			},
 		);
 
@@ -966,7 +966,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 
 				assert.equal(result.length, 3);
 
-				await testTable.clearAll();
+				await testTable.deleteAll();
 			},
 		);
 
@@ -984,7 +984,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 
 				assert.equal(result.length, 2);
 
-				await testTable.clearAll();
+				await testTable.deleteAll();
 			},
 		);
 

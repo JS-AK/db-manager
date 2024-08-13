@@ -69,21 +69,20 @@ export class QueryHandler {
 		};
 	}
 
-	#compareSql() {
-		let sql = "";
-
-		if (this.#with) sql += this.#with + " ";
-		if (this.#mainQuery) sql += this.#mainQuery;
-		if (this.#join.length) sql += " " + this.#join.join(" ");
-		if (this.#mainWhere) sql += " " + this.#mainWhere;
-		if (this.#groupBy) sql += " " + this.#groupBy;
-		if (this.#mainHaving) sql += " " + this.#mainHaving;
-		if (this.#orderBy) sql += " " + this.#orderBy;
-		if (this.#pagination) sql += " " + this.#pagination;
-		if (this.#returning) sql += " " + this.#returning;
-		if (this.#for) sql += " " + this.#for;
-
-		return sql + ";";
+	#compareSql(): string {
+		return (
+			(this.#with ? this.#with + " " : "")
+			+ (this.#mainQuery || "")
+			+ (this.#join.length ? " " + this.#join.join(" ") : "")
+			+ (this.#mainWhere ? " " + this.#mainWhere : "")
+			+ (this.#groupBy ? " " + this.#groupBy : "")
+			+ (this.#mainHaving ? " " + this.#mainHaving : "")
+			+ (this.#orderBy ? " " + this.#orderBy : "")
+			+ (this.#pagination ? " " + this.#pagination : "")
+			+ (this.#returning ? " " + this.#returning : "")
+			+ (this.#for ? " " + this.#for : "")
+			+ ";"
+		);
 	}
 
 	/* #replaceDollarSign(text: string) {

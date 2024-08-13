@@ -4,6 +4,7 @@ import * as DomainTypes from "../domain/types.js";
 import * as ModelTypes from "../model/types.js";
 import * as SharedTypes from "../../../shared-types/index.js";
 import { QueryHandler } from "./query-handler.js";
+import { setLoggerAndExecutor } from "../helpers/index.js";
 
 export class QueryBuilder {
 	#dataSourceRaw;
@@ -11,13 +12,20 @@ export class QueryBuilder {
 
 	#client;
 	#queryHandler;
+	#logger?: SharedTypes.TLogger;
+	#executeSql;
 
 	constructor(
 		dataSource: string,
 		client: pg.Pool | pg.PoolClient,
-		queryHandler?: QueryHandler,
+		options?: {
+			isLoggerEnabled?: true;
+			logger?: SharedTypes.TLogger;
+			queryHandler?: QueryHandler;
+		},
 	) {
 		this.#dataSourceRaw = dataSource;
+		this.#client = client;
 
 		const chunks = dataSource.toLowerCase().split(" ").filter((e) => e && e !== "as");
 		const as = chunks[1]?.trim();
@@ -28,18 +36,26 @@ export class QueryBuilder {
 			this.#dataSourcePrepared = dataSource;
 		}
 
+		const { isLoggerEnabled, logger, queryHandler } = options || {};
+
 		this.#queryHandler = queryHandler || new QueryHandler({
 			dataSourcePrepared: this.#dataSourcePrepared,
 			dataSourceRaw: this.#dataSourceRaw,
 		});
 
-		this.#client = client;
+		const preparedOptions = setLoggerAndExecutor(
+			this.#client,
+			{ isLoggerEnabled, logger },
+		);
+
+		this.#executeSql = preparedOptions.executeSql;
+		this.#logger = preparedOptions.logger;
 	}
 
 	clone() {
-		const main = new QueryHandler(this.#queryHandler.optionsToClone);
+		const queryHandler = new QueryHandler(this.#queryHandler.optionsToClone);
 
-		return new QueryBuilder(this.#dataSourceRaw, this.#client, main);
+		return new QueryBuilder(this.#dataSourceRaw, this.#client, { logger: this.#logger, queryHandler });
 	}
 
 	compareQuery(): { query: string; values: unknown[]; } {
@@ -298,6 +314,6 @@ export class QueryBuilder {
 	async execute<T extends pg.QueryResultRow>() {
 		const sql = this.compareQuery();
 
-		return (await this.#client.query<T>(sql.query, sql.values)).rows;
+		return (await this.#executeSql<T>(sql)).rows;
 	}
 }

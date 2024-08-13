@@ -72,7 +72,7 @@ export class BaseView<
 			ordering: SharedTypes.TOrdering;
 		}[];
 	}): Promise<Array<Pick<BVG["CoreFields"], T>>> {
-		return this.model.getArrByParams(
+		return this.model.getArrByParams<Pick<BVG["CoreFields"], T>>(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 			options.pagination,
@@ -92,7 +92,7 @@ export class BaseView<
 		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>>;
 		selected?: [T, ...T[]];
 	}): Promise<{ message?: string; one?: Pick<BVG["CoreFields"], T>; }> {
-		const one = await this.model.getOneByParams(
+		const one = await this.model.getOneByParams<Pick<BVG["CoreFields"], T>>(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 		);

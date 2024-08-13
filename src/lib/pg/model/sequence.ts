@@ -1,56 +1,69 @@
 import pg from "pg";
 
+import * as SharedTypes from "../../../shared-types/index.js";
 import * as Types from "./types.js";
 import * as connection from "../connection.js";
 import { QueryBuilder } from "../query-builder/index.js";
+import { setLoggerAndExecutor } from "../helpers/index.js";
 
 /**
  * @experimental
  */
 export class BaseSequence {
+	#isLoggerEnabled;
+	#logger?: SharedTypes.TLogger;
+	#executeSql;
+
 	pool: pg.Pool;
 	name;
 
 	constructor(
 		data: { name: string; },
 		dbCreds: Types.TDBCreds,
+		options?: Types.TSOptions,
 	) {
 		this.pool = connection.getStandardPool(dbCreds);
 		this.name = data.name;
+
+		const { executeSql, isLoggerEnabled, logger } = setLoggerAndExecutor(this.pool, options);
+
+		this.#executeSql = executeSql;
+		this.#isLoggerEnabled = isLoggerEnabled;
+		this.#logger = logger;
 	}
 
 	async getCurrentValue<T extends string | number>(): Promise<T | null> {
 		const query = `SELECT last_value FROM ${this.name}`;
-		const { rows: [result] } = await this.pool.query<{ last_value: T; }>(query);
+		const { rows: [entity] } = await this.#executeSql<{ last_value: T; }>({ query, values: [] });
 
-		return result ? result.last_value : null;
+		return entity ? entity.last_value : null;
 	}
 
 	async getNextValue<T extends string | number>(): Promise<T> {
 		const query = `SELECT nextval('${this.name}')`;
-		const { rows: [result] } = await this.pool.query<{ nextval: T; }>(query);
+		const { rows: [entity] } = await this.#executeSql<{ nextval: T; }>({ query, values: [] });
 
-		if (!result) throw new Error("Could not get next value");
+		if (!entity) throw new Error("Could not get next value");
 
-		return result.nextval;
+		return entity.nextval;
 	}
 
 	async setValue<T extends string | number>(value: T): Promise<void> {
 		const query = `SELECT setval('${this.name}', $1)`;
 
-		await this.pool.query(query, [value]);
+		await this.#executeSql({ query, values: [value] });
 	}
 
 	async incrementBy<T extends string | number>(value: T): Promise<void> {
 		const query = `SELECT setval('${this.name}', nextval('${this.name}') + $1)`;
 
-		await this.pool.query(query, [value]);
+		await this.#executeSql({ query, values: [value] });
 	}
 
 	async restartWith<T extends string | number>(value: T): Promise<void> {
 		const query = `ALTER SEQUENCE ${this.name} RESTART WITH ${Number(value)}`;
 
-		await this.pool.query(query);
+		await this.#executeSql({ query, values: [] });
 	}
 
 	queryBuilder(options?: {
@@ -59,7 +72,11 @@ export class BaseSequence {
 	}) {
 		const { client, name } = options || {};
 
-		return new QueryBuilder(name || this.name, client || this.pool);
+		return new QueryBuilder(
+			name ?? this.name,
+			client ?? this.pool,
+			{ isLoggerEnabled: this.#isLoggerEnabled, logger: this.#logger },
+		);
 	}
 
 	// STATIC METHODS
