@@ -5,20 +5,6 @@ import { TableKeys } from "./types.js";
 
 // ----- Class ------------------------------
 export class Model extends PG.Model.BaseTable {
-	constructor(creds: PG.ModelTypes.TDBCreds, options?: PG.ModelTypes.TDBOptions) {
-		super(
-			{
-				createField,
-				primaryKey,
-				tableFields,
-				tableName,
-				updateField,
-			},
-			creds,
-			options,
-		);
-	}
-
 	async test() {
 		return (await this.pool.query<{ test: boolean; }>(queries.test())).rows[0];
 	}
@@ -49,4 +35,11 @@ const queries = {
 	test() {
 		return "SELECT 1=1 AS test;";
 	},
+};
+
+export const initModel = (creds: PG.ModelTypes.TDBCreds) => {
+	return new Model(
+		{ createField, primaryKey, tableFields, tableName, updateField },
+		creds,
+	);
 };

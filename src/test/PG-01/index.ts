@@ -7,7 +7,7 @@ import * as TestTable from "./test-table-01/index.js";
 import { isHasFields } from "../../shared-helpers/index.js";
 
 export const start = async (creds: PG.ModelTypes.TDBCreds) => {
-	const testTable = new TestTable.Domain(creds);
+	const testTable = TestTable.initDomain(creds);
 
 	return test("PG-01", async (testContext) => {
 		await testContext.test(
@@ -89,10 +89,6 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 
 					const { rows: [entity] } = (await client.query<{ id: string; }>(query, values));
 
-					/* const entity = await testTable
-						.setPoolClient(client)
-						.createOne(params, { returningFields: ["id"] }); */
-
 					if (!entity) throw new Error("Entity not found");
 
 					assert.equal(typeof entity.id, "string");
@@ -118,10 +114,6 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						});
 
 						const { rows: entities } = (await client.query<{ id: string; }>(query, values));
-
-						/* const entities = await testTable
-							.setPoolClient(client)
-							.createMany(params, { returningFields: ["id"] }); */
 
 						assert.equal(entities.length, params.length);
 					}
