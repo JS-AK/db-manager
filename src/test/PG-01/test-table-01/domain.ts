@@ -1,6 +1,10 @@
 import { PG } from "../../../index.js";
 
-import { Model, Types } from "./model/index.js";
+import {
+	Model,
+	Types,
+	initModel,
+} from "./model/index.js";
 
 export class Domain extends PG.Domain.BaseTable<Model, {
 	CreateFields: Types.CreateFields;
@@ -8,11 +12,6 @@ export class Domain extends PG.Domain.BaseTable<Model, {
 	CoreFields: Types.TableFields;
 	UpdateFields: Types.UpdateFields;
 }> {
-
-	constructor(creds: PG.ModelTypes.TDBCreds) {
-		super({ model: new Model(creds) });
-	}
-
 	async createDefaultState(): Promise<void> {
 		await Promise.all([1, 2, 3, 4, 5].map((e) => super.createOne({
 			books: [`book 0${e}`, `book 1${e}`, `book 2${e}`, `book 3${e}`, `book 4${e}`],
@@ -38,3 +37,7 @@ export class Domain extends PG.Domain.BaseTable<Model, {
 		return res.test;
 	}
 }
+
+export const initDomain = (creds: PG.ModelTypes.TDBCreds) => {
+	return new Domain({ model: initModel(creds) });
+};

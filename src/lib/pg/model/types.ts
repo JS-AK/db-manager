@@ -12,7 +12,7 @@ export type SNDArray = ClearString[] | ClearNumber[] | ClearDate[];
 export type SNDB = SND | ClearBoolean;
 export type SNDBArray = SNDArray | ClearBoolean[];
 export type TDBCreds = pg.PoolConfig & { database: string; host: string; password: string; port: number; user: string; };
-export type TDBOptions = TMVOptions & { insertOptions?: { onConflict: string; }; };
+export type TDBOptions = TMVOptions & { insertOptions?: { onConflict: string; }; poolClient?: pg.PoolClient; };
 export type TField = { key: string; sign?: string; operator: TOperator; };
 export type TMVOptions = {
 	isLoggerEnabled?: true;

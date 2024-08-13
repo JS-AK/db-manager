@@ -31,8 +31,10 @@ export class BaseTable {
 		dbCreds: Types.TDBCreds,
 		options?: Types.TDBOptions,
 	) {
+		const { insertOptions, isLoggerEnabled, logger, poolClient } = options || {};
+
 		this.createField = data.createField;
-		this.pool = connection.getStandardPool(dbCreds);
+		this.pool = poolClient || connection.getStandardPool(dbCreds);
 		this.primaryKey = data.primaryKey;
 		this.tableName = data.tableName;
 		this.tableFields = data.tableFields;
@@ -44,8 +46,6 @@ export class BaseTable {
 		] as const);
 
 		this.#initialArgs = { data, dbCreds, options };
-
-		const { insertOptions, isLoggerEnabled, logger } = options || {};
 
 		const preparedOptions = setLoggerAndExecutor(
 			this.pool,
@@ -61,12 +61,25 @@ export class BaseTable {
 	/**
 	 * @experimental
 	 */
-	setPoolClient(client: pg.PoolClient): BaseTable {
-		const baseTable = new BaseTable({ ...this.#initialArgs.data }, { ...this.#initialArgs.dbCreds }, { ...this.#initialArgs.options });
+	setPoolClientInCurrentClass(poolClient: pg.PoolClient): this {
+		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+		// @ts-expect-error
+		return new this.constructor(
+			{ ...this.#initialArgs.data },
+			{ ...this.#initialArgs.dbCreds },
+			{ ...this.#initialArgs.options, poolClient },
+		);
+	}
 
-		baseTable.pool = client;
-
-		return baseTable;
+	/**
+ * @experimental
+ */
+	setPoolClientInBaseClass(poolClient: pg.PoolClient): BaseTable {
+		return new BaseTable(
+			{ ...this.#initialArgs.data },
+			{ ...this.#initialArgs.dbCreds },
+			{ ...this.#initialArgs.options, poolClient },
+		);
 	}
 
 	compareFields = Helpers.compareFields;

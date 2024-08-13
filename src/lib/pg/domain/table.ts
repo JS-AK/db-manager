@@ -25,8 +25,6 @@ export class BaseTable<
 	#tableFields;
 	#updateField;
 
-	#initialArgs;
-
 	model: M;
 
 	constructor(data: Types.TDomain<M>) {
@@ -41,26 +39,49 @@ export class BaseTable<
 		this.#tableName = this.model.tableName;
 		this.#tableFields = this.model.tableFields;
 		this.#updateField = this.model.updateField;
-
-		this.#initialArgs = { data };
 	}
 
+	/**
+	 * Gets the field used for creation timestamps in the table, if applicable.
+	 *
+	 * @returns The creation field configuration object or `null` if not set.
+	 */
 	get createField() {
 		return this.#createField as { title: keyof BTG["CoreFields"]; type: "unix_timestamp" | "timestamp"; } | null;
 	}
 
+	/**
+	 * Gets the primary key of the table.
+	 *
+	 * @returns The primary key of the table.
+	 */
 	get primaryKey() {
 		return this.#primaryKey;
 	}
 
+	/**
+	 * Gets the name of the database table.
+	 *
+	 * @returns The name of the table.
+	 */
 	get tableName() {
 		return this.#tableName;
 	}
 
+	/**
+	 * Gets the fields of the database table.
+	 *
+	 * @returns An array of field names in the table.
+	 */
 	get tableFields() {
 		return this.#tableFields;
 	}
 
+	/**
+	 * Gets the field used for update timestamps in the table, if applicable.
+	 *
+	 * @returns The update field configuration object or `null` if not set.
+	 */
 	get updateField() {
 		return this.#updateField as { title: keyof BTG["CoreFields"]; type: "unix_timestamp" | "timestamp"; } | null;
 	}
@@ -120,16 +141,42 @@ export class BaseTable<
 	};
 
 	/**
+	 * Sets the pool client in the current class.
+	 *
 	 * @experimental
+	 * @param poolClient - The pool client to set.
+	 *
+	 * @returns A new instance of the current class with the updated pool client.
 	 */
-	setPoolClient(client: pg.PoolClient): BaseTable<M, BTG> {
-		const baseTable = new BaseTable<M, BTG>(this.#initialArgs.data);
-
-		baseTable.model = baseTable.model.setPoolClient(client) as M;
-
-		return baseTable;
+	setPoolClientInCurrentClass(poolClient: pg.PoolClient): this {
+		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+		// @ts-expect-error
+		return new this.constructor({ model: this.model.setPoolClientInCurrentClass(poolClient) });
 	}
 
+	/**
+	 * Sets the pool client in the base class.
+	 *
+	 * @experimental
+	 * @param poolClient - The pool client to set.
+	 *
+	 * @returns A new instance of the BaseTable class with the updated pool client.
+	 */
+	setPoolClientInBaseClass(poolClient: pg.PoolClient): BaseTable<Model, BTG> {
+		return new BaseTable({ model: this.model.setPoolClientInBaseClass(poolClient) });
+	}
+
+	/**
+	 * Creates a single record in the database.
+	 *
+	 * @param recordParams - The parameters required to create a new record.
+	 * @param [saveOptions] - Optional settings for saving the record.
+	 * @param [saveOptions.returningFields] - The fields to return after creating the record.
+	 *
+	 * @returns A promise that resolves to the created record or the selected fields from it.
+	 *
+	 * @throws {Error} If the record could not be saved to the database.
+	 */
 	async createOne<T extends Extract<keyof BTG["CoreFields"], string>[] = Extract<keyof BTG["CoreFields"], string>[]>(
 		recordParams: ConditionalRawParamsType<BTG["CreateFields"], BTG["CoreFields"]>,
 		saveOptions?: { returningFields?: T; },
@@ -141,25 +188,46 @@ export class BaseTable<
 		return res;
 	}
 
+	/**
+	 * Creates multiple records in the database.
+	 *
+	 * @param recordParams - An array of parameters required to create each record.
+	 * @param [saveOptions] - Optional settings for saving the records.
+	 * @param [saveOptions.returningFields] - The fields to return for each record after creation.
+	 *
+	 * @returns A promise that resolves to an array of created records or the selected fields from each record.
+	 *
+	 * @throws {Error} If the records could not be saved to the database.
+	 */
 	async createMany<T extends Extract<keyof BTG["CoreFields"], string>[] = Extract<keyof BTG["CoreFields"], string>[]>(
 		recordParams: ConditionalRawParamsType<BTG["CreateFields"], BTG["CoreFields"]>[],
 		saveOptions?: { returningFields?: T; },
 	): Promise<(T extends undefined ? BTG["CoreFields"][] : Pick<BTG["CoreFields"], T[0]>[])[]> {
-		const res = await this.model.createMany<
-			T extends undefined
-				? BTG["CoreFields"][]
-				: Pick<BTG["CoreFields"], T[0]>[]
-		>(recordParams, saveOptions);
+		const res = await this.model.createMany<T extends undefined ? BTG["CoreFields"][] : Pick<BTG["CoreFields"], T[0]>[]>(recordParams, saveOptions);
 
 		if (!res) throw new Error(`Save to ${this.model.tableName} table error`);
 
 		return res;
 	}
 
+	/**
+	 * Deletes all records from the database table.
+	 *
+	 * @returns A promise that resolves when the deletion is complete.
+	 */
 	async deleteAll(): Promise<void> {
 		return this.model.deleteAll();
 	}
 
+	/**
+	 * Deletes records based on the specified search parameters.
+	 *
+	 * @param options - The options for deleting records.
+	 * @param options.params - The search parameters to match records for deletion.
+	 * @param [options.paramsOr] - An optional array of search parameters, where at least one must be matched for deletion.
+	 *
+	 * @returns A promise that resolves to `null` when the deletion is complete.
+	 */
 	async deleteByParams(options: {
 		params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
 		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
@@ -169,10 +237,31 @@ export class BaseTable<
 		);
 	}
 
+	/**
+	 * Deletes a single record based on its primary key.
+	 *
+	 * @param pk - The primary key of the record to delete.
+	 *
+	 * @returns A promise that resolves to the deleted primary key if successful, or `null` if no record was found.
+	 */
 	async deleteOneByPk<T = string | number>(pk: T): Promise<T | null> {
 		return this.model.deleteOneByPk<T>(pk);
 	}
 
+	/**
+	 * Retrieves an array of records based on the specified search parameters.
+	 *
+	 * @param options - The options for retrieving records.
+	 * @param options.params - The search parameters to match records.
+	 * @param [options.paramsOr] - An optional array of search parameters, where at least one must be matched.
+	 * @param [options.selected] - The fields to return for each matched record.
+	 * @param [options.pagination] - The pagination options.
+	 * @param [options.order] - The sorting options.
+	 * @param options.order.orderBy - The field by which to sort the results.
+	 * @param options.order.ordering - The ordering direction (e.g., ASC, DESC).
+	 *
+	 * @returns A promise that resolves to an array of records with the selected fields.
+	 */
 	async getArrByParams<T extends keyof BTG["CoreFields"]>(this: BaseTable<M, BTG>, options: {
 		params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
 		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
@@ -191,10 +280,27 @@ export class BaseTable<
 		);
 	}
 
+	/**
+	 * Gets the count of records that match the specified primary keys.
+	 *
+	 * @param pks - An array of primary keys to count the matching records.
+	 *
+	 * @returns A promise that resolves to the number of matching records.
+	 */
 	async getCountByPks<T = string | number>(pks: T[]): Promise<number> {
 		return this.model.getCountByPks(pks);
 	}
 
+	/**
+	 * Gets the count of records that match the specified primary keys and search parameters.
+	 *
+	 * @param pks - An array of primary keys to count the matching records.
+	 * @param options - The options for filtering records.
+	 * @param options.params - The search parameters to match records.
+	 * @param [options.paramsOr] - An optional array of search parameters, where at least one must be matched.
+	 *
+	 * @returns A promise that resolves to the number of matching records.
+	 */
 	async getCountByPksAndParams<T = string | number>(
 		pks: T[],
 		options: {
@@ -208,6 +314,15 @@ export class BaseTable<
 		);
 	}
 
+	/**
+	 * Gets the count of records that match the specified search parameters.
+	 *
+	 * @param options - The options for filtering records.
+	 * @param options.params - The search parameters to match records.
+	 * @param [options.paramsOr] - An optional array of search parameters, where at least one must be matched.
+	 *
+	 * @returns A promise that resolves to the number of matching records.
+	 */
 	async getCountByParams(options: {
 		params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
 		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
@@ -230,6 +345,16 @@ export class BaseTable<
 		return { one };
 	}
 
+	/**
+	 * Retrieves a single record based on the specified search parameters.
+	 *
+	 * @param options - The options for retrieving the record.
+	 * @param options.params - The search parameters to match the record.
+	 * @param [options.paramsOr] - An optional array of search parameters, where at least one must be matched.
+	 * @param [options.selected] - The fields to return for the matched record.
+	 *
+	 * @returns A promise that resolves to the retrieved record with the selected fields or a message if not found.
+	 */
 	async getOneByPk<T = string | number>(pk: T): Promise<{ message?: string; one?: BTG["CoreFields"]; }> {
 		const one = await this.model.getOneByPk(pk);
 
@@ -238,6 +363,17 @@ export class BaseTable<
 		return { one };
 	}
 
+	/**
+	 * Updates records that match the specified search parameters.
+	 *
+	 * @param queryConditions - The conditions for finding records to update.
+	 * @param queryConditions.params - The search parameters to match records.
+	 * @param [queryConditions.paramsOr] - An optional array of search parameters, where at least one must be matched.
+	 * @param [queryConditions.returningFields] - The fields to return for each updated record.
+	 * @param updateFields - The fields to update in the matched records.
+	 *
+	 * @returns A promise that resolves to an array of updated records.
+	 */
 	async updateByParams<T extends Extract<keyof BTG["CoreFields"], string>[] = Extract<keyof BTG["CoreFields"], string>[]>(
 		queryConditions: {
 			params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
@@ -249,6 +385,16 @@ export class BaseTable<
 		return this.model.updateByParams({ $and: queryConditions.params, $or: queryConditions.paramsOr, returningFields: queryConditions.returningFields }, updateFields);
 	}
 
+	/**
+	 * Updates a single record by its primary key.
+	 *
+	 * @param primaryKeyValue - The primary key of the record to update.
+	 * @param updateFields - The fields to update in the record.
+	 * @param [updateOptions] - Optional settings for updating the record.
+	 * @param [updateOptions.returningFields] - The fields to return after updating the record.
+	 *
+	 * @returns A promise that resolves to the updated record or `undefined` if the update failed.
+	 */
 	async updateOneByPk<T extends string | number = string | number, R extends Extract<keyof BTG["CoreFields"], string>[] = Extract<keyof BTG["CoreFields"], string>[]>(
 		primaryKeyValue: T,
 		updateFields: ConditionalRawParamsType<BTG["UpdateFields"], BTG["CoreFields"]>,
