@@ -1,3 +1,10 @@
+# [3.33.0](https://github.com/JS-AK/db-manager/compare/v3.32.0...v3.33.0) (2024-08-19)
+
+
+### Features
+
+* updated pg-core added Buffer type ([49f8e9e](https://github.com/JS-AK/db-manager/commit/49f8e9e201af13db3e19f3621da0d0640531300b))
+
 # [3.32.0](https://github.com/JS-AK/db-manager/compare/v3.31.1...v3.32.0) (2024-08-13)
 
 
