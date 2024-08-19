@@ -1,2 +1,2 @@
 export * from "./domain.js";
-export * from "./model/index.js";
+export * as Types from "./types.js";

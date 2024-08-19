@@ -7,7 +7,7 @@ import * as TestTable from "./test-table-01/index.js";
 import { isHasFields } from "../../shared-helpers/index.js";
 
 export const start = async (creds: PG.ModelTypes.TDBCreds) => {
-	const testTable = TestTable.initDomain(creds);
+	const testTable = TestTable.domain(creds);
 
 	return test("PG-01", async (testContext) => {
 		await testContext.test(

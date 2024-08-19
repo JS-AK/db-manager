@@ -15,16 +15,19 @@ type TSearchParamValue<T> = T extends object
 
 type TSearchParamObjectValue<T> = T extends Date
 	? BaseDate
-	: T extends Array<unknown>
-		? BaseArray<T>
-		: BaseObject<T>;
+	: T extends Buffer
+		? BaseBuffer
+		: T extends Array<unknown>
+			? BaseArray<T>
+			: BaseObject<T>;
 
 type TSearchParamPrimitiveValue<T> = T extends string | number
 	? BaseStringOrNumber<T>
-	: BaseBoolean<T>;
+	: BaseBoolean<ClearBoolean>;
 
 type TDefault =
 	| BaseDate
+	| BaseBuffer
 	| BaseStringOrNumber<ClearString>
 	| BaseStringOrNumber<ClearNumber>
 	| BaseBoolean<ClearBoolean>
@@ -49,6 +52,11 @@ type Base<T> =
 	| { $nilike: string; }
 	| { $in: NonNullable<T>[]; }
 	| { $nin: NonNullable<T>[]; };
+
+type BaseBuffer =
+	| ClearBuffer
+	| Base<ClearBuffer>
+	| Array<Base<ClearBuffer>>;
 
 type BaseDate =
 	| ClearDate
@@ -113,6 +121,7 @@ type JsonKeysToStringResult<T> = {
 		: never
 }[keyof T];
 
+type ClearBuffer = Omit<Buffer, Extract<keyof Buffer, string>>;
 type ClearDate = Omit<Date, Extract<keyof Date, string>>;
 type ClearString = Omit<string, Extract<keyof string, string>>;
 type ClearNumber = Omit<number, Extract<keyof number, string>>;

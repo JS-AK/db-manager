@@ -1,12 +1,11 @@
 import { PG } from "../../../index.js";
 
-import {
-	Model,
-	Types,
-	initModel,
-} from "./model/index.js";
+import * as Types from "./types.js";
 
-export class Domain extends PG.Domain.BaseTable<Model, {
+import { model } from "./model.js";
+import { queries } from "./queries.js";
+
+export class Domain extends PG.Domain.BaseTable<PG.Model.BaseTable, {
 	CreateFields: Types.CreateFields;
 	SearchFields: Types.SearchFields;
 	CoreFields: Types.TableFields;
@@ -30,14 +29,16 @@ export class Domain extends PG.Domain.BaseTable<Model, {
 	}
 
 	async test(): Promise<boolean> {
-		const res = await this.model.test();
+		const { rows: [entity] } = await this
+			.model
+			.pool
+			.query<{ test: boolean; }>(queries.test());
 
-		if (!res) return false;
+		if (!entity) return false;
 
-		return res.test;
+		return entity.test;
 	}
 }
 
-export const initDomain = (creds: PG.ModelTypes.TDBCreds) => {
-	return new Domain({ model: initModel(creds) });
-};
+export const domain = (creds: PG.ModelTypes.TDBCreds) =>
+	new Domain({ model: model(creds) });

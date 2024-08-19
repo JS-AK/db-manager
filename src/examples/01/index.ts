@@ -10,9 +10,9 @@ const creds = {
 	user: "postgres",
 };
 
-const UserDomain = new User.Domain(creds);
+const userDomain = User.domain(creds);
 
-const user = await UserDomain.createOne({
+const user = await userDomain.createOne({
 	firstName: "user firstName",
 	lastName: "user lastName",
 });
@@ -20,19 +20,19 @@ const user = await UserDomain.createOne({
 console.log(user);
 
 {
-	const { message, one: userFounded } = await UserDomain.getOneByParams({
+	const { message, one: founded } = await userDomain.getOneByParams({
 		params: { firstName: "user firstName" },
 		selected: ["id"],
 	});
 
-	if (userFounded) {
-		console.log(userFounded);
+	if (founded) {
+		console.log(founded);
 
-		const userUpdated = await UserDomain.updateOneByPk(userFounded.id, {
+		const updated = await userDomain.updateOneByPk(founded.id, {
 			firstName: "user firstName updated",
 		});
 
-		console.log(userUpdated);
+		console.log(updated);
 	} else {
 		console.log(message);
 	}

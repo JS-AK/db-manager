@@ -1,16 +1,12 @@
 import { PG } from "../../../index.js";
 
-import { Model, Types } from "./model/index.js";
+import * as Types from "./types.js";
 
-export class Domain extends PG.BaseDomain<{
-	Model: Model;
-	CreateFields: Types.CreateFields;
-	SearchFields: Types.SearchFields;
-	TableFields: Types.TableFields;
-	UpdateFields: Types.UpdateFields;
-}> {
+import { model } from "./model.js";
 
-	constructor(creds: PG.ModelTypes.TDBCreds) {
-		super({ model: new Model(creds) });
-	}
-}
+class Domain extends PG.Domain.BaseTable<PG.Model.BaseTable, {
+	CoreFields: Types.TableFields;
+}> { }
+
+export const domain = (creds: PG.ModelTypes.TDBCreds) =>
+	new Domain({ model: model(creds) });
