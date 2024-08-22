@@ -1,3 +1,10 @@
+# [3.34.0](https://github.com/JS-AK/db-manager/compare/v3.33.0...v3.34.0) (2024-08-22)
+
+
+### Features
+
+* updated pg-core qb added toSubquery method ([232e17a](https://github.com/JS-AK/db-manager/commit/232e17a09826e30d637e080ccede5a6a2f1c6611))
+
 # [3.33.0](https://github.com/JS-AK/db-manager/compare/v3.32.0...v3.33.0) (2024-08-19)
 
 
