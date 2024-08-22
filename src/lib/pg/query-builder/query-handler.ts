@@ -7,6 +7,7 @@ import * as SharedTypes from "../../../shared-types/index.js";
 export class QueryHandler {
 	#groupBy = "";
 	#join: string[] = [];
+	#subqueryName = "";
 	#mainHaving = "";
 	#mainQuery = "";
 	#mainWhere = "";
@@ -20,9 +21,12 @@ export class QueryHandler {
 	#values: unknown[] = [];
 	#with = "";
 
+	isSubquery = false;
+
 	constructor(options: {
 		groupBy?: string;
 		join?: string[];
+		isSubquery?: boolean;
 		mainHaving?: string;
 		mainQuery?: string;
 		mainWhere?: string;
@@ -37,6 +41,7 @@ export class QueryHandler {
 	}) {
 		if (options.groupBy) this.#groupBy = options.groupBy;
 		if (options.join) this.#join = options.join;
+		if (options.isSubquery) this.isSubquery = options.isSubquery;
 		if (options.mainHaving) this.#mainHaving = options.mainHaving;
 		if (options.mainQuery) this.#mainQuery = options.mainQuery;
 		if (options.mainWhere) this.#mainWhere = options.mainWhere;
@@ -70,9 +75,9 @@ export class QueryHandler {
 	}
 
 	#compareSql(): string {
-		return (
+		const query = (
 			(this.#with ? this.#with + " " : "")
-			+ (this.#mainQuery || "")
+			+ (this.#mainQuery ?? "")
 			+ (this.#join.length ? " " + this.#join.join(" ") : "")
 			+ (this.#mainWhere ? " " + this.#mainWhere : "")
 			+ (this.#groupBy ? " " + this.#groupBy : "")
@@ -81,8 +86,11 @@ export class QueryHandler {
 			+ (this.#pagination ? " " + this.#pagination : "")
 			+ (this.#returning ? " " + this.#returning : "")
 			+ (this.#for ? " " + this.#for : "")
-			+ ";"
 		);
+
+		return this.isSubquery
+			? `(${query})${this.#subqueryName ? ` AS ${this.#subqueryName}` : ""}`
+			: query + ";";
 	}
 
 	/* #replaceDollarSign(text: string) {
@@ -343,8 +351,12 @@ export class QueryHandler {
 		this.#mainQuery = `SELECT ${data.join(", ")}${fromClause}`;
 	}
 
-	from(data: string) {
-		this.#dataSourceRaw = data;
+	from(data: string, values?: unknown[]) {
+		const dataPrepared = values?.length
+			? this.#processDataWithValues(data, values)
+			: data;
+
+		this.#dataSourceRaw = dataPrepared;
 
 		const [firstClause, fromClause] = this.#mainQuery.split(" FROM ");
 
@@ -354,16 +366,17 @@ export class QueryHandler {
 			this.#mainQuery = `${this.#mainQuery} FROM ${this.#dataSourceRaw}`;
 		}
 
-		const chunks = data
+		const chunks = dataPrepared
 			.toLowerCase()
 			.split(" ")
 			.filter((e) => e && e !== "as");
+
 		const as = chunks[1]?.trim();
 
 		if (as) {
 			this.#dataSourcePrepared = as;
 		} else {
-			this.#dataSourcePrepared = data;
+			this.#dataSourcePrepared = dataPrepared;
 		}
 	}
 
@@ -641,5 +654,13 @@ export class QueryHandler {
 
 	returning(data: string[]) {
 		this.#returning = `RETURNING ${data.join(", ")}`;
+	}
+
+	toSubquery(data?: string) {
+		this.isSubquery = true;
+
+		if (data) {
+			this.#subqueryName = data;
+		}
 	}
 }
