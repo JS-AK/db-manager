@@ -5,6 +5,7 @@ import { start as startPG02 } from "./PG-02/index.js";
 import { start as startPG03 } from "./PG-03/index.js";
 import { start as startPG04 } from "./PG-04/index.js";
 import { start as startPG05 } from "./PG-05/index.js";
+import { start as startPG06 } from "./PG-06/index.js";
 
 const startMYSQLTests = async () => {
 	const creds = {
@@ -32,6 +33,7 @@ const startPGTests = async () => {
 	await startPG03(creds);
 	await startPG04(creds);
 	await startPG05(creds);
+	await startPG06(creds);
 };
 
 await startMYSQLTests();

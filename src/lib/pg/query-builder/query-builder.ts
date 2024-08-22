@@ -52,6 +52,10 @@ export class QueryBuilder {
 		this.#logger = preparedOptions.logger;
 	}
 
+	get isSubquery(): boolean {
+		return this.#queryHandler.isSubquery;
+	}
+
 	clone() {
 		const queryHandler = new QueryHandler(this.#queryHandler.optionsToClone);
 
@@ -127,8 +131,26 @@ export class QueryBuilder {
 		return this;
 	}
 
-	from(data: string) {
-		this.#queryHandler.from(data);
+	from(data: string | QueryBuilder, values?: unknown[]) {
+		if (data instanceof QueryBuilder) {
+			if (!data.isSubquery) {
+				throw new Error("data must be a query builder subquery");
+			}
+
+			const { query, values } = data.compareQuery();
+
+			this.#queryHandler.from(query, values);
+
+			return this;
+		} else {
+			this.#queryHandler.from(data, values);
+
+			return this;
+		}
+	}
+
+	toSubquery(name?: string) {
+		this.#queryHandler.toSubquery(name);
 
 		return this;
 	}
