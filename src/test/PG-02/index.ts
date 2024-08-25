@@ -103,12 +103,6 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 			},
 		);
 
-		await testContext.test(
-			"remove pools",
-			async () => {
-				await PG.BaseModel.removeStandardPool(creds);
-				await PG.BaseModel.removeTransactionPool(creds);
-			},
-		);
+		await testContext.test("PG.connection shutdown", async () => await PG.connection.shutdown());
 	});
 };
