@@ -1,3 +1,10 @@
+# [3.36.0](https://github.com/JS-AK/db-manager/compare/v3.35.0...v3.36.0) (2024-08-25)
+
+
+### Features
+
+* added pg-core transaction-manager ([afb0805](https://github.com/JS-AK/db-manager/commit/afb0805987e81fea5ba6273624cea01f51b5cdec))
+
 # [3.35.0](https://github.com/JS-AK/db-manager/compare/v3.34.0...v3.35.0) (2024-08-25)
 
 
