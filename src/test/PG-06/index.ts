@@ -12,7 +12,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 
 	return test("PG-06", async (testContext) => {
 		await testContext.test(
-			"create table",
+			"create tables",
 			async () => {
 				const pool = PG.BaseModel.getStandardPool(creds);
 
