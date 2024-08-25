@@ -1,3 +1,15 @@
+# [3.35.0](https://github.com/JS-AK/db-manager/compare/v3.34.0...v3.35.0) (2024-08-25)
+
+
+### Bug Fixes
+
+* updated jsdoc ([d457040](https://github.com/JS-AK/db-manager/commit/d45704048ee470372fa4d8f64a115cca0c76f1b0))
+
+
+### Features
+
+* updated pg-core connection  ([a141b68](https://github.com/JS-AK/db-manager/commit/a141b68ecb011d141c38a572c85c3826c300e8f9))
+
 # [3.34.0](https://github.com/JS-AK/db-manager/compare/v3.33.0...v3.34.0) (2024-08-22)
 
 
