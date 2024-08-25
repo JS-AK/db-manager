@@ -165,6 +165,7 @@ export const shutdown = async (): Promise<void> => {
  * @param {string} creds.host - The database host.
  * @param {number} creds.port - The database port.
  * @param {string} creds.database - The database name.
+ *
  * @returns {string} - The constructed credentials string.
  */
 const _createCredsString = (poolName: string, creds: { user: string; password: string; host: string; port: number; database: string; }): string => {
@@ -175,6 +176,7 @@ const _createCredsString = (poolName: string, creds: { user: string; password: s
  * Masks sensitive information in a connection string.
  *
  * @param {string} credsString - The connection credentials string.
+ *
  * @returns {string} - The credentials string with sensitive information masked.
  */
 const _maskSensitiveInfo = (credsString: string): string => {
