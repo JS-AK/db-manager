@@ -76,12 +76,12 @@ export type TSearchParamsWithOperator = {
 	"$~"?: string | string[];
 	"$?"?: string | string[];
 };
-export type TTable = {
+export type TTable<T extends readonly string[] = readonly string[]> = {
 	additionalSortingFields?: string[];
-	createField: { title: string; type: "unix_timestamp" | "timestamp"; } | null;
-	primaryKey: string | null;
-	tableFields: string[];
+	createField: { title: T[number]; type: "unix_timestamp" | "timestamp"; } | null;
+	primaryKey: T[number] | [T[number], T[number], ...T[number][]] | null;
+	tableFields: T;
 	tableName: string;
-	updateField: { title: string; type: "unix_timestamp" | "timestamp"; } | null;
+	updateField: { title: T[number]; type: "unix_timestamp" | "timestamp"; } | null;
 };
 export type TVOptions = TMVOptions;

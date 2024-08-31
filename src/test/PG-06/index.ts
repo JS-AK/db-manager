@@ -5,10 +5,12 @@ import { PG } from "../../index.js";
 
 import * as Admin from "./admin/index.js";
 import * as User from "./user/index.js";
+import * as UserTest from "./user-test/index.js";
 
 export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 	const admin = Admin.domain(creds);
 	const user = User.domain(creds);
+	const userTest = UserTest.domain(creds);
 
 	return test("PG-06", async (testContext) => {
 		await testContext.test(
@@ -16,6 +18,19 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 			async () => {
 				const pool = PG.BaseModel.getStandardPool(creds);
 
+				await pool.query(`
+					DROP TABLE IF EXISTS ${admin.tableName} CASCADE;
+
+					CREATE TABLE ${admin.tableName}(
+					    id                              BIGSERIAL PRIMARY KEY,
+
+					    first_name                      TEXT,
+					    last_name                       TEXT,
+
+					    created_at                      TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+					    updated_at                      TIMESTAMP WITH TIME ZONE
+					);
+				`);
 				await pool.query(`
 					DROP TABLE IF EXISTS ${user.tableName} CASCADE;
 
@@ -30,16 +45,19 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 					);
 				`);
 				await pool.query(`
-					DROP TABLE IF EXISTS ${admin.tableName} CASCADE;
+					DROP TABLE IF EXISTS ${userTest.tableName} CASCADE;
 
-					CREATE TABLE ${admin.tableName}(
-					    id                              BIGSERIAL PRIMARY KEY,
+					CREATE TABLE ${userTest.tableName}(
+					    id                              UUID DEFAULT gen_random_uuid(),
+					    id_sec                          UUID DEFAULT gen_random_uuid(),
 
 					    first_name                      TEXT,
 					    last_name                       TEXT,
 
 					    created_at                      TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-					    updated_at                      TIMESTAMP WITH TIME ZONE
+					    updated_at                      TIMESTAMP WITH TIME ZONE,
+
+					    CONSTRAINT pk_id_id_sec PRIMARY KEY (id, id_sec)
 					);
 				`);
 			},
@@ -200,6 +218,79 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 				);
 
 				await user.deleteAll();
+			},
+		);
+
+		await testContext.test(
+			"Composite pk",
+			async (testContext) => {
+				const user = await userTest.createOne({ first_name: "test" });
+
+				await testContext.test(
+					"userTest.getOneByPk",
+					async () => {
+						const { one: result } = await userTest.getOneByPk([user.id, user.id_sec]);
+
+						if (!result) throw new Error("result is empty");
+
+						assert.equal(result.first_name, "test");
+					},
+				);
+
+				await testContext.test(
+					"userTest.getOneByPk",
+					async () => {
+						const result = await userTest.updateOneByPk([user.id, user.id_sec], { last_name: "test" });
+
+						if (!result) throw new Error("result is empty");
+
+						assert.equal(result.first_name, "test");
+						assert.equal(result.last_name, "test");
+					},
+				);
+
+				await testContext.test(
+					"userTest.getCountByPks",
+					async () => {
+						const result = await userTest.getCountByPks([[user.id, user.id_sec]]);
+
+						assert.equal(result, 1);
+					},
+				);
+
+				await testContext.test(
+					"userTest.getCountByPksAndParams",
+					async () => {
+						const result = await userTest.getCountByPksAndParams([[user.id, user.id_sec]], {
+							params: { created_at: { $gte: new Date("1970") } },
+						});
+
+						assert.equal(result, 1);
+					},
+				);
+
+				await testContext.test(
+					"userTest.getCountByPksAndParams",
+					async () => {
+						const result = await userTest.getCountByPksAndParams([[user.id, user.id_sec]], {
+							params: {},
+						});
+
+						assert.equal(result, 1);
+					},
+				);
+
+				await testContext.test(
+					"userTest.deleteOneByPk",
+					async () => {
+						const result = await userTest.deleteOneByPk([user.id, user.id_sec]);
+
+						if (!result) throw new Error("result is empty");
+
+						assert.equal(result[0], user.id);
+						assert.equal(result[1], user.id_sec);
+					},
+				);
 			},
 		);
 
