@@ -1,3 +1,10 @@
+# [3.37.0-next.1](https://github.com/JS-AK/db-manager/compare/v3.36.0...v3.37.0-next.1) (2024-08-31)
+
+
+### Features
+
+* updated pg-core added composite pk ([da6f520](https://github.com/JS-AK/db-manager/commit/da6f520de6f9b88bfa389789e81f92fc82e1ae5e))
+
 # [3.36.0](https://github.com/JS-AK/db-manager/compare/v3.35.0...v3.36.0) (2024-08-25)
 
 
