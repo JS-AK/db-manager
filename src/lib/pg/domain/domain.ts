@@ -65,7 +65,7 @@ export class BaseDomain<TC extends {
 			params: Types.TSearchParams<ConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>;
 			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>>;
 		}) => this.model.compareQuery.deleteByParams({ $and: options.params, $or: options.paramsOr }),
-		deleteOneByPk: <T = unknown>(pk: T) => this.model.compareQuery.deleteOneByPk(pk),
+		deleteOneByPk: <T>(pk: T) => this.model.compareQuery.deleteOneByPk(pk),
 		getArrByParams: <T extends keyof TC["TableFields"]>(options: {
 			params: Types.TSearchParams<ConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>;
 			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>>;
@@ -80,8 +80,8 @@ export class BaseDomain<TC extends {
 			params: Types.TSearchParams<ConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>;
 			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>>;
 		}) => this.model.compareQuery.getCountByParams({ $and: options.params, $or: options.paramsOr }),
-		getCountByPks: <T = unknown>(pks: T[]) => this.model.compareQuery.getCountByPks(pks),
-		getCountByPksAndParams: <T = unknown>(
+		getCountByPks: <T>(pks: T[]) => this.model.compareQuery.getCountByPks(pks),
+		getCountByPksAndParams: <T>(
 			pks: T[],
 			options: {
 				params: Types.TSearchParams<ConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>;
@@ -93,7 +93,7 @@ export class BaseDomain<TC extends {
 			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>>;
 			selected?: [T, ...T[]];
 		}) => this.model.compareQuery.getOneByParams({ $and: options.params, $or: options.paramsOr }, options.selected as string[]),
-		getOneByPk: <T = unknown>(pk: T) => this.model.compareQuery.getOneByPk(pk),
+		getOneByPk: <T>(pk: T) => this.model.compareQuery.getOneByPk(pk),
 		updateByParams: <T extends Extract<keyof TC["TableFields"], string>[] = Extract<keyof TC["TableFields"], string>[]>(
 			queryConditions: {
 				params: Types.TSearchParams<ConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>;
@@ -102,7 +102,7 @@ export class BaseDomain<TC extends {
 			},
 			updateFields: ConditionalRawParamsType<TC["UpdateFields"], TC["TableFields"]>,
 		) => this.model.compareQuery.updateByParams({ $and: queryConditions.params, $or: queryConditions.paramsOr, returningFields: queryConditions.returningFields }, updateFields),
-		updateOneByPk: <T extends string | number = string | number, R extends Extract<keyof TC["TableFields"], string>[] = Extract<keyof TC["TableFields"], string>[]>(
+		updateOneByPk: <T, R extends Extract<keyof TC["TableFields"], string>[] = Extract<keyof TC["TableFields"], string>[]>(
 			primaryKeyValue: T,
 			updateFields: ConditionalRawParamsType<TC["UpdateFields"], TC["TableFields"]>,
 			updateOptions?: { returningFields?: R; },
@@ -133,7 +133,7 @@ export class BaseDomain<TC extends {
 		);
 	}
 
-	async deleteOneByPk<T = unknown>(pk: T): Promise<T | null> {
+	async deleteOneByPk<T>(pk: T): Promise<T | null> {
 		return this.model.deleteOneByPk<T>(pk);
 	}
 
@@ -155,11 +155,11 @@ export class BaseDomain<TC extends {
 		);
 	}
 
-	async getCountByPks<T = unknown>(pks: T[]): Promise<number> {
+	async getCountByPks<T>(pks: T[]): Promise<number> {
 		return this.model.getCountByPks(pks);
 	}
 
-	async getCountByPksAndParams<T = unknown>(
+	async getCountByPksAndParams<T>(
 		pks: T[],
 		options: {
 			params: Types.TSearchParams<ConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>;
@@ -212,7 +212,7 @@ export class BaseDomain<TC extends {
 		return { one };
 	}
 
-	async getOneByPk<T = unknown>(pk: T): Promise<{ message?: string; one?: TC["TableFields"]; }> {
+	async getOneByPk<T>(pk: T): Promise<{ message?: string; one?: TC["TableFields"]; }> {
 		const one = await this.model.getOneByPk(pk);
 
 		if (!one) return { message: `Not found from ${this.model.tableName}` };
@@ -231,12 +231,12 @@ export class BaseDomain<TC extends {
 		return this.model.updateByParams({ $and: queryConditions.params, $or: queryConditions.paramsOr, returningFields: queryConditions.returningFields }, updateFields);
 	}
 
-	async updateOneByPk<T extends string | number = string | number, R extends Extract<keyof TC["TableFields"], string>[] = Extract<keyof TC["TableFields"], string>[]>(
+	async updateOneByPk<T, R extends Extract<keyof TC["TableFields"], string>[] = Extract<keyof TC["TableFields"], string>[]>(
 		primaryKeyValue: T,
 		updateFields: ConditionalRawParamsType<TC["UpdateFields"], TC["TableFields"]>,
 		updateOptions?: { returningFields?: R; },
 	): Promise<TC["TableFields"] | undefined> {
-		const one = await this.model.updateOneByPk<TC["TableFields"]>(primaryKeyValue, updateFields, updateOptions);
+		const one = await this.model.updateOneByPk<TC["TableFields"], T>(primaryKeyValue, updateFields, updateOptions);
 
 		return one;
 	}
