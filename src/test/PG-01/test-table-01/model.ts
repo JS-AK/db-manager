@@ -17,7 +17,7 @@ export const model = (creds: PG.ModelTypes.TDBCreds) => new PG.Model.BaseTable(
 
 			"created_at",
 			"updated_at",
-		],
+		] as const,
 		tableName: "test_table_01",
 		updateField: { title: "updated_at", type: "timestamp" },
 	},

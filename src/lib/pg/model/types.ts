@@ -76,7 +76,7 @@ export type TSearchParamsWithOperator = {
 	"$~"?: string | string[];
 	"$?"?: string | string[];
 };
-export type TTable<T extends readonly string[] = readonly string[]> = {
+export type TTable<T extends readonly string[] | string[] = readonly string[]> = {
 	additionalSortingFields?: string[];
 	createField: { title: T[number]; type: "unix_timestamp" | "timestamp"; } | null;
 	primaryKey: T[number] | [T[number], T[number], ...T[number][]] | null;
