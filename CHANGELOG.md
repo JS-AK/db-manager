@@ -1,3 +1,10 @@
+# [3.37.0-next.4](https://github.com/JS-AK/db-manager/compare/v3.37.0-next.3...v3.37.0-next.4) (2024-09-01)
+
+
+### Bug Fixes
+
+* updated types ([dd647fb](https://github.com/JS-AK/db-manager/commit/dd647fb0745f7935101e6fc53ed072a0a36f769f))
+
 # [3.37.0-next.3](https://github.com/JS-AK/db-manager/compare/v3.37.0-next.2...v3.37.0-next.3) (2024-09-01)
 
 
