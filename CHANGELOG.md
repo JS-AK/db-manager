@@ -1,3 +1,17 @@
+# [3.37.0](https://github.com/JS-AK/db-manager/compare/v3.36.0...v3.37.0) (2024-09-01)
+
+
+### Bug Fixes
+
+* updated pg-core typing Model.tableFields ([9aef308](https://github.com/JS-AK/db-manager/commit/9aef3087b25ef6e75c8c98bf13aa040e18b7d13a))
+* updated types ([dd647fb](https://github.com/JS-AK/db-manager/commit/dd647fb0745f7935101e6fc53ed072a0a36f769f))
+* updated types ([4f087dd](https://github.com/JS-AK/db-manager/commit/4f087dd7ffb26385a436564b439be2d08f961c0e))
+
+
+### Features
+
+* updated pg-core added composite pk ([da6f520](https://github.com/JS-AK/db-manager/commit/da6f520de6f9b88bfa389789e81f92fc82e1ae5e))
+
 # [3.36.0](https://github.com/JS-AK/db-manager/compare/v3.35.0...v3.36.0) (2024-08-25)
 
 
