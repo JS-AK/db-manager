@@ -96,7 +96,7 @@ export class BaseTable<
 			params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
 			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
 		}) => this.model.compareQuery.deleteByParams({ $and: options.params, $or: options.paramsOr }),
-		deleteOneByPk: <T = unknown | unknown[]>(pk: T) => this.model.compareQuery.deleteOneByPk(pk),
+		deleteOneByPk: <T = unknown>(pk: T) => this.model.compareQuery.deleteOneByPk(pk),
 		getArrByParams: <T extends keyof BTG["CoreFields"]>(options: {
 			params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
 			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
@@ -111,8 +111,8 @@ export class BaseTable<
 			params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
 			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
 		}) => this.model.compareQuery.getCountByParams({ $and: options.params, $or: options.paramsOr }),
-		getCountByPks: <T = unknown | unknown[]>(pks: T[]) => this.model.compareQuery.getCountByPks(pks),
-		getCountByPksAndParams: <T = unknown | unknown[]>(
+		getCountByPks: <T = unknown>(pks: T[]) => this.model.compareQuery.getCountByPks(pks),
+		getCountByPksAndParams: <T = unknown>(
 			pks: T[],
 			options: {
 				params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
@@ -124,7 +124,7 @@ export class BaseTable<
 			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
 			selected?: [T, ...T[]];
 		}) => this.model.compareQuery.getOneByParams({ $and: options.params, $or: options.paramsOr }, options.selected as string[]),
-		getOneByPk: <T = unknown | unknown[]>(pk: T) => this.model.compareQuery.getOneByPk(pk),
+		getOneByPk: <T = unknown>(pk: T) => this.model.compareQuery.getOneByPk(pk),
 		updateByParams: <T extends Extract<keyof BTG["CoreFields"], string>[] = Extract<keyof BTG["CoreFields"], string>[]>(
 			queryConditions: {
 				params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
@@ -244,7 +244,7 @@ export class BaseTable<
 	 *
 	 * @returns A promise that resolves to the deleted primary key if successful, or `null` if no record was found.
 	 */
-	async deleteOneByPk<T = unknown | unknown[]>(pk: T): Promise<T | null> {
+	async deleteOneByPk<T = unknown>(pk: T): Promise<T | null> {
 		return this.model.deleteOneByPk<T>(pk);
 	}
 
@@ -287,7 +287,7 @@ export class BaseTable<
 	 *
 	 * @returns A promise that resolves to the number of matching records.
 	 */
-	async getCountByPks<T = unknown | unknown[]>(pks: T[]): Promise<number> {
+	async getCountByPks<T = unknown>(pks: T[]): Promise<number> {
 		return this.model.getCountByPks(pks);
 	}
 
@@ -301,7 +301,7 @@ export class BaseTable<
 	 *
 	 * @returns A promise that resolves to the number of matching records.
 	 */
-	async getCountByPksAndParams<T = unknown | unknown[]>(
+	async getCountByPksAndParams<T = unknown>(
 		pks: T[],
 		options: {
 			params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
@@ -355,7 +355,7 @@ export class BaseTable<
 	 *
 	 * @returns A promise that resolves to the retrieved record with the selected fields or a message if not found.
 	 */
-	async getOneByPk<T = unknown | unknown[]>(pk: T): Promise<{ message?: string; one?: BTG["CoreFields"]; }> {
+	async getOneByPk<T = unknown>(pk: T): Promise<{ message?: string; one?: BTG["CoreFields"]; }> {
 		const one = await this.model.getOneByPk(pk);
 
 		if (!one) return { message: `Not found from ${this.model.tableName}` };
@@ -395,7 +395,7 @@ export class BaseTable<
 	 *
 	 * @returns A promise that resolves to the updated record or `undefined` if the update failed.
 	 */
-	async updateOneByPk<T = unknown | unknown[], R extends Extract<keyof BTG["CoreFields"], string>[] = Extract<keyof BTG["CoreFields"], string>[]>(
+	async updateOneByPk<T = unknown, R extends Extract<keyof BTG["CoreFields"], string>[] = Extract<keyof BTG["CoreFields"], string>[]>(
 		primaryKeyValue: T,
 		updateFields: ConditionalRawParamsType<BTG["UpdateFields"], BTG["CoreFields"]>,
 		updateOptions?: { returningFields?: R; },
