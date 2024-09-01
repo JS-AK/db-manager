@@ -9,7 +9,7 @@ import { QueryBuilder } from "../query-builder/index.js";
 import queries from "./queries.js";
 import { setLoggerAndExecutor } from "../helpers/index.js";
 
-export class BaseModel {
+export class BaseModel<T extends readonly string[] = readonly string[]> {
 	#insertOptions;
 	#sortingOrders = new Set(["ASC", "DESC"]);
 	#tableFieldsSet;
@@ -21,11 +21,11 @@ export class BaseModel {
 	pool: pg.Pool;
 	primaryKey;
 	tableName;
-	tableFields;
+	tableFields: readonly string[];
 	updateField;
 
 	constructor(
-		data: Types.TTable,
+		data: Types.TTable<T>,
 		dbCreds: Types.TDBCreds,
 		options?: Types.TDBOptions,
 	) {
@@ -33,7 +33,7 @@ export class BaseModel {
 		this.pool = connection.getStandardPool(dbCreds);
 		this.primaryKey = data.primaryKey;
 		this.tableName = data.tableName;
-		this.tableFields = data.tableFields;
+		this.tableFields = [...data.tableFields];
 		this.updateField = data.updateField;
 
 		this.#tableFieldsSet = new Set([
@@ -72,10 +72,12 @@ export class BaseModel {
 				values,
 			};
 		},
-		deleteOneByPk: <T = string | number>(primaryKey: T): { query: string; values: unknown[]; } => {
+		deleteOneByPk: <T>(primaryKey: T): { query: string; values: unknown[]; } => {
+			if (!this.primaryKey) { throw new Error("Primary key not specified"); }
+
 			return {
-				query: queries.deleteByPk(this.tableName, this.primaryKey as string),
-				values: [primaryKey],
+				query: queries.deleteByPk(this.tableName, this.primaryKey),
+				values: Array.isArray(primaryKey) ? primaryKey : [primaryKey],
 			};
 		},
 		getArrByParams: (
@@ -117,21 +119,47 @@ export class BaseModel {
 				values,
 			};
 		},
-		getCountByPks: <T = string | number>(pks: T[]): { query: string; values: unknown[]; } => {
+		getCountByPks: <T>(pks: T[]): { query: string; values: unknown[]; } => {
+			if (!this.primaryKey) { throw new Error("Primary key not specified"); }
+
+			if (Array.isArray(pks[0])) {
+				if (!Array.isArray(this.primaryKey)) { throw new Error("invalid primary key type"); }
+
+				return {
+					query: queries.getCountByCompositePks(this.primaryKey as string[], this.tableName, pks.length),
+					values: [pks.flat()],
+				};
+			}
+
+			if (Array.isArray(this.primaryKey)) { throw new Error("invalid primary key type"); }
+
 			return {
 				query: queries.getCountByPks(this.primaryKey as string, this.tableName),
 				values: [pks],
 			};
 		},
-		getCountByPksAndParams: <T = string | number>(
+		getCountByPksAndParams: <T>(
 			pks: T[],
 			{ $and = {}, $or }: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
 		): { query: string; values: unknown[]; } => {
+			if (!this.primaryKey) { throw new Error("Primary key not specified"); }
+
 			const { queryArray, queryOrArray, values } = this.compareFields($and, $or);
 			const { orderNumber, searchFields } = this.getFieldsToSearch({ queryArray, queryOrArray });
 
+			if (Array.isArray(pks[0])) {
+				if (!Array.isArray(this.primaryKey)) { throw new Error("invalid primary key type"); }
+
+				return {
+					query: queries.getCountByCompositePksAndParams(this.primaryKey, this.tableName, searchFields, orderNumber, pks.length),
+					values: pks.flat(),
+				};
+			}
+
+			if (Array.isArray(this.primaryKey)) { throw new Error("invalid primary key type"); }
+
 			return {
-				query: queries.getCountByPksAndParams(this.primaryKey as string, this.tableName, searchFields, orderNumber),
+				query: queries.getCountByPksAndParams(this.primaryKey, this.tableName, searchFields, orderNumber),
 				values: [...values, pks],
 			};
 		},
@@ -155,9 +183,11 @@ export class BaseModel {
 				values,
 			};
 		},
-		getOneByPk: <T = string | number>(pk: T): { query: string; values: unknown[]; } => {
+		getOneByPk: <T>(pk: T): { query: string; values: unknown[]; } => {
+			if (!this.primaryKey) { throw new Error("Primary key not specified"); }
+
 			return {
-				query: queries.getOneByPk(this.tableName, this.primaryKey as string),
+				query: queries.getOneByPk(this.tableName, this.primaryKey),
 				values: [pk],
 			};
 		},
@@ -192,18 +222,20 @@ export class BaseModel {
 				values: [...values, ...Object.values(clearedUpdate)],
 			};
 		},
-		updateOneByPk: <T extends string | number = string | number>(
+		updateOneByPk: <T>(
 			primaryKeyValue: T,
 			updateFields: SharedTypes.TRawParams = {},
 			updateOptions?: { returningFields?: string[]; },
 		): { query: string; values: unknown[]; } => {
+			if (!this.primaryKey) { throw new Error("Primary key not specified"); }
+
 			const clearedParams = SharedHelpers.clearUndefinedFields(updateFields);
 			const fields = Object.keys(clearedParams);
 
 			if (!fields.length) throw new Error("No one update field arrived");
 
 			return {
-				query: queries.updateByPk(this.tableName, fields, this.primaryKey as string, this.updateField, updateOptions?.returningFields),
+				query: queries.updateByPk(this.tableName, fields, this.primaryKey, this.updateField, updateOptions?.returningFields),
 				values: [...Object.values(clearedParams), primaryKeyValue],
 			};
 		},
@@ -217,13 +249,18 @@ export class BaseModel {
 		return;
 	}
 
-	async deleteOneByPk<T = string | number>(primaryKey: T): Promise<T | null> {
-		if (!this.primaryKey) { throw new Error("Primary key not specified"); }
-
+	async deleteOneByPk<T>(primaryKey: T): Promise<T | null> {
 		const sql = this.compareQuery.deleteOneByPk(primaryKey);
-		const { rows: [entity] } = (await this.pool.query(sql.query, sql.values));
 
-		return entity?.[this.primaryKey] || null;
+		const { rows: [entity] } = await this.#executeSql(sql);
+
+		if (!entity) return null;
+
+		if (Array.isArray(this.primaryKey)) {
+			return this.primaryKey.map((e) => entity[e]) as T;
+		} else {
+			return entity[this.primaryKey as string];
+		}
 	}
 
 	async deleteByParams(
@@ -248,21 +285,17 @@ export class BaseModel {
 		return rows;
 	}
 
-	async getCountByPks<T = string | number>(pks: T[]): Promise<number> {
-		if (!this.primaryKey) { throw new Error("Primary key not specified"); }
-
+	async getCountByPks<T>(pks: T[]): Promise<number> {
 		const sql = this.compareQuery.getCountByPks(pks);
 		const { rows: [entity] } = await this.#executeSql(sql);
 
 		return Number(entity?.count) || 0;
 	}
 
-	async getCountByPksAndParams<T = string | number>(
+	async getCountByPksAndParams<T>(
 		pks: T[],
 		params: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
 	) {
-		if (!this.primaryKey) { throw new Error("Primary key not specified"); }
-
 		const sql = this.compareQuery.getCountByPksAndParams(pks, params);
 		const { rows: [entity] } = await this.#executeSql(sql);
 
@@ -286,9 +319,7 @@ export class BaseModel {
 		return entity;
 	}
 
-	async getOneByPk<T = string | number>(pk: T) {
-		if (!this.primaryKey) { throw new Error("Primary key not specified"); }
-
+	async getOneByPk<T>(pk: T) {
 		const sql = this.compareQuery.getOneByPk(pk);
 		const { rows: [entity] } = await this.#executeSql(sql);
 
@@ -315,13 +346,11 @@ export class BaseModel {
 		return rows;
 	}
 
-	async updateOneByPk<Q extends pg.QueryResultRow, T extends string | number = string | number>(
+	async updateOneByPk<Q extends pg.QueryResultRow, T>(
 		primaryKeyValue: T,
 		updateFields: SharedTypes.TRawParams = {},
 		updateOptions?: { returningFields?: string[]; },
 	) {
-		if (!this.primaryKey) { throw new Error("Primary key not specified"); }
-
 		const sql = this.compareQuery.updateOneByPk(primaryKeyValue, updateFields, updateOptions);
 		const { rows: [entity] } = await this.#executeSql<Q>(sql);
 

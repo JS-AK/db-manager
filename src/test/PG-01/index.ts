@@ -249,7 +249,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 							if (!one) throw new Error("No one found");
 
 							assert.equal(result.length, 5);
-							assert.equal(isHasFields(one, testTable.tableFields), true);
+							assert.equal(isHasFields(one, [...testTable.tableFields]), true);
 						},
 					);
 				}
@@ -273,7 +273,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 
 							assert.equal(result.length, 5);
 							assert.equal(isHasFields(one, ["number_key"]), true);
-							assert.equal(isHasFields(one, testTable.tableFields), false);
+							assert.equal(isHasFields(one, [...testTable.tableFields]), false);
 						},
 					);
 				}
@@ -597,7 +597,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 							if (!one) throw new Error("No one found");
 
 							assert.equal(one.number_key, 1);
-							assert.equal(isHasFields(one, testTable.tableFields), true);
+							assert.equal(isHasFields(one, [...testTable.tableFields]), true);
 						},
 					);
 				}
@@ -623,7 +623,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 
 							assert.equal(one.number_key, 1);
 							assert.equal(isHasFields(one, ["number_key"]), true);
-							assert.equal(isHasFields(one, testTable.tableFields), false);
+							assert.equal(isHasFields(one, [...testTable.tableFields]), false);
 						},
 					);
 				}

@@ -1,3 +1,5 @@
+import * as SharedTypes from "../../../shared-types/index.js";
+
 export default {
 	createMany(data: {
 		fields: string[][];
@@ -58,8 +60,15 @@ export default {
 
 	deleteByPk(
 		tableName: string,
-		primaryKeyField: string,
+		primaryKeyField: SharedTypes.TPrimaryKeyField,
 	) {
+		if (Array.isArray(primaryKeyField)) {
+			const query = primaryKeyField.map((e, idx) => `${e} = $${++idx}`);
+			const returning = primaryKeyField.join(", ");
+
+			return `DELETE FROM ${tableName} WHERE ${query.join(" AND ")} RETURNING ${returning};`;
+		}
+
 		return `DELETE FROM ${tableName} WHERE ${primaryKeyField} = $1 RETURNING ${primaryKeyField};`;
 	},
 
@@ -73,11 +82,56 @@ export default {
 		return `SELECT ${selectedFields} FROM ${tableName}${searchFields}${orderByFields}${paginationFields};`;
 	},
 
+	getCountByCompositePks(
+		primaryKeyFields: string[],
+		tableName: string,
+		pksCount: number,
+	): string {
+		const conditions = [];
+
+		for (let i = 0; i < pksCount; i++) {
+			const condition = primaryKeyFields
+				.map((field, index) => `${field} = $${i * primaryKeyFields.length + index + 1}`)
+				.join(" AND ");
+
+			conditions.push(`(${condition})`);
+		}
+
+		const whereClause = conditions.join(" OR ");
+
+		return `SELECT COUNT(*) AS count FROM ${tableName} WHERE ${whereClause};`;
+	},
+
+	getCountByCompositePksAndParams(
+		primaryKeyFields: string[],
+		tableName: string,
+		searchFields: string,
+		orderNumber: number,
+		pksCount: number,
+	): string {
+		const conditions = [];
+
+		for (let i = 0; i < pksCount; i++) {
+			const condition = primaryKeyFields
+				.map((field, index) => `${field} = $${orderNumber + 1 + i * primaryKeyFields.length + index}`)
+				.join(" AND ");
+
+			conditions.push(`(${condition})`);
+		}
+
+		const compositePkCondition = conditions.join(" OR ");
+
+		return `SELECT COUNT(*) AS count FROM ${tableName} ${searchFields} AND (${compositePkCondition});`;
+	},
+
 	getCountByParams(tableName: string, searchFields: string) {
 		return `SELECT COUNT(*) AS count FROM ${tableName}${searchFields};`;
 	},
 
-	getCountByPks(primaryKeyField: string, tableName: string) {
+	getCountByPks(
+		primaryKeyField: string,
+		tableName: string,
+	) {
 		return `SELECT COUNT(*) AS count FROM ${tableName} WHERE ${primaryKeyField} = ANY ($1);`;
 	},
 
@@ -90,7 +144,16 @@ export default {
 		return `SELECT COUNT(*) AS count FROM ${tableName}${searchFields} AND ${primaryKeyField} = ANY ($${orderNumber + 1});`;
 	},
 
-	getOneByPk(tableName: string, primaryKeyField: string) {
+	getOneByPk(
+		tableName: string,
+		primaryKeyField: SharedTypes.TPrimaryKeyField,
+	) {
+		if (Array.isArray(primaryKeyField)) {
+			const query = primaryKeyField.map((e, idx) => `${e} = $${++idx}`);
+
+			return `SELECT * FROM ${tableName} WHERE ${query.join(" AND ")} LIMIT 1;`;
+		}
+
 		return `SELECT * FROM ${tableName} WHERE ${primaryKeyField} = $1 LIMIT 1;`;
 	},
 
@@ -125,7 +188,7 @@ export default {
 	updateByPk(
 		tableName: string,
 		fields: string[],
-		primaryKeyField: string,
+		primaryKeyField: SharedTypes.TPrimaryKeyField,
 		updateField: { title: string; type: "unix_timestamp" | "timestamp"; } | null,
 		returning?: string[],
 	) {
@@ -144,6 +207,12 @@ export default {
 				default:
 					throw new Error("Invalid type: " + updateField.type);
 			}
+		}
+
+		if (Array.isArray(primaryKeyField)) {
+			const query = primaryKeyField.map((e) => `${e} = $${idx++}`);
+
+			return `UPDATE ${tableName} SET ${updateFields} WHERE ${query.join(" AND ")} RETURNING ${returning?.length ? returning.join(",") : "*"};`;
 		}
 
 		return `UPDATE ${tableName} SET ${updateFields} WHERE ${primaryKeyField} = $${idx} RETURNING ${returning?.length ? returning.join(",") : "*"};`;

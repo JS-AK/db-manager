@@ -3,22 +3,18 @@ import { PG } from "../../../index.js";
 export const model = (creds: PG.ModelTypes.TDBCreds) => new PG.Model.BaseTable(
 	{
 		createField: { title: "created_at", type: "timestamp" },
-		primaryKey: "id",
+		primaryKey: ["id", "id_sec"],
 		tableFields: [
 			"id",
+			"id_sec",
 
-			"books",
-			"description",
-			"checklist",
-			"meta",
-			"number_key",
-			"number_range",
-			"title",
+			"first_name",
+			"last_name",
 
 			"created_at",
 			"updated_at",
 		] as const,
-		tableName: "test_table_01",
+		tableName: "users_test",
 		updateField: { title: "updated_at", type: "timestamp" },
 	},
 	creds,
