@@ -185,7 +185,7 @@ export class BaseTable<T extends readonly string[] = readonly string[]> {
 				values,
 			};
 		},
-		deleteOneByPk: <T = unknown | unknown[]>(primaryKey: T): { query: string; values: unknown[]; } => {
+		deleteOneByPk: <T = unknown>(primaryKey: T): { query: string; values: unknown[]; } => {
 			if (!this.primaryKey) { throw new Error("Primary key not specified"); }
 
 			return {
@@ -232,7 +232,7 @@ export class BaseTable<T extends readonly string[] = readonly string[]> {
 				values,
 			};
 		},
-		getCountByPks: <T = unknown | unknown[]>(pks: T[]): { query: string; values: unknown[]; } => {
+		getCountByPks: <T = unknown>(pks: T[]): { query: string; values: unknown[]; } => {
 			if (!this.primaryKey) { throw new Error("Primary key not specified"); }
 
 			if (Array.isArray(pks[0])) {
@@ -251,7 +251,7 @@ export class BaseTable<T extends readonly string[] = readonly string[]> {
 				values: [pks],
 			};
 		},
-		getCountByPksAndParams: <T = unknown | unknown[]>(
+		getCountByPksAndParams: <T = unknown>(
 			pks: T[],
 			{ $and = {}, $or }: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
 		): { query: string; values: unknown[]; } => {
@@ -296,7 +296,7 @@ export class BaseTable<T extends readonly string[] = readonly string[]> {
 				values,
 			};
 		},
-		getOneByPk: <T = unknown | unknown[]>(primaryKey: T): { query: string; values: unknown[]; } => {
+		getOneByPk: <T = unknown>(primaryKey: T): { query: string; values: unknown[]; } => {
 			if (!this.primaryKey) { throw new Error("Primary key not specified"); }
 
 			return {
@@ -320,7 +320,7 @@ export class BaseTable<T extends readonly string[] = readonly string[]> {
 				values: [...values, ...Object.values(clearedUpdate)],
 			};
 		},
-		updateOneByPk: <T = unknown | unknown[]>(
+		updateOneByPk: <T = unknown>(
 			primaryKeyValue: T,
 			updateFields: SharedTypes.TRawParams = {},
 			updateOptions?: { returningFields?: string[]; },
@@ -347,7 +347,7 @@ export class BaseTable<T extends readonly string[] = readonly string[]> {
 		return;
 	}
 
-	async deleteOneByPk<T = unknown | unknown[]>(primaryKey: T): Promise<T | null> {
+	async deleteOneByPk<T = unknown>(primaryKey: T): Promise<T | null> {
 		const sql = this.compareQuery.deleteOneByPk(primaryKey);
 
 		const { rows: [entity] } = await this.#executeSql(sql);
@@ -383,14 +383,14 @@ export class BaseTable<T extends readonly string[] = readonly string[]> {
 		return rows;
 	}
 
-	async getCountByPks<T = unknown | unknown[]>(pks: T[]): Promise<number> {
+	async getCountByPks<T = unknown>(pks: T[]): Promise<number> {
 		const sql = this.compareQuery.getCountByPks(pks);
 		const { rows: [entity] } = await this.#executeSql(sql);
 
 		return Number(entity?.count) || 0;
 	}
 
-	async getCountByPksAndParams<T = unknown | unknown[]>(
+	async getCountByPksAndParams<T = unknown>(
 		pks: T[],
 		params: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
 	) {
@@ -417,7 +417,7 @@ export class BaseTable<T extends readonly string[] = readonly string[]> {
 		return entity;
 	}
 
-	async getOneByPk<T = unknown | unknown[]>(primaryKey: T) {
+	async getOneByPk<T = unknown>(primaryKey: T) {
 		const sql = this.compareQuery.getOneByPk(primaryKey);
 		const { rows: [entity] } = await this.#executeSql(sql);
 
@@ -454,7 +454,7 @@ export class BaseTable<T extends readonly string[] = readonly string[]> {
 		return rows;
 	}
 
-	async updateOneByPk<Q extends pg.QueryResultRow, T = unknown | unknown[]>(
+	async updateOneByPk<Q extends pg.QueryResultRow, T = unknown>(
 		primaryKeyValue: T,
 		updateFields: SharedTypes.TRawParams = {},
 		updateOptions?: { returningFields?: string[]; },
