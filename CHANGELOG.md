@@ -1,3 +1,10 @@
+# [3.37.0-next.2](https://github.com/JS-AK/db-manager/compare/v3.37.0-next.1...v3.37.0-next.2) (2024-09-01)
+
+
+### Bug Fixes
+
+* updated pg-core typing Model.tableFields ([9aef308](https://github.com/JS-AK/db-manager/commit/9aef3087b25ef6e75c8c98bf13aa040e18b7d13a))
+
 # [3.37.0-next.1](https://github.com/JS-AK/db-manager/compare/v3.36.0...v3.37.0-next.1) (2024-08-31)
 
 
