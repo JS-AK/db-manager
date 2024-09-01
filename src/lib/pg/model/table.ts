@@ -23,7 +23,7 @@ export class BaseTable<T extends readonly string[] = readonly string[]> {
 	pool: pg.Pool | pg.PoolClient;
 	primaryKey;
 	tableName;
-	tableFields;
+	tableFields: readonly string[];
 	updateField;
 
 	constructor(
@@ -37,7 +37,7 @@ export class BaseTable<T extends readonly string[] = readonly string[]> {
 		this.pool = poolClient || connection.getStandardPool(dbCreds);
 		this.primaryKey = data.primaryKey;
 		this.tableName = data.tableName;
-		this.tableFields = data.tableFields;
+		this.tableFields = [...data.tableFields];
 		this.updateField = data.updateField;
 
 		this.#tableFieldsSet = new Set([
