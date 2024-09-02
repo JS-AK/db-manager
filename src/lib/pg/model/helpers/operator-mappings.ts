@@ -1,5 +1,24 @@
 import * as Types from "../types.js";
 
+/**
+ * A mapping of operators to their corresponding SQL expression generators.
+ *
+ * This `Map` associates a string operator key (e.g., `$custom`, `$between`) with a function that takes a field and an order number,
+ * and returns a tuple containing the generated SQL string and the updated order number.
+ *
+ * @type {Map<Types.TOperator, (el: Types.TField, orderNumber: number) => [string, number]>}
+ *
+ * @property {function} $custom - Generates a custom SQL expression using the field's key and sign.
+ * @property {function} $between - Generates a SQL `BETWEEN` expression with two placeholders.
+ * @property {function} $in - Generates a SQL `= ANY` expression for array inclusion.
+ * @property {function} $like - Generates a SQL `LIKE` expression for pattern matching.
+ * @property {function} $ilike - Generates a SQL `ILIKE` expression for case-insensitive pattern matching.
+ * @property {function} $nin - Generates a SQL `NOT = ANY` expression for array exclusion.
+ * @property {function} $nbetween - Generates a SQL `NOT BETWEEN` expression with two placeholders.
+ * @property {function} $nlike - Generates a SQL `NOT LIKE` expression for negated pattern matching.
+ * @property {function} $nilike - Generates a SQL `NOT ILIKE` expression for negated case-insensitive pattern matching.
+ * @property {function} $withoutParameters - Returns the field's key as the SQL expression without any parameters.
+ */
 export const operatorMappings: Map<
 	Types.TOperator,
 	(el: Types.TField, orderNumber: number) => [string, number]

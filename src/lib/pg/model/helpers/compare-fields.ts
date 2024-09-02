@@ -2,10 +2,25 @@ import * as Types from "../types.js";
 
 import { processMappings } from "./process-mappings.js";
 
+/**
+ * Compares and processes search parameters into query fields and values.
+ *
+ * @param {Types.TSearchParams} [params={}] - The main search parameters as key-value pairs.
+ * @param {Types.TSearchParams[]} [paramsOr=[]] - An array of additional search parameters, each of which is treated as an OR condition.
+ * @returns {{queryArray: Types.TField[], queryOrArray: { query: Types.TField[] }[], values: unknown[]}}
+ *    An object containing the following properties:
+ *    - `queryArray`: An array of fields derived from the main search parameters.
+ *    - `queryOrArray`: An array of objects, each containing a `query` array of fields, representing the OR conditions.
+ *    - `values`: An array of values corresponding to the fields in `queryArray` and `queryOrArray`.
+ */
 export const compareFields = (
 	params: Types.TSearchParams = {},
 	paramsOr?: Types.TSearchParams[],
-) => {
+): {
+	queryArray: Types.TField[];
+	queryOrArray: { query: Types.TField[]; }[];
+	values: unknown[];
+} => {
 	const queryArray: Types.TField[] = [];
 	const values: unknown[] = [];
 
