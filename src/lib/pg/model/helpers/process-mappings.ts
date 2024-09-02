@@ -1,5 +1,40 @@
 import * as Types from "../types.js";
 
+/**
+ * A mapping of search operators to their corresponding processing functions.
+ *
+ * This `Map` associates an operator key (e.g., `$eq`, `$gt`) with a function that processes the search parameter,
+ * modifies the `queryArray`, and populates the `values` array with the appropriate values for the SQL query.
+ *
+ * @type {Map<
+ *   keyof Types.TSearchParams,
+ *   (key: string, value: Types.TSearchParams[keyof Types.TSearchParams], queryArray: Types.TField[], values: unknown[]) => void
+ * >}
+ *
+ * @property {function} $custom - Processes a custom operator, pushing the key and value to the `queryArray` and `values` respectively.
+ * @property {function} $eq - Processes an equality check (`=`), handling both regular and `NULL` values.
+ * @property {function} $gt - Processes a greater-than comparison (`>`).
+ * @property {function} $gte - Processes a greater-than-or-equal comparison (`>=`).
+ * @property {function} $in - Processes an inclusion check (`IN`), pushing the array of values.
+ * @property {function} $@> - Processes a containment check (`@>`), typically for arrays, ranges, or JSON.
+ * @property {function} $<@ - Processes an is-contained-by check (`<@`), typically for arrays or ranges.
+ * @property {function} $&& - Processes an overlap check (`&&`), typically for arrays or ranges.
+ * @property {function} $@ - Processes a distance operator (`@`), typically for geometric types.
+ * @property {function} $~ - Processes a regular expression match (`~`).
+ * @property {function} $? - Processes an existence check (`?`), typically for JSON keys.
+ * @property {function} $json - Processes a JSON equality check.
+ * @property {function} $jsonb - Processes a JSONB equality check.
+ * @property {function} $like - Processes a pattern match (`LIKE`).
+ * @property {function} $ilike - Processes a case-insensitive pattern match (`ILIKE`).
+ * @property {function} $lt - Processes a less-than comparison (`<`).
+ * @property {function} $lte - Processes a less-than-or-equal comparison (`<=`).
+ * @property {function} $ne - Processes a not-equal comparison (`<>`), handling both regular and `NULL` values.
+ * @property {function} $nin - Processes a not-inclusion check (`NOT IN`).
+ * @property {function} $between - Processes a range check (`BETWEEN`).
+ * @property {function} $nbetween - Processes a not-in-range check (`NOT BETWEEN`).
+ * @property {function} $nlike - Processes a not-like pattern match (`NOT LIKE`).
+ * @property {function} $nilike - Processes a not-ilike pattern match (`NOT ILIKE`).
+ */
 export const processMappings: Map<
 	keyof Types.TSearchParams,
 	(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], queryArray: Types.TField[], values: unknown[],) => void
