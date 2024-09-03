@@ -1,6 +1,6 @@
 import pg from "pg";
 
-import * as Helpers from "./helpers/index.js";
+import * as Helpers from "../helpers/index.js";
 import * as SharedTypes from "../../../shared-types/index.js";
 import * as Types from "./types.js";
 import * as connection from "../connection.js";
@@ -21,29 +21,29 @@ export class BaseMaterializedView {
 	#executeSql;
 
 	/**
-	 * @type {pg.Pool} The PostgreSQL connection pool.
+	 * The PostgreSQL connection pool.
 	 */
 	pool: pg.Pool;
 
 	/**
-	 * @type {string} The name of the materialized view.
+	 * The name of the materialized view.
 	 */
 	name: string;
 
 	/**
-	 * @type {string[]} The core fields of the materialized view.
+	 * @type The core fields of the materialized view.
 	 */
 	coreFields: string[];
 
 	/**
 	 * Creates an instance of `BaseMaterializedView`.
 	 *
-	 * @param {Object} data - Data for initializing the materialized view.
-	 * @param {string[]} data.coreFields - The core fields of the materialized view.
-	 * @param {string} data.name - The name of the materialized view.
-	 * @param {string[]} [data.additionalSortingFields] - Additional fields allowed for sorting.
-	 * @param {Types.TDBCreds} dbCreds - Database credentials.
-	 * @param {Types.TMVOptions} [options] - Additional options.
+	 * @param data - Data for initializing the materialized view.
+	 * @param data.coreFields - The core fields of the materialized view.
+	 * @param data.name - The name of the materialized view.
+	 * @param [data.additionalSortingFields] - Additional fields allowed for sorting.
+	 * @param dbCreds - Database credentials.
+	 * @param [options] - Additional options.
 	 */
 	constructor(
 		data: { additionalSortingFields?: string[]; coreFields: string[]; name: string; },
@@ -83,16 +83,16 @@ export class BaseMaterializedView {
 		/**
 		 * Generates a SQL query and values for selecting an array of records based on search parameters.
 		 *
-		 * @param {Object} params - Search parameters.
-		 * @param {Types.TSearchParams} params.$and - AND conditions for the search.
-		 * @param {Types.TSearchParams[]} [params.$or] - OR conditions for the search.
-		 * @param {string[]} [selected=["*"]] - Fields to be selected.
-		 * @param {SharedTypes.TPagination} [pagination] - Pagination details.
-		 * @param {Object[]} [order] - Order by details.
-		 * @param {string} order.orderBy - Field to order by.
-		 * @param {SharedTypes.TOrdering} order.ordering - Ordering direction ("ASC" or "DESC").
+		 * @param params - Search parameters.
+		 * @param params.$and - AND conditions for the search.
+		 * @param [params.$or] - OR conditions for the search.
+		 * @param [selected=["*"]] - Fields to be selected.
+		 * @param [pagination] - Pagination details.
+		 * @param [order] - Order by details.
+		 * @param order.orderBy - Field to order by.
+		 * @param order.ordering - Ordering direction ("ASC" or "DESC").
 		 *
-		 * @returns {Object} - An object containing the query string and values array.
+		 * @returns An object containing the query string and values array.
 		 */
 		getArrByParams: (
 			{ $and = {}, $or }: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
@@ -125,11 +125,11 @@ export class BaseMaterializedView {
 		/**
 		 * Generates a SQL query and values for counting records based on search parameters.
 		 *
-		 * @param {Object} params - Search parameters.
-		 * @param {Types.TSearchParams} params.$and - AND conditions for the search.
-		 * @param {Types.TSearchParams[]} [params.$or] - OR conditions for the search.
+		 * @param params - Search parameters.
+		 * @param params.$and - AND conditions for the search.
+		 * @param [params.$or] - OR conditions for the search.
 		 *
-		 * @returns {Object} - An object containing the query string and values array.
+		 * @returns An object containing the query string and values array.
 		 */
 		getCountByParams: (
 			{ $and = {}, $or }: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
@@ -145,12 +145,12 @@ export class BaseMaterializedView {
 		/**
 		 * Generates a SQL query and values for selecting a single record based on search parameters.
 		 *
-		 * @param {Object} params - Search parameters.
-		 * @param {Types.TSearchParams} params.$and - AND conditions for the search.
-		 * @param {Types.TSearchParams[]} [params.$or] - OR conditions for the search.
-		 * @param {string[]} [selected=["*"]] - Fields to be selected.
+		 * @param params - Search parameters.
+		 * @param params.$and - AND conditions for the search.
+		 * @param [params.$or] - OR conditions for the search.
+		 * @param [selected=["*"]] - Fields to be selected.
 		 *
-		 * @returns {Object} - An object containing the query string and values array.
+		 * @returns An object containing the query string and values array.
 		 */
 		getOneByParams: (
 			{ $and = {}, $or }: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
@@ -177,17 +177,16 @@ export class BaseMaterializedView {
 	/**
 	 * Executes a query to get an array of records based on provided parameters.
 	 *
-	 * @template T
-	 * @param {Object} params - Search parameters.
-	 * @param {Types.TSearchParams} params.$and - AND conditions for the search.
-	 * @param {Types.TSearchParams[]} [params.$or] - OR conditions for the search.
-	 * @param {string[]} [selected=["*"]] - Fields to be selected.
-	 * @param {SharedTypes.TPagination} [pagination] - Pagination details.
-	 * @param {Object[]} [order] - Order by details.
-	 * @param {string} order.orderBy - Field to order by.
-	 * @param {SharedTypes.TOrdering} order.ordering - Ordering direction ("ASC" or "DESC").
+	 * @param params - Search parameters.
+	 * @param params.$and - AND conditions for the search.
+	 * @param [params.$or] - OR conditions for the search.
+	 * @param [selected=["*"]] - Fields to be selected.
+	 * @param [pagination] - Pagination details.
+	 * @param [order] - Order by details.
+	 * @param order.orderBy - Field to order by.
+	 * @param order.ordering - Ordering direction ("ASC" or "DESC").
 	 *
-	 * @returns {Promise<T[]>} - A promise that resolves to an array of records.
+	 * @returns A promise that resolves to an array of records.
 	 */
 	async getArrByParams<T extends pg.QueryResultRow>(
 		params: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
@@ -204,11 +203,11 @@ export class BaseMaterializedView {
 	/**
 	 * Executes a query to count records based on provided parameters.
 	 *
-	 * @param {Object} params - Search parameters.
-	 * @param {Types.TSearchParams} params.$and - AND conditions for the search.
-	 * @param {Types.TSearchParams[]} [params.$or] - OR conditions for the search.
+	 * @param params - Search parameters.
+	 * @param params.$and - AND conditions for the search.
+	 * @param [params.$or] - OR conditions for the search.
 	 *
-	 * @returns {Promise<number>} - A promise that resolves to the count of records.
+	 * @returns A promise that resolves to the count of records.
 	 */
 	async getCountByParams(params: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; }): Promise<number> {
 		const sql = this.compareQuery.getCountByParams(params);
@@ -220,13 +219,12 @@ export class BaseMaterializedView {
 	/**
 	 * Executes a query to get a single record based on provided parameters.
 	 *
-	 * @template T
-	 * @param {Object} params - Search parameters.
-	 * @param {Types.TSearchParams} params.$and - AND conditions for the search.
-	 * @param {Types.TSearchParams[]} [params.$or] - OR conditions for the search.
-	 * @param {string[]} [selected=["*"]] - Fields to be selected.
+	 * @param params - Search parameters.
+	 * @param params.$and - AND conditions for the search.
+	 * @param [params.$or] - OR conditions for the search.
+	 * @param [selected=["*"]] - Fields to be selected.
 	 *
-	 * @returns {Promise<T | undefined>} - A promise that resolves to a single record or undefined if no record is found.
+	 * @returns A promise that resolves to a single record or undefined if no record is found.
 	 */
 	async getOneByParams<T extends pg.QueryResultRow>(
 		params: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
@@ -241,9 +239,9 @@ export class BaseMaterializedView {
 	/**
 	 * Refreshes the materialized view.
 	 *
-	 * @param {boolean} [concurrently=false] - Whether to refresh the view concurrently.
+	 * @param [concurrently=false] - Whether to refresh the view concurrently.
 	 *
-	 * @returns {Promise<void>} - A promise that resolves when the view is refreshed.
+	 * @returns A promise that resolves when the view is refreshed.
 	 */
 	async refresh(concurrently: boolean = false): Promise<void> {
 		const query = `REFRESH MATERIALIZED VIEW ${concurrently ? "CONCURRENTLY" : ""} ${this.name}`;
@@ -254,11 +252,11 @@ export class BaseMaterializedView {
 	/**
 	 * Creates a new query builder instance for the materialized view.
 	 *
-	 * @param {Object} [options] - Options for the query builder.
-	 * @param {pg.Pool | pg.PoolClient} [options.client] - The PostgreSQL client or pool to use.
-	 * @param {string} [options.name] - The name of the materialized view.
+	 * @param [options] - Options for the query builder.
+	 * @param [options.client] - The PostgreSQL client or pool to use.
+	 * @param [options.name] - The name of the materialized view.
 	 *
-	 * @returns {QueryBuilder} - A new `QueryBuilder` instance.
+	 * @returns A new `QueryBuilder` instance.
 	 */
 	queryBuilder(options?: {
 		client?: pg.Pool | pg.PoolClient;
@@ -279,10 +277,10 @@ export class BaseMaterializedView {
 	 * Gets a standard connection pool.
 	 *
 	 * @static
-	 * @param {Types.TDBCreds} creds - Database credentials.
-	 * @param {string} [poolName] - Optional pool name.
+	 * @param creds - Database credentials.
+	 * @param [poolName] - Optional pool name.
 	 *
-	 * @returns {pg.Pool} - A new PostgreSQL connection pool.
+	 * @returns A new PostgreSQL connection pool.
 	 */
 	static getStandardPool(creds: Types.TDBCreds, poolName?: string): pg.Pool {
 		return connection.getStandardPool(creds, poolName);
@@ -292,10 +290,10 @@ export class BaseMaterializedView {
 	 * Removes a standard connection pool.
 	 *
 	 * @static
-	 * @param {Types.TDBCreds} creds - Database credentials.
-	 * @param {string} [poolName] - Optional pool name.
+	 * @param creds - Database credentials.
+	 * @param [poolName] - Optional pool name.
 	 *
-	 * @returns {Promise<void>} - A promise that resolves when the pool is removed.
+	 * @returns A promise that resolves when the pool is removed.
 	 */
 	static async removeStandardPool(creds: Types.TDBCreds, poolName?: string): Promise<void> {
 		return connection.removeStandardPool(creds, poolName);
@@ -305,10 +303,10 @@ export class BaseMaterializedView {
 	 * Gets a transaction connection pool.
 	 *
 	 * @static
-	 * @param {Types.TDBCreds} creds - Database credentials.
-	 * @param {string} [poolName] - Optional pool name.
+	 * @param creds - Database credentials.
+	 * @param [poolName] - Optional pool name.
 	 *
-	 * @returns {pg.Pool} - A new PostgreSQL transaction connection pool.
+	 * @returns A new PostgreSQL transaction connection pool.
 	 */
 	static getTransactionPool(creds: Types.TDBCreds, poolName?: string): pg.Pool {
 		return connection.getTransactionPool(creds, poolName);
@@ -318,10 +316,10 @@ export class BaseMaterializedView {
 	 * Removes a transaction connection pool.
 	 *
 	 * @static
-	 * @param {Types.TDBCreds} creds - Database credentials.
-	 * @param {string} [poolName] - Optional pool name.
+	 * @param creds - Database credentials.
+	 * @param [poolName] - Optional pool name.
 	 *
-	 * @returns {Promise<void>} - A promise that resolves when the pool is removed.
+	 * @returns A promise that resolves when the pool is removed.
 	 */
 	static async removeTransactionPool(creds: Types.TDBCreds, poolName?: string): Promise<void> {
 		return connection.removeTransactionPool(creds, poolName);

@@ -7,9 +7,9 @@ const pools = new Map<string, pg.Pool>();
 /**
  * Creates a new PostgreSQL client instance.
  *
- * @param {string | pg.ClientConfig} config - The connection configuration as a connection string or a client configuration object.
+ * @param config - The connection configuration as a connection string or a client configuration object.
  *
- * @returns {pg.Client} - The PostgreSQL client instance.
+ * @returns The PostgreSQL client instance.
  */
 export const createClient = (config: string | pg.ClientConfig): pg.Client => {
 	return new pg.Client(config);
@@ -18,10 +18,10 @@ export const createClient = (config: string | pg.ClientConfig): pg.Client => {
 /**
  * Retrieves or creates a standard connection pool.
  *
- * @param {PG.ModelTypes.TDBCreds} config - The database credentials configuration object.
- * @param {string} [poolName="00"] - The name suffix for the pool, default is "00".
+ * @param config - The database credentials configuration object.
+ * @param [poolName="00"] - The name suffix for the pool, default is "00".
  *
- * @returns {pg.Pool} - The retrieved or newly created standard connection pool.
+ * @returns The retrieved or newly created standard connection pool.
  */
 export const getStandardPool = (config: PG.ModelTypes.TDBCreds, poolName = "00"): pg.Pool => {
 	const { database, host, password, port, user } = config;
@@ -50,10 +50,10 @@ export const getStandardPool = (config: PG.ModelTypes.TDBCreds, poolName = "00")
 /**
  * Retrieves or creates a transaction-specific connection pool.
  *
- * @param {PG.ModelTypes.TDBCreds} config - The database credentials configuration object.
- * @param {string} [poolName="00"] - The name suffix for the pool, default is "00".
+ * @param config - The database credentials configuration object.
+ * @param [poolName="00"] - The name suffix for the pool, default is "00".
  *
- * @returns {pg.Pool} - The retrieved or newly created transaction connection pool.
+ * @returns The retrieved or newly created transaction connection pool.
  */
 export const getTransactionPool = (config: PG.ModelTypes.TDBCreds, poolName: string = "00"): pg.Pool => {
 	const { database, host, password, port, user } = config;
@@ -82,10 +82,10 @@ export const getTransactionPool = (config: PG.ModelTypes.TDBCreds, poolName: str
 /**
  * Removes and closes a standard connection pool.
  *
- * @param {PG.ModelTypes.TDBCreds} config - The database credentials configuration object.
- * @param {string} [poolName="00"] - The name suffix for the pool, default is "00".
+ * @param config - The database credentials configuration object.
+ * @param [poolName="00"] - The name suffix for the pool, default is "00".
  *
- * @returns {Promise<void>} - A promise that resolves when the pool is closed.
+ * @returns A promise that resolves when the pool is closed.
  */
 export const removeStandardPool = async (config: PG.ModelTypes.TDBCreds, poolName: string = "00"): Promise<void> => {
 	const { database, host, password, port, user } = config;
@@ -110,10 +110,10 @@ export const removeStandardPool = async (config: PG.ModelTypes.TDBCreds, poolNam
 /**
  * Removes and closes a transaction-specific connection pool.
  *
- * @param {PG.ModelTypes.TDBCreds} config - The database credentials configuration object.
- * @param {string} [poolName="00"] - The name suffix for the pool, default is "00".
+ * @param config - The database credentials configuration object.
+ * @param [poolName="00"] - The name suffix for the pool, default is "00".
  *
- * @returns {Promise<void>} - A promise that resolves when the pool is closed.
+ * @returns A promise that resolves when the pool is closed.
  */
 export const removeTransactionPool = async (config: PG.ModelTypes.TDBCreds, poolName: string = "00"): Promise<void> => {
 	const { database, host, password, port, user } = config;
@@ -138,7 +138,7 @@ export const removeTransactionPool = async (config: PG.ModelTypes.TDBCreds, pool
 /**
  * Gracefully shuts down all active connection pools.
  *
- * @returns {Promise<void>} - A promise that resolves when all pools are closed.
+ * @returns A promise that resolves when all pools are closed.
  */
 export const shutdown = async (): Promise<void> => {
 	const poolShutdowns: Promise<void>[] = [];
@@ -158,15 +158,15 @@ export const shutdown = async (): Promise<void> => {
  * Creates a connection credentials string.
  * This string is used as a key in the pools map to identify different pools.
  *
- * @param {string} poolName - The name prefix for the pool.
- * @param {object} creds - The credentials object.
- * @param {string} creds.user - The database user.
- * @param {string} creds.password - The database password.
- * @param {string} creds.host - The database host.
- * @param {number} creds.port - The database port.
- * @param {string} creds.database - The database name.
+ * @param poolName - The name prefix for the pool.
+ * @param creds - The credentials object.
+ * @param creds.user - The database user.
+ * @param creds.password - The database password.
+ * @param creds.host - The database host.
+ * @param creds.port - The database port.
+ * @param creds.database - The database name.
  *
- * @returns {string} - The constructed credentials string.
+ * @returns The constructed credentials string.
  */
 const _createCredsString = (poolName: string, creds: { user: string; password: string; host: string; port: number; database: string; }): string => {
 	return `${poolName}#${creds.user}:${creds.password}@${creds.host}:${creds.port}/${creds.database}`;
@@ -175,9 +175,9 @@ const _createCredsString = (poolName: string, creds: { user: string; password: s
 /**
  * Masks sensitive information in a connection string.
  *
- * @param {string} credsString - The connection credentials string.
+ * @param credsString - The connection credentials string.
  *
- * @returns {string} - The credentials string with sensitive information masked.
+ * @returns The credentials string with sensitive information masked.
  */
 const _maskSensitiveInfo = (credsString: string): string => {
 	return credsString.replace(/:.+@/, ":<hidden>@");

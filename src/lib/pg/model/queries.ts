@@ -4,13 +4,14 @@ export default {
 	/**
 	 * Generates an SQL `INSERT` statement for inserting multiple rows into a table.
 	 *
-	 * @param {Object} data - Data required to build the SQL query.
-	 * @param {string[][]} data.fields - An array of arrays where each sub-array represents the values for one row.
-	 * @param {string[]} data.headers - An array of strings representing the column names.
-	 * @param {string} data.onConflict - A string to handle conflicts (e.g., "ON CONFLICT DO NOTHING").
-	 * @param {string[]} [data.returning] - An optional array of column names to return after the insert.
-	 * @param {string} data.tableName - The name of the table to insert into.
-	 * @returns {string} - The generated SQL `INSERT` statement.
+	 * @param data - Data required to build the SQL query.
+	 * @param data.fields - An array of arrays where each sub-array represents the values for one row.
+	 * @param data.headers - An array of strings representing the column names.
+	 * @param data.onConflict - A string to handle conflicts (e.g., "ON CONFLICT DO NOTHING").
+	 * @param [data.returning] - An optional array of column names to return after the insert.
+	 * @param data.tableName - The name of the table to insert into.
+	 *
+	 * @returns The generated SQL `INSERT` statement.
 	 */
 	createMany(data: {
 		fields: string[][];
@@ -27,14 +28,16 @@ export default {
 	/**
 	 * Generates an SQL `INSERT` statement for inserting a single row into a table.
 	 *
-	 * @param {string} tableName - The name of the table to insert into.
-	 * @param {string[]} fields - An array of strings representing the column names to insert values into.
-	 * @param {Object|null} createField - An optional field to automatically set a timestamp or unix timestamp.
-	 * @param {string} createField.title - The name of the column for the timestamp.
-	 * @param {"unix_timestamp"|"timestamp"} createField.type - The type of timestamp to insert.
-	 * @param {string} onConflict - A string to handle conflicts (e.g., "ON CONFLICT DO NOTHING").
-	 * @param {string[]} [returning] - An optional array of column names to return after the insert.
-	 * @returns {string} - The generated SQL `INSERT` statement.
+	 * @param tableName - The name of the table to insert into.
+	 * @param fields - An array of strings representing the column names to insert values into.
+	 * @param createField - An optional field to automatically set a timestamp or unix timestamp.
+	 * @param createField.title - The name of the column for the timestamp.
+	 * @param createField.type - The type of timestamp to insert.
+	 * @param onConflict - A string to handle conflicts (e.g., "ON CONFLICT DO NOTHING").
+	 * @param [returning] - An optional array of column names to return after the insert.
+	 *
+	 * @returns The generated SQL `INSERT` statement.
+	 *
 	 * @throws {Error} If an invalid `createField.type` is provided.
 	 */
 	createOne(
@@ -74,8 +77,9 @@ export default {
 	/**
 	 * Generates an SQL `DELETE` statement to delete all rows from a table.
 	 *
-	 * @param {string} tableName - The name of the table to delete from.
-	 * @returns {string} - The generated SQL `DELETE` statement.
+	 * @param tableName - The name of the table to delete from.
+	 *
+	 * @returns The generated SQL `DELETE` statement.
 	 */
 	deleteAll(tableName: string): string {
 		return `DELETE FROM ${tableName};`;
@@ -84,9 +88,10 @@ export default {
 	/**
 	 * Generates an SQL `DELETE` statement based on provided search conditions.
 	 *
-	 * @param {string} tableName - The name of the table to delete from.
-	 * @param {string} searchFields - The search conditions for the `WHERE` clause.
-	 * @returns {string} - The generated SQL `DELETE` statement.
+	 * @param tableName - The name of the table to delete from.
+	 * @param searchFields - The search conditions for the `WHERE` clause.
+	 *
+	 * @returns The generated SQL `DELETE` statement.
 	 */
 	deleteByParams(
 		tableName: string,
@@ -98,9 +103,10 @@ export default {
 	/**
 	 * Generates an SQL `DELETE` statement to delete a row or rows based on primary key(s).
 	 *
-	 * @param {string} tableName - The name of the table to delete from.
-	 * @param {SharedTypes.TPrimaryKeyField} primaryKeyField - The primary key(s) of the row(s) to delete.
-	 * @returns {string} - The generated SQL `DELETE` statement.
+	 * @param tableName - The name of the table to delete from.
+	 * @param primaryKeyField - The primary key(s) of the row(s) to delete.
+	 *
+	 * @returns The generated SQL `DELETE` statement.
 	 */
 	deleteByPk(
 		tableName: string,
@@ -119,12 +125,13 @@ export default {
 	/**
 	 * Generates an SQL `SELECT` statement to retrieve rows based on search conditions, ordering, and pagination.
 	 *
-	 * @param {string} tableName - The name of the table to select from.
-	 * @param {string} selectedFields - The columns to select.
-	 * @param {string} searchFields - The search conditions for the `WHERE` clause.
-	 * @param {string} orderByFields - The ordering for the `ORDER BY` clause.
-	 * @param {string} paginationFields - The pagination for the `LIMIT` and `OFFSET` clauses.
-	 * @returns {string} - The generated SQL `SELECT` statement.
+	 * @param tableName - The name of the table to select from.
+	 * @param selectedFields - The columns to select.
+	 * @param searchFields - The search conditions for the `WHERE` clause.
+	 * @param orderByFields - The ordering for the `ORDER BY` clause.
+	 * @param paginationFields - The pagination for the `LIMIT` and `OFFSET` clauses.
+	 *
+	 * @returns The generated SQL `SELECT` statement.
 	 */
 	getByParams(
 		tableName: string,
@@ -139,10 +146,11 @@ export default {
 	/**
 	 * Generates an SQL `SELECT COUNT` statement to count rows that match specific composite primary keys.
 	 *
-	 * @param {string[]} primaryKeyFields - The primary key fields to use for the condition.
-	 * @param {string} tableName - The name of the table to count rows from.
-	 * @param {number} pksCount - The number of primary key sets to match.
-	 * @returns {string} - The generated SQL `SELECT COUNT` statement.
+	 * @param primaryKeyFields - The primary key fields to use for the condition.
+	 * @param tableName - The name of the table to count rows from.
+	 * @param pksCount - The number of primary key sets to match.
+	 *
+	 * @returns The generated SQL `SELECT COUNT` statement.
 	 */
 	getCountByCompositePks(
 		primaryKeyFields: string[],
@@ -167,12 +175,13 @@ export default {
 	/**
 	 * Generates an SQL `SELECT COUNT` statement to count rows that match specific composite primary keys and additional conditions.
 	 *
-	 * @param {string[]} primaryKeyFields - The primary key fields to use for the condition.
-	 * @param {string} tableName - The name of the table to count rows from.
-	 * @param {string} searchFields - The search conditions for the `WHERE` clause.
-	 * @param {number} orderNumber - The starting index for the parameterized query.
-	 * @param {number} pksCount - The number of primary key sets to match.
-	 * @returns {string} - The generated SQL `SELECT COUNT` statement.
+	 * @param primaryKeyFields - The primary key fields to use for the condition.
+	 * @param tableName - The name of the table to count rows from.
+	 * @param searchFields - The search conditions for the `WHERE` clause.
+	 * @param orderNumber - The starting index for the parameterized query.
+	 * @param pksCount - The number of primary key sets to match.
+	 *
+	 * @returns The generated SQL `SELECT COUNT` statement.
 	 */
 	getCountByCompositePksAndParams(
 		primaryKeyFields: string[],
@@ -199,9 +208,10 @@ export default {
 	/**
 	 * Generates an SQL `SELECT COUNT` statement to count rows based on search conditions.
 	 *
-	 * @param {string} tableName - The name of the table to count rows from.
-	 * @param {string} searchFields - The search conditions for the `WHERE` clause.
-	 * @returns {string} - The generated SQL `SELECT COUNT` statement.
+	 * @param tableName - The name of the table to count rows from.
+	 * @param searchFields - The search conditions for the `WHERE` clause.
+	 *
+	 * @returns The generated SQL `SELECT COUNT` statement.
 	 */
 	getCountByParams(tableName: string, searchFields: string): string {
 		return `SELECT COUNT(*) AS count FROM ${tableName}${searchFields};`;
@@ -210,9 +220,10 @@ export default {
 	/**
 	 * Generates an SQL `SELECT COUNT` statement to count rows that match a list of primary keys.
 	 *
-	 * @param {string} primaryKeyField - The primary key field to match.
-	 * @param {string} tableName - The name of the table to count rows from.
-	 * @returns {string} - The generated SQL `SELECT COUNT` statement.
+	 * @param primaryKeyField - The primary key field to match.
+	 * @param tableName - The name of the table to count rows from.
+	 *
+	 * @returns The generated SQL `SELECT COUNT` statement.
 	 */
 	getCountByPks(
 		primaryKeyField: string,
@@ -224,11 +235,12 @@ export default {
 	/**
 	 * Generates an SQL `SELECT COUNT` statement to count rows that match a list of primary keys and additional conditions.
 	 *
-	 * @param {string} primaryKeyField - The primary key field to match.
-	 * @param {string} tableName - The name of the table to count rows from.
-	 * @param {string} searchFields - The search conditions for the `WHERE` clause.
-	 * @param {number} orderNumber - The starting index for the parameterized query.
-	 * @returns {string} - The generated SQL `SELECT COUNT` statement.
+	 * @param primaryKeyField - The primary key field to match.
+	 * @param tableName - The name of the table to count rows from.
+	 * @param searchFields - The search conditions for the `WHERE` clause.
+	 * @param orderNumber - The starting index for the parameterized query.
+	 *
+	 * @returns The generated SQL `SELECT COUNT` statement.
 	 */
 	getCountByPksAndParams(
 		primaryKeyField: string,
@@ -242,9 +254,10 @@ export default {
 	/**
 	 * Generates an SQL `SELECT` statement to retrieve a single row based on the primary key(s).
 	 *
-	 * @param {string} tableName - The name of the table to select from.
-	 * @param {SharedTypes.TPrimaryKeyField} primaryKeyField - The primary key(s) of the row to retrieve.
-	 * @returns {string} - The generated SQL `SELECT` statement.
+	 * @param tableName - The name of the table to select from.
+	 * @param primaryKeyField - The primary key(s) of the row to retrieve.
+	 *
+	 * @returns The generated SQL `SELECT` statement.
 	 */
 	getOneByPk(
 		tableName: string,
@@ -262,15 +275,17 @@ export default {
 	/**
 	 * Generates an SQL `UPDATE` statement to update rows based on search conditions.
 	 *
-	 * @param {string} tableName - The name of the table to update.
-	 * @param {string[]} fields - The columns to update.
-	 * @param {string} searchFields - The search conditions for the `WHERE` clause.
-	 * @param {Object|null} updateField - An optional field to automatically set a timestamp or unix timestamp.
-	 * @param {string} updateField.title - The name of the column for the timestamp.
-	 * @param {"unix_timestamp"|"timestamp"} updateField.type - The type of timestamp to insert.
-	 * @param {number} startOrderNumber - The starting index for the parameterized query.
-	 * @param {string[]} [returning] - An optional array of column names to return after the update.
-	 * @returns {string} - The generated SQL `UPDATE` statement.
+	 * @param tableName - The name of the table to update.
+	 * @param fields - The columns to update.
+	 * @param searchFields - The search conditions for the `WHERE` clause.
+	 * @param updateField - An optional field to automatically set a timestamp or unix timestamp.
+	 * @param updateField.title - The name of the column for the timestamp.
+	 * @param updateField.type - The type of timestamp to insert.
+	 * @param startOrderNumber - The starting index for the parameterized query.
+	 * @param [returning] - An optional array of column names to return after the update.
+	 *
+	 * @returns The generated SQL `UPDATE` statement.
+	 *
 	 * @throws {Error} If an invalid `updateField.type` is provided.
 	 */
 	updateByParams(
@@ -304,14 +319,16 @@ export default {
 	/**
 	 * Generates an SQL `UPDATE` statement to update a row or rows based on primary key(s).
 	 *
-	 * @param {string} tableName - The name of the table to update.
-	 * @param {string[]} fields - The columns to update.
-	 * @param {SharedTypes.TPrimaryKeyField} primaryKeyField - The primary key(s) of the row(s) to update.
-	 * @param {Object|null} updateField - An optional field to automatically set a timestamp or unix timestamp.
-	 * @param {string} updateField.title - The name of the column for the timestamp.
-	 * @param {"unix_timestamp"|"timestamp"} updateField.type - The type of timestamp to insert.
-	 * @param {string[]} [returning] - An optional array of column names to return after the update.
-	 * @returns {string} - The generated SQL `UPDATE` statement.
+	 * @param tableName - The name of the table to update.
+	 * @param fields - The columns to update.
+	 * @param primaryKeyField - The primary key(s) of the row(s) to update.
+	 * @param updateField - An optional field to automatically set a timestamp or unix timestamp.
+	 * @param updateField.title - The name of the column for the timestamp.
+	 * @param updateField.type - The type of timestamp to insert.
+	 * @param [returning] - An optional array of column names to return after the update.
+	 * 
+	 * @returns The generated SQL `UPDATE` statement.
+	 *
 	 * @throws {Error} If an invalid `updateField.type` is provided.
 	 */
 	updateByPk(
