@@ -14,7 +14,7 @@ export class QueryBuilderFactory {
 	/**
 	 * Creates an instance of QueryBuilderFactory.
 	 *
-	 * @param {pg.Pool | pg.PoolClient} client - The PostgreSQL client or pool.
+	 * @param client - The PostgreSQL client or pool.
 	 */
 	constructor(
 		client: pg.Pool | pg.PoolClient,
@@ -40,13 +40,13 @@ export class QueryBuilderFactory {
 	/**
 	 * Creates a new QueryBuilder instance.
 	 *
-	 * @param {Object} [options] - Optional parameters for the query builder.
-	 * @param {pg.Pool|pg.PoolClient} [options.client] - The database client to use for the query.
-	 * @param {string} [options.dataSource] - The name of the table, view, or materialized view
+	 * @param [options] - Optional parameters for the query builder.
+	 * @param [options.client] - The database client to use for the query.
+	 * @param [options.dataSource] - The name of the table, view, or materialized view
 	 * that serves as the base for the SQL queries in the QueryBuilder. This clause is used to identify
 	 * the primary data source for queries being constructed.
 	 *
-	 * @returns {QueryBuilder} A new instance of QueryBuilder.
+	 * @returns A new instance of QueryBuilder.
 	 */
 	createQueryBuilder(options?: {
 		client?: pg.Pool | pg.PoolClient;

@@ -1,26 +1,26 @@
-import * as SharedTypes from "../../../../shared-types/index.js";
-import * as Types from "../types.js";
+import * as SharedTypes from "../../../shared-types/index.js";
+import * as Types from "../model/types.js";
 
 import { operatorMappings } from "./operator-mappings.js";
 
 /**
  * Generates and returns various fields required for executing a search query, including selected fields, pagination, ordering, and search conditions.
  *
- * @param {Object} data - The search data containing the query arrays.
- * @param {Types.TField[]} data.queryArray - The main array of fields to search by.
- * @param {Array<{query: Types.TField[]}>} [data.queryOrArray] - An optional array of objects, each containing a `query` array of fields representing OR conditions.
- * @param {string[]} [selected=["*"]] - An array of selected fields for the search query. Defaults to selecting all fields ("*").
- * @param {SharedTypes.TPagination} [pagination] - Optional pagination details including page number and page size.
- * @param {Object|Object[]} [order] - An object or an array of objects defining the ordering of the search results.
- * @param {string} order.orderBy - The field by which to order the search results.
- * @param {SharedTypes.TOrdering} order.ordering - The ordering direction, either ascending or descending.
+ * @param data - The search data containing the query arrays.
+ * @param data.queryArray - The main array of fields to search by.
+ * @param [data.queryOrArray] - An optional array of objects, each containing a `query` array of fields representing OR conditions.
+ * @param [selected=["*"]] - An array of selected fields for the search query. Defaults to selecting all fields ("*").
+ * @param [pagination] - Optional pagination details including page number and page size.
+ * @param [order] - An object or an array of objects defining the ordering of the search results.
+ * @param order.orderBy - The field by which to order the search results.
+ * @param order.ordering - The ordering direction, either ascending or descending.
  *
- * @returns {Object} An object containing the following properties:
- *    - `orderByFields`: A string representing the fields by which to order the search results.
- *    - `orderNumber`: A number representing the ordering priority or sequence.
- *    - `paginationFields`: A string representing the pagination details.
- *    - `searchFields`: A string representing the search conditions derived from `queryArray` and `queryOrArray`.
- *    - `selectedFields`: A string representing the fields selected for the search query.
+ * @returns An object containing the following properties:
+ *  - `orderByFields`: A string representing the fields by which to order the search results.
+ *  - `orderNumber`: A number representing the ordering priority or sequence.
+ *  - `paginationFields`: A string representing the pagination details.
+ *  - `searchFields`: A string representing the search conditions derived from `queryArray` and `queryOrArray`.
+ *  - `selectedFields`: A string representing the fields selected for the search query.
  */
 export const getFieldsToSearch = (
 	data: {

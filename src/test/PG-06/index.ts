@@ -301,6 +301,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 
 				await pool.query(`DROP TABLE IF EXISTS ${admin.tableName};`);
 				await pool.query(`DROP TABLE IF EXISTS ${user.tableName};`);
+				await pool.query(`DROP TABLE IF EXISTS ${userTest.tableName};`);
 			},
 		);
 

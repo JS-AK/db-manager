@@ -1,4 +1,4 @@
-import * as Types from "../types.js";
+import * as Types from "../model/types.js";
 
 /**
  * A mapping of operators to their corresponding SQL expression generators.

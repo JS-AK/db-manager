@@ -1,9 +1,12 @@
 import * as DomainTypes from "../domain/types.js";
-import * as Helpers from "../model/helpers/index.js";
+import * as Helpers from "../helpers/index.js";
 import * as ModelTypes from "../model/types.js";
 import * as SharedHelpers from "../../../shared-helpers/index.js";
 import * as SharedTypes from "../../../shared-types/index.js";
 
+/**
+ * Class to handle SQL query construction.
+ */
 export class QueryHandler {
 	#groupBy = "";
 	#join: string[] = [];
@@ -23,6 +26,25 @@ export class QueryHandler {
 
 	isSubquery = false;
 
+	/**
+	 * Constructs a new QueryHandler instance.
+	 *
+	 * @param options - The configuration options.
+	 * @param [options.groupBy] - Group by clause.
+	 * @param [options.join] - Array of join clauses.
+	 * @param [options.isSubquery] - Whether this is a subquery.
+	 * @param [options.mainHaving] - Having clause.
+	 * @param [options.mainQuery] - Main query string.
+	 * @param [options.mainWhere] - Where clause.
+	 * @param [options.orderBy] - Order by clause.
+	 * @param [options.pagination] - Pagination clause.
+	 * @param [options.returning] - Returning clause.
+	 * @param options.dataSourcePrepared - Prepared data source name.
+	 * @param options.dataSourceRaw - Raw data source name.
+	 * @param [options.values] - Array of values to be used in the query.
+	 * @param [options.valuesOrder] - Initial order for value placeholders.
+	 * @param [options.with] - With clause for common table expressions.
+	 */
 	constructor(options: {
 		groupBy?: string;
 		join?: string[];
@@ -56,6 +78,11 @@ export class QueryHandler {
 		this.#dataSourcePrepared = options.dataSourcePrepared;
 	}
 
+	/**
+	 * Get the options to clone the current query.
+	 *
+	 * @returns Clonable options.
+	 */
 	get optionsToClone() {
 		return {
 			dataSourcePrepared: this.#dataSourcePrepared,
@@ -74,6 +101,20 @@ export class QueryHandler {
 		};
 	}
 
+	/**
+	 * Constructs and returns a SQL query string based on the provided query components.
+	 *
+	 * The method assembles the SQL query by concatenating various parts such as `WITH` clause,
+	 * main query, JOIN clauses, WHERE clause, GROUP BY clause, HAVING clause, ORDER BY clause,
+	 * pagination, RETURNING clause, and FOR clause. It handles the case where the query is a
+	 * subquery by wrapping the query in parentheses and optionally naming the subquery.
+	 *
+	 * @private
+	 *
+	 * @returns The assembled SQL query string. If the query is a subquery, it will be
+	 * enclosed in parentheses and optionally followed by an alias name. Otherwise, the query
+	 * will end with a semicolon.
+	 */
 	#compareSql(): string {
 		const query = (
 			(this.#with ? this.#with + " " : "")
@@ -93,17 +134,16 @@ export class QueryHandler {
 			: query + ";";
 	}
 
-	/* #replaceDollarSign(text: string) {
-		const regex = /\$\?/g;
-
-		const initialCounter = this.#valuesOrder;
-		const replacedText = text.replace(regex, () => `$${++this.#valuesOrder}`);
-		const growth = this.#valuesOrder - initialCounter;
-
-		return { growth, text: replacedText };
-	} */
-
-	#replaceDollarSign(text: string) {
+	/**
+	 * Replaces dollar sign placeholders in the SQL query.
+	 *
+	 * @param text - The text containing placeholders.
+	 *
+	 * @returns The replaced text and growth in placeholders.
+	 *
+	 * @throws {Error} If values are not sequential starting from $1.
+	 */
+	#replaceDollarSign(text: string): { growth: number; text: string; } {
 		const regex = /\$(\d+)/g;
 		const initialCounter = this.#valuesOrder;
 
@@ -134,6 +174,16 @@ export class QueryHandler {
 		return { growth: 0, text };
 	}
 
+	/**
+	 * Processes the provided data with the corresponding values.
+	 *
+	 * @param data - The SQL clause data.
+	 * @param values - The values to be used in the SQL clause.
+	 *
+	 * @returns The processed SQL clause.
+	 *
+	 * @throws {Error} If the number of placeholders doesn't match the values length.
+	 */
 	#processDataWithValues(data: string, values: unknown[]): string {
 		const { growth, text } = this.#replaceDollarSign(data);
 
@@ -146,11 +196,36 @@ export class QueryHandler {
 		return text;
 	}
 
+	/**
+	 * Constructs and returns an object containing the SQL query string and its associated values.
+	 *
+	 * The method generates the SQL query string by invoking the `#compareSql` method, and returns
+	 * an object that includes the query string and the associated parameter values.
+	 *
+	 * @returns An object containing the SQL query string
+	 * and the array of values to be used as parameters in the query.
+	 */
 	compareQuery(): { query: string; values: unknown[]; } {
 		return { query: this.#compareSql(), values: this.#values };
 	}
 
-	rawFor(data: string, values?: unknown[]) {
+	/**
+	 * Adds a raw SQL `FOR` clause to the query.
+	 *
+	 * This method adds the given raw SQL data to the `FOR` clause of the query. If the provided
+	 * string does not start with "FOR", it will prepend "FOR " to the data. The method also
+	 * handles any placeholder values within the data string, processing them accordingly.
+	 *
+	 * @param data - The raw SQL data to be added to the `FOR` clause.
+	 * @param [values] - An optional array of values to replace placeholders in the
+	 * data string.
+	 *
+	 * @returns
+	 */
+	rawFor(
+		data: string,
+		values?: unknown[],
+	): void {
 		if (!data) return;
 
 		if (!this.#for) {
@@ -168,15 +243,40 @@ export class QueryHandler {
 		this.#for += ` ${dataPrepared}`;
 	}
 
-	delete() {
+	/**
+	 * Sets the main SQL query to a DELETE statement.
+	 *
+	 * This method sets the main part of the query to a `DELETE FROM` statement, targeting the
+	 * specified data source.
+	 *
+	 * @returns
+	 */
+	delete(): void {
 		this.#mainQuery = `DELETE FROM ${this.#dataSourceRaw}`;
 	}
 
+	/**
+	 * Constructs and sets an SQL INSERT query with optional conflict handling and timestamp updates.
+	 *
+	 * This method builds an SQL INSERT statement based on the provided parameters. It supports batch inserts,
+	 * conflict handling using the `onConflict` option, and automatic updates of timestamp columns if specified.
+	 *
+	 * @param options - Options for constructing the INSERT query.
+	 * @param options.params - The parameters for the INSERT operation, which can be a single object or an array of objects.
+	 * @param [options.onConflict] - Optional SQL clause to handle conflicts, typically used to specify `ON CONFLICT DO UPDATE`.
+	 * @param [options.updateColumn] -
+	 * An optional object specifying a column to update with the current timestamp on conflict. The `title` is the column name,
+	 * and `type` specifies the format (either `timestamp` or `unix_timestamp`).
+	 *
+	 * @returns
+	 *
+	 * @throws {Error} Throws an error if parameters are invalid or if fields are undefined.
+	 */
 	insert<T extends SharedTypes.TRawParams = SharedTypes.TRawParams>(options: {
 		onConflict?: string;
 		params: T | T[];
 		updateColumn?: { title: string; type: "unix_timestamp" | "timestamp"; } | null;
-	}) {
+	}): void {
 		const v = [];
 		const k = [];
 		const headers = new Set<string>();
@@ -270,7 +370,21 @@ export class QueryHandler {
 		this.#valuesOrder += v.length;
 	}
 
-	rawInsert(data: string, values?: unknown[]) {
+	/**
+	 * Constructs and sets a raw SQL INSERT query with optional value substitution.
+	 *
+	 * This method allows inserting raw SQL data into the specified data source. If values are provided,
+	 * they are substituted into the SQL string using the internal value processing method.
+	 *
+	 * @param data - The raw SQL data string to be inserted.
+	 * @param [values] - Optional array of values to be substituted into the SQL string.
+	 *
+	 * @returns
+	 */
+	rawInsert(
+		data: string,
+		values?: unknown[],
+	): void {
 		if (!data) return;
 
 		const dataPrepared = values?.length
@@ -280,11 +394,28 @@ export class QueryHandler {
 		this.#mainQuery = `INSERT INTO ${this.#dataSourceRaw} ${dataPrepared}`;
 	}
 
+	/**
+	 * Constructs and sets an SQL UPDATE query with optional conflict handling and timestamp updates.
+	 *
+	 * This method builds an SQL UPDATE statement based on the provided parameters. It supports
+	 * automatic updates of timestamp columns if specified and optional conflict handling.
+	 *
+	 * @param options - Options for constructing the UPDATE query.
+	 * @param options.params - The parameters for the UPDATE operation, which is a single object.
+	 * @param [options.onConflict] - Optional SQL clause to handle conflicts, typically used to specify `ON CONFLICT DO UPDATE`.
+	 * @param [options.updateColumn] -
+	 * An optional object specifying a column to update with the current timestamp on conflict. The `title` is the column name,
+	 * and `type` specifies the format (either `timestamp` or `unix_timestamp`).
+	 *
+	 * @returns
+	 *
+	 * @throws {Error} Throws an error if parameters are invalid or if fields are undefined.
+	 */
 	update<T extends SharedTypes.TRawParams = SharedTypes.TRawParams>(options: {
 		onConflict?: string;
 		params: T;
 		updateColumn?: { title: string; type: "unix_timestamp" | "timestamp"; } | null;
-	}) {
+	}): void {
 		const params = SharedHelpers.clearUndefinedFields(options.params);
 		const k = Object.keys(params);
 		const v = Object.values(params);
@@ -319,7 +450,22 @@ export class QueryHandler {
 		this.#valuesOrder += v.length;
 	}
 
-	rawUpdate(data: string, values?: unknown[]): void {
+	/**
+	 * Constructs and sets a raw SQL UPDATE query with optional value substitution.
+	 *
+	 * This method allows updating raw SQL data in the specified data source. If values are provided,
+	 * they are substituted into the SQL string using the internal value processing method. The method
+	 * also ensures that the query starts with an `UPDATE` clause if it hasn't been set.
+	 *
+	 * @param data - The raw SQL data string to be updated.
+	 * @param [values] - Optional array of values to be substituted into the SQL string.
+	 *
+	 * @returns
+	 */
+	rawUpdate(
+		data: string,
+		values?: unknown[],
+	): void {
 		if (!data) return;
 
 		const dataPrepared = values?.length
@@ -343,7 +489,17 @@ export class QueryHandler {
 		return;
 	}
 
-	select(data: string[]) {
+	/**
+	 * Constructs and sets an SQL SELECT query.
+	 *
+	 * This method builds an SQL SELECT statement based on the provided column names.
+	 * The `FROM` clause is automatically appended using the internal data source.
+	 *
+	 * @param data - An array of column names to select from the data source.
+	 *
+	 * @returns
+	 */
+	select(data: string[]): void {
 		const fromClause = this.#dataSourceRaw
 			? ` FROM ${this.#dataSourceRaw}`
 			: "";
@@ -351,7 +507,21 @@ export class QueryHandler {
 		this.#mainQuery = `SELECT ${data.join(", ")}${fromClause}`;
 	}
 
-	from(data: string, values?: unknown[]) {
+	/**
+	 * Sets the source table for the query and optionally processes values for the SQL string.
+	 *
+	 * This method updates the internal data source (`#dataSourceRaw`) and adjusts the current SQL
+	 * query to include the `FROM` clause. It also extracts and prepares the alias for the data source, if present.
+	 *
+	 * @param data - The table name or SQL string specifying the data source.
+	 * @param [values] - Optional array of values to be substituted into the SQL string.
+	 *
+	 * @returns
+	 */
+	from(
+		data: string,
+		values?: unknown[],
+	): void {
 		const dataPrepared = values?.length
 			? this.#processDataWithValues(data, values)
 			: data;
@@ -380,7 +550,21 @@ export class QueryHandler {
 		}
 	}
 
-	rawJoin(data: string, values?: unknown[]) {
+	/**
+	 * Appends a raw SQL JOIN clause to the current query with optional value substitution.
+	 *
+	 * This method allows adding any type of JOIN clause to the SQL query. If values are provided,
+	 * they are substituted into the SQL string using the internal value processing method.
+	 *
+	 * @param data - The raw SQL JOIN clause to be appended.
+	 * @param [values] - Optional array of values to be substituted into the SQL string.
+	 *
+	 * @returns
+	 */
+	rawJoin(
+		data: string,
+		values?: unknown[],
+	): void {
 		const dataPrepared = values?.length
 			? this.#processDataWithValues(data, values)
 			: data;
@@ -388,58 +572,131 @@ export class QueryHandler {
 		this.#join.push(dataPrepared);
 	}
 
+	/**
+	 * Appends a RIGHT JOIN clause to the current SQL query.
+	 *
+	 * This method constructs and appends a RIGHT JOIN clause, using the specified table and field names.
+	 * It supports table aliasing and defaults to the main data source if the initial table is not provided.
+	 *
+	 * @param data - The details for constructing the RIGHT JOIN clause.
+	 * @param data.targetTableName - The name of the target table to join with.
+	 * @param [data.targetTableNameAs] - Optional alias for the target table.
+	 * @param data.targetField - The field in the target table to join on.
+	 * @param [data.initialTableName] - Optional name of the initial table, defaults to the main data source.
+	 * @param data.initialField - The field in the initial table to join on.
+	 *
+	 * @returns
+	 */
 	rightJoin(data: {
 		targetTableName: string;
 		targetTableNameAs?: string;
 		targetField: string;
 		initialTableName?: string;
 		initialField: string;
-	}) {
+	}): void {
 		const targetTableName = data.targetTableName + (data.targetTableNameAs ? ` AS ${data.targetTableNameAs}` : "");
 
 		this.#join.push(`RIGHT JOIN ${targetTableName} ON ${data.targetTableNameAs || data.targetTableName}.${data.targetField} = ${data.initialTableName || this.#dataSourcePrepared}.${data.initialField}`);
 	}
 
+	/**
+	 * Appends a LEFT JOIN clause to the current SQL query.
+	 *
+	 * This method constructs and appends a LEFT JOIN clause, using the specified table and field names.
+	 * It supports table aliasing and defaults to the main data source if the initial table is not provided.
+	 *
+	 * @param data - The details for constructing the LEFT JOIN clause.
+	 * @param data.targetTableName - The name of the target table to join with.
+	 * @param [data.targetTableNameAs] - Optional alias for the target table.
+	 * @param data.targetField - The field in the target table to join on.
+	 * @param [data.initialTableName] - Optional name of the initial table, defaults to the main data source.
+	 * @param data.initialField - The field in the initial table to join on.
+	 *
+	 * @returns
+	 */
 	leftJoin(data: {
 		targetTableName: string;
 		targetTableNameAs?: string;
 		targetField: string;
 		initialTableName?: string;
 		initialField: string;
-	}) {
+	}): void {
 		const targetTableName = data.targetTableName + (data.targetTableNameAs ? ` AS ${data.targetTableNameAs}` : "");
 
 		this.#join.push(`LEFT JOIN ${targetTableName} ON ${data.targetTableNameAs || data.targetTableName}.${data.targetField} = ${data.initialTableName || this.#dataSourcePrepared}.${data.initialField}`);
 	}
 
+	/**
+	 * Appends an INNER JOIN clause to the current SQL query.
+	 *
+	 * This method constructs and appends an INNER JOIN clause, using the specified table and field names.
+	 * It supports table aliasing and defaults to the main data source if the initial table is not provided.
+	 *
+	 * @param data - The details for constructing the INNER JOIN clause.
+	 * @param data.targetTableName - The name of the target table to join with.
+	 * @param [data.targetTableNameAs] - Optional alias for the target table.
+	 * @param data.targetField - The field in the target table to join on.
+	 * @param [data.initialTableName] - Optional name of the initial table, defaults to the main data source.
+	 * @param data.initialField - The field in the initial table to join on.
+	 *
+	 * @returns
+	 */
 	innerJoin(data: {
 		targetTableName: string;
 		targetTableNameAs?: string;
 		targetField: string;
 		initialTableName?: string;
 		initialField: string;
-	}) {
+	}): void {
 		const targetTableName = data.targetTableName + (data.targetTableNameAs ? ` AS ${data.targetTableNameAs}` : "");
 
 		this.#join.push(`INNER JOIN ${targetTableName} ON ${data.targetTableNameAs || data.targetTableName}.${data.targetField} = ${data.initialTableName || this.#dataSourcePrepared}.${data.initialField}`);
 	}
 
+	/**
+	 * Appends a FULL OUTER JOIN clause to the current SQL query.
+	 *
+	 * This method constructs and appends a FULL OUTER JOIN clause, using the specified table and field names.
+	 * It supports table aliasing and defaults to the main data source if the initial table is not provided.
+	 *
+	 * @param data - The details for constructing the FULL OUTER JOIN clause.
+	 * @param data.targetTableName - The name of the target table to join with.
+	 * @param [data.targetTableNameAs] - Optional alias for the target table.
+	 * @param data.targetField - The field in the target table to join on.
+	 * @param [data.initialTableName] - Optional name of the initial table, defaults to the main data source.
+	 * @param data.initialField - The field in the initial table to join on.
+	 *
+	 * @returns
+	 */
 	fullOuterJoin(data: {
 		targetTableName: string;
 		targetTableNameAs?: string;
 		targetField: string;
 		initialTableName?: string;
 		initialField: string;
-	}) {
+	}): void {
 		const targetTableName = data.targetTableName + (data.targetTableNameAs ? ` AS ${data.targetTableNameAs}` : "");
 
 		this.#join.push(`FULL OUTER JOIN ${targetTableName} ON ${data.targetTableNameAs || data.targetTableName}.${data.targetField} = ${data.initialTableName || this.#dataSourcePrepared}.${data.initialField}`);
 	}
 
+	/**
+	 * Constructs and appends a WHERE clause to the current SQL query with AND/OR conditions.
+	 *
+	 * This method builds a WHERE clause based on the provided search parameters. It supports both AND and OR
+	 * conditions and appends them to the existing WHERE clause in the query. The method also updates the list of values
+	 * to be used in the SQL statement.
+	 *
+	 * @param data - The search parameters for constructing the WHERE clause.
+	 * @param [data.params] - The primary search parameters, which are ANDed together.
+	 * @param [data.paramsOr] - An array of search parameters, each set is ORed together.
+	 *
+	 * @returns
+	 */
 	where(data: {
 		params?: ModelTypes.TSearchParams;
 		paramsOr?: DomainTypes.TArray2OrMore<ModelTypes.TSearchParams>;
-	}) {
+	}): void {
 		const { queryArray, queryOrArray, values } = Helpers.compareFields(
 			data.params as ModelTypes.TSearchParams,
 			data.paramsOr,
@@ -507,7 +764,24 @@ export class QueryHandler {
 		this.#values.push(...values);
 	}
 
-	with(data: { name: string; query: string; }, values?: unknown[]) {
+	/**
+	 * Adds a CTE (Common Table Expression) to the query with the specified name and query.
+	 *
+	 * This method constructs a `WITH` clause, allowing the inclusion of a CTE in the SQL query.
+	 * The CTE is named and defined by the provided query. If there are existing CTEs, they are
+	 * concatenated with commas.
+	 *
+	 * @param data - The CTE details.
+	 * @param data.name - The name of the CTE.
+	 * @param data.query - The SQL query that defines the CTE.
+	 * @param [values] - Optional array of values to be substituted into the CTE query.
+	 *
+	 * @returns
+	 */
+	with(
+		data: { name: string; query: string; },
+		values?: unknown[],
+	): void {
 		const queryPrepared = values?.length
 			? this.#processDataWithValues(data.query, values)
 			: data.query;
@@ -521,7 +795,21 @@ export class QueryHandler {
 		}
 	}
 
-	rawWhere(data: string, values?: unknown[]) {
+	/**
+	 * Appends a raw SQL WHERE clause to the current query with optional value substitution.
+	 *
+	 * This method adds a raw `WHERE` clause to the SQL query. If values are provided, they are
+	 * substituted into the SQL string using the internal value processing method.
+	 *
+	 * @param data - The raw SQL WHERE clause to be appended.
+	 * @param [values] - Optional array of values to be substituted into the SQL string.
+	 *
+	 * @returns
+	 */
+	rawWhere(
+		data: string,
+		values?: unknown[],
+	): void {
 		if (!data) return;
 
 		if (!this.#mainWhere) {
@@ -539,7 +827,24 @@ export class QueryHandler {
 		this.#mainWhere += ` ${dataPrepared}`;
 	}
 
-	pagination(data: { limit: number; offset: number; }) {
+	/**
+	 * Sets pagination for the query, specifying the limit and offset.
+	 *
+	 * This method adds a `LIMIT` and `OFFSET` clause to the query. It enforces that pagination
+	 * can only be defined once per query.
+	 *
+	 * @param data - The pagination details.
+	 * @param data.limit - The maximum number of records to return.
+	 * @param data.offset - The number of records to skip before starting to return results.
+	 *
+	 * @returns
+	 *
+	 * @throws {Error} - Throws an error if pagination is already defined.
+	 */
+	pagination(data: {
+		limit: number;
+		offset: number;
+	}): void {
 		if (this.#pagination) throw new Error("pagination already defined");
 
 		this.#pagination = `LIMIT $${++this.#valuesOrder} OFFSET $${++this.#valuesOrder}`;
@@ -548,25 +853,58 @@ export class QueryHandler {
 		this.#values.push(data.offset);
 	}
 
+	/**
+	 * Adds an `ORDER BY` clause to the current query.
+	 *
+	 * This method specifies the columns and sorting direction for ordering the query results.
+	 *
+	 * @param data - Array of column and sorting direction objects.
+	 * @param data.column - The column to sort by.
+	 * @param data.sorting - The sorting direction, either "ASC" or "DESC".
+	 *
+	 * @returns
+	 */
 	orderBy(data: {
 		column: string;
 		sorting: SharedTypes.TOrdering;
-	}[]) {
+	}[]): void {
 		if (!this.#orderBy) this.#orderBy = "ORDER BY";
 
 		this.#orderBy += ` ${data.map((o) => `${o.column} ${o.sorting}`).join(", ")}`;
 	}
 
+	/**
+	 * Adds a `GROUP BY` clause to the current query.
+	 *
+	 * This method specifies the columns for grouping query results.
+	 *
+	 * @param data - Array of columns to group by.
+	 *
+	 * @returns
+	 */
 	groupBy(data: string[]) {
 		if (!this.#groupBy) this.#groupBy = "GROUP BY";
 
 		this.#groupBy += ` ${data.join(", ")}`;
 	}
 
+	/**
+	 * Constructs and appends a HAVING clause to the current SQL query with AND/OR conditions.
+	 *
+	 * This method builds a `HAVING` clause based on the provided search parameters. It supports
+	 * both AND and OR conditions and appends them to the existing `HAVING` clause in the query.
+	 * It also updates the list of values to be used in the SQL statement.
+	 *
+	 * @param data - The search parameters for constructing the HAVING clause.
+	 * @param [data.params] - The primary search parameters, which are ANDed together.
+	 * @param [data.paramsOr] - An array of search parameters, each set is ORed together.
+	 *
+	 * @returns
+	 */
 	having(data: {
 		params?: ModelTypes.TSearchParams;
 		paramsOr?: DomainTypes.TArray2OrMore<ModelTypes.TSearchParams>;
-	}) {
+	}): void {
 		const { queryArray, queryOrArray, values } = Helpers.compareFields(
 			data.params as ModelTypes.TSearchParams,
 			data.paramsOr,
@@ -634,7 +972,21 @@ export class QueryHandler {
 		this.#values.push(...values);
 	}
 
-	rawHaving(data: string, values?: unknown[]) {
+	/**
+	 * Appends a raw SQL HAVING clause to the current query with optional value substitution.
+	 *
+	 * This method allows adding a raw `HAVING` clause to the SQL query. If values are provided,
+	 * they are substituted into the SQL string using the internal value processing method.
+	 *
+	 * @param data - The raw SQL HAVING clause to be appended.
+	 * @param [values] - Optional array of values to be substituted into the SQL string.
+	 *
+	 * @returns
+	 */
+	rawHaving(
+		data: string,
+		values?: unknown[],
+	): void {
 		if (!data) return;
 
 		if (!this.#mainHaving) {
@@ -652,11 +1004,29 @@ export class QueryHandler {
 		this.#mainHaving += ` ${dataPrepared}`;
 	}
 
-	returning(data: string[]) {
+	/**
+	 * Specifies the columns to be returned by the query using a RETURNING clause.
+	 *
+	 * This method constructs a `RETURNING` clause to specify which columns to return in the result set.
+	 *
+	 * @param data - Array of columns to return.
+	 *
+	 * @returns
+	 */
+	returning(data: string[]): void {
 		this.#returning = `RETURNING ${data.join(", ")}`;
 	}
 
-	toSubquery(data?: string) {
+	/**
+	 * Marks the query as a subquery and optionally assigns a name to the subquery.
+	 *
+	 * This method configures the query to be treated as a subquery, and optionally assigns a name to it.
+	 *
+	 * @param [data] - Optional name for the subquery.
+	 *
+	 * @returns
+	 */
+	toSubquery(data?: string): void {
 		this.isSubquery = true;
 
 		if (data) {
