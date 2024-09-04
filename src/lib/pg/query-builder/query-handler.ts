@@ -265,7 +265,7 @@ export class QueryHandler {
 	 * @param options.params - The parameters for the INSERT operation, which can be a single object or an array of objects.
 	 * @param [options.onConflict] - Optional SQL clause to handle conflicts, typically used to specify `ON CONFLICT DO UPDATE`.
 	 * @param [options.updateColumn] -
-	 * An optional object specifying a column to update with the current timestamp on conflict. The `title` is the column name,
+	 * An optional object specifying a column to update with the current timestamp. The `title` is the column name,
 	 * and `type` specifies the format (either `timestamp` or `unix_timestamp`).
 	 *
 	 * @returns
@@ -404,7 +404,7 @@ export class QueryHandler {
 	 * @param options.params - The parameters for the UPDATE operation, which is a single object.
 	 * @param [options.onConflict] - Optional SQL clause to handle conflicts, typically used to specify `ON CONFLICT DO UPDATE`.
 	 * @param [options.updateColumn] -
-	 * An optional object specifying a column to update with the current timestamp on conflict. The `title` is the column name,
+	 * An optional object specifying a column to update with the current timestamp. The `title` is the column name,
 	 * and `type` specifies the format (either `timestamp` or `unix_timestamp`).
 	 *
 	 * @returns

@@ -128,7 +128,7 @@ export class QueryBuilder {
 	 * @param options - The options for the insert operation.
 	 * @param [options.onConflict] - Conflict resolution strategy.
 	 * @param options.params - The parameters to insert.
-	 * @param [options.updateColumn] - Optional column for update on conflict.
+	 * @param [options.updateColumn] - Optional default system column for updates.
 	 *
 	 * @returns The current QueryBuilder instance for method chaining.
 	 */
@@ -165,7 +165,7 @@ export class QueryBuilder {
 	 * @param options - The options for the update operation.
 	 * @param [options.onConflict] - Conflict resolution strategy.
 	 * @param options.params - The parameters to update.
-	 * @param [options.updateColumn] - Optional column for update on conflict.
+	 * @param [options.updateColumn] - Optional default system column for updates.
 	 *
 	 * @returns The current QueryBuilder instance for method chaining.
 	 */
