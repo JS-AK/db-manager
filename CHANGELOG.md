@@ -1,3 +1,10 @@
+## [3.37.4](https://github.com/JS-AK/db-manager/compare/v3.37.3...v3.37.4) (2024-09-04)
+
+
+### Bug Fixes
+
+* pg core updated jsdoc ([25db845](https://github.com/JS-AK/db-manager/commit/25db8457cb3d122bcdabc4b1a9dfa17effd6a16d))
+
 ## [3.37.3](https://github.com/JS-AK/db-manager/compare/v3.37.2...v3.37.3) (2024-09-04)
 
 
