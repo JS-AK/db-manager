@@ -4,9 +4,6 @@ import * as SharedTypes from "../../../shared-types/index.js";
 import * as Types from "./types.js";
 import { BaseTable as Model } from "../model/index.js";
 
-type ConditionalRawParamsType<First, Second> = First extends SharedTypes.TRawParams ? First : Partial<Second>;
-type ConditionalDomainFieldsType<First, Second> = First extends Types.TDomainFields ? First : Partial<Second>;
-
 export type BaseTableGeneric = {
 	AdditionalSortingFields?: string;
 	CreateFields?: SharedTypes.TRawParams;
@@ -15,6 +12,9 @@ export type BaseTableGeneric = {
 	UpdateFields?: SharedTypes.TRawParams;
 };
 
+/**
+ * A class representing a base table with generic type parameters for handling database operations.
+ */
 export class BaseTable<
 	M extends Model = Model,
 	BTG extends BaseTableGeneric = BaseTableGeneric
@@ -25,8 +25,18 @@ export class BaseTable<
 	#tableFields;
 	#updateField;
 
+	/**
+	 * The model associated with this domain.
+	 */
 	model: M;
 
+	/**
+	 * Initializes a new instance of the `BaseTable` class.
+	 *
+	 * @param data - The domain data object containing the model.
+	 *
+	 * @throws {Error} If `data.model` is not an instance of `Model`.
+	 */
 	constructor(data: Types.TDomain<M>) {
 		if (!(data.model instanceof Model)) {
 			throw new Error("You need pass data.model extended of PG.Model.BaseTable");
@@ -86,58 +96,193 @@ export class BaseTable<
 		return this.#updateField as { title: keyof BTG["CoreFields"]; type: "unix_timestamp" | "timestamp"; } | null;
 	}
 
+	/**
+	 * Compare query operations for the table.
+	 */
 	compareQuery = {
+
+		/**
+		 * Compare query of `Creates multiple records in the database`.
+		 *
+		 * @param recordParams - An array of parameters for creating new records.
+		 * @param [saveOptions] - Optional settings for saving the records.
+		 * @param [saveOptions.returningFields] - The fields to return after creating the records.
+		 *
+		 * @returns An object containing the SQL query string and the values to be inserted.
+		 */
+		createMany: <T extends Extract<keyof BTG["CoreFields"], string>[] = Extract<keyof BTG["CoreFields"], string>[]>(
+			recordParams: Types.TConditionalRawParamsType<BTG["CreateFields"], BTG["CoreFields"]>[],
+			saveOptions?: { returningFields?: T; },
+		): Types.TCompareQueryResult => this.model.compareQuery.createMany(recordParams, saveOptions),
+
+		/**
+		 * Compare query of `Creates a single record in the database`.
+		 *
+		 * @param recordParams - The parameters required to create a new record.
+		 * @param [saveOptions] - Optional settings for saving the record.
+		 * @param [saveOptions.returningFields] - The fields to return after creating the record.
+		 *
+		 * @returns An object containing the SQL query string and the values to be inserted.
+		 */
 		createOne: (
-			recordParams: ConditionalRawParamsType<BTG["CreateFields"], BTG["CoreFields"]>,
+			recordParams: Types.TConditionalRawParamsType<BTG["CreateFields"], BTG["CoreFields"]>,
 			saveOptions?: { returningFields?: Extract<keyof BTG["CoreFields"], string>[]; },
-		) => this.model.compareQuery.createOne(recordParams, saveOptions),
-		deleteAll: () => this.model.compareQuery.deleteAll(),
+		): Types.TCompareQueryResult => this.model.compareQuery.createOne(recordParams, saveOptions),
+
+		/**
+		 * Compare query of `Deletes all records from the database table`.
+		 *
+		 * @returns An object containing the SQL query string and the values (empty for delete all).
+		 */
+		deleteAll: (): Types.TCompareQueryResult => this.model.compareQuery.deleteAll(),
+
+		/**
+		 * Compare query of `Deletes records based on the specified search parameters`.
+		 *
+		 * @param options - The options for deleting records.
+		 * @param options.params - The search parameters to match records for deletion.
+		 * @param [options.paramsOr] - An optional array of search parameters, where at least one must be matched for deletion.
+		 *
+		 * @returns An object containing the SQL query string and the values for the parameters.
+		 */
 		deleteByParams: (options: {
-			params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
-		}) => this.model.compareQuery.deleteByParams({ $and: options.params, $or: options.paramsOr }),
-		deleteOneByPk: <T>(pk: T) => this.model.compareQuery.deleteOneByPk(pk),
+			params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
+			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
+		}): Types.TCompareQueryResult => this.model.compareQuery.deleteByParams({ $and: options.params, $or: options.paramsOr }),
+
+		/**
+		 * Compare query of `Deletes a single record based on its primary key`.
+		 *
+		 * @param pk - The primary key of the record to delete.
+		 *
+		 * @returns An object containing the SQL query string and the value of the primary key.
+		 */
+		deleteOneByPk: <T>(pk: T): Types.TCompareQueryResult => this.model.compareQuery.deleteOneByPk(pk),
+
+		/**
+		 * Compare query of `Retrieves an array of records based on the specified search parameters`.
+		 *
+		 * @param options - The options for retrieving records.
+		 * @param options.params - The search parameters to match records.
+		 * @param [options.paramsOr] - An optional array of search parameters, where at least one must be matched.
+		 * @param [options.selected] - The fields to return for each matched record.
+		 * @param [options.pagination] - The pagination options.
+		 * @param [options.order] - The sorting options.
+		 *
+		 * @returns An object containing the SQL query string and the values for the parameters.
+		 */
 		getArrByParams: <T extends keyof BTG["CoreFields"]>(options: {
-			params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
+			params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
+			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
 			selected?: [T, ...T[]];
 			pagination?: SharedTypes.TPagination;
 			order?: {
 				orderBy: Extract<keyof BTG["CoreFields"], string> | (BTG["AdditionalSortingFields"] extends string ? BTG["AdditionalSortingFields"] : never);
 				ordering: SharedTypes.TOrdering;
 			}[];
-		}) => this.model.compareQuery.getArrByParams({ $and: options.params, $or: options.paramsOr }, options.selected as string[], options.pagination, options.order),
+		}): Types.TCompareQueryResult => this.model.compareQuery.getArrByParams({ $and: options.params, $or: options.paramsOr }, options.selected as string[], options.pagination, options.order),
+
+		/**
+		 * Compare query of `Gets the count of records that match the specified search parameters`.
+		 *
+		 * @param options - The options for filtering records.
+		 * @param options.params - The search parameters to match records.
+		 * @param [options.paramsOr] - An optional array of search parameters, where at least one must be matched.
+		 *
+		 * @returns An object containing the SQL query string and the values for the parameters.
+		 */
 		getCountByParams: (options: {
-			params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
-		}) => this.model.compareQuery.getCountByParams({ $and: options.params, $or: options.paramsOr }),
-		getCountByPks: <T>(pks: T[]) => this.model.compareQuery.getCountByPks(pks),
+			params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
+			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
+		}): Types.TCompareQueryResult => this.model.compareQuery.getCountByParams({ $and: options.params, $or: options.paramsOr }),
+
+		/**
+		 * Compare query of `Gets the count of records that match the specified primary keys`.
+		 *
+		 * @param pks - An array of primary keys.
+		 *
+		 * @returns An object containing the SQL query string and the values for the primary keys.
+		 */
+		getCountByPks: <T>(pks: T[]): Types.TCompareQueryResult => this.model.compareQuery.getCountByPks(pks),
+
+		/**
+		 * Compare query of `Gets the count of records that match the specified primary keys and search parameters`.
+		 *
+		 * @param pks - An array of primary keys.
+		 * @param options - The options for filtering records.
+		 * @param options.params - The search parameters to match records.
+		 * @param [options.paramsOr] - An optional array of search parameters, where at least one must be matched.
+		 *
+		 * @returns An object containing the SQL query string and the values for the parameters and primary keys.
+		 */
 		getCountByPksAndParams: <T>(
 			pks: T[],
 			options: {
-				params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
-				paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
+				params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
+				paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
 			},
-		) => this.model.compareQuery.getCountByPksAndParams(pks, { $and: options.params, $or: options.paramsOr }),
+		): Types.TCompareQueryResult => this.model.compareQuery.getCountByPksAndParams(pks, { $and: options.params, $or: options.paramsOr }),
+
+		/**
+		 * Compare query of `Retrieves a single record based on the specified search parameters`.
+		 *
+		 * @param options - The options for retrieving the record.
+		 * @param options.params - The search parameters to match the record.
+		 * @param [options.paramsOr] - An optional array of search parameters, where at least one must be matched.
+		 * @param [options.selected] - The fields to return for the matched record.
+		 *
+		 * @returns An object containing the SQL query string and the values for the parameters.
+		 */
 		getOneByParams: <T extends keyof BTG["CoreFields"]>(options: {
-			params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
+			params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
+			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
 			selected?: [T, ...T[]];
-		}) => this.model.compareQuery.getOneByParams({ $and: options.params, $or: options.paramsOr }, options.selected as string[]),
-		getOneByPk: <T>(pk: T) => this.model.compareQuery.getOneByPk(pk),
+		}): Types.TCompareQueryResult => this.model.compareQuery.getOneByParams({ $and: options.params, $or: options.paramsOr }, options.selected as string[]),
+
+		/**
+		 * Compare query of `Retrieves a single record based on its primary key`.
+		 *
+		 * @param pk - The primary key of the record to retrieve.
+		 *
+		 * @returns An object containing the SQL query string and the value of the primary key.
+		 */
+		getOneByPk: <T>(pk: T): Types.TCompareQueryResult => this.model.compareQuery.getOneByPk(pk),
+
+		/**
+		 * Compare query of `Updates records based on the specified search parameters`.
+		 *
+		 * @param queryConditions - The conditions for selecting records to update.
+		 * @param queryConditions.params - The search parameters to match records for updating.
+		 * @param [queryConditions.paramsOr] - An optional array of search parameters, where at least one must be matched.
+		 * @param [queryConditions.returningFields] - The fields to return after updating the records.
+		 * @param updateFields - The fields and their new values to update in the matched records.
+		 *
+		 * @returns An object containing the SQL query string and the values for the parameters and updated fields.
+		 */
 		updateByParams: <T extends Extract<keyof BTG["CoreFields"], string>[] = Extract<keyof BTG["CoreFields"], string>[]>(
 			queryConditions: {
-				params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
-				paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
+				params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
+				paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
 				returningFields?: T;
 			},
-			updateFields: ConditionalRawParamsType<BTG["UpdateFields"], BTG["CoreFields"]>,
-		) => this.model.compareQuery.updateByParams({ $and: queryConditions.params, $or: queryConditions.paramsOr, returningFields: queryConditions.returningFields }, updateFields),
+			updateFields: Types.TConditionalRawParamsType<BTG["UpdateFields"], BTG["CoreFields"]>,
+		): Types.TCompareQueryResult => this.model.compareQuery.updateByParams({ $and: queryConditions.params, $or: queryConditions.paramsOr, returningFields: queryConditions.returningFields }, updateFields),
+
+		/**
+		 * Compare query of `Updates a single record based on its primary key`.
+		 *
+		 * @param primaryKeyValue - The primary key of the record to update.
+		 * @param updateFields - The fields and their new values to update in the matched record.
+		 * @param [updateOptions] - Optional settings for updating the record.
+		 * @param [updateOptions.returningFields] - The fields to return after updating the record.
+		 *
+		 * @returns An object containing the SQL query string and the values for the updated fields and primary key.
+		 */
 		updateOneByPk: <T, R extends Extract<keyof BTG["CoreFields"], string>[] = Extract<keyof BTG["CoreFields"], string>[]>(
 			primaryKeyValue: T,
-			updateFields: ConditionalRawParamsType<BTG["UpdateFields"], BTG["CoreFields"]>,
+			updateFields: Types.TConditionalRawParamsType<BTG["UpdateFields"], BTG["CoreFields"]>,
 			updateOptions?: { returningFields?: R; },
-		) => this.model.compareQuery.updateOneByPk(primaryKeyValue, updateFields, updateOptions),
+		): Types.TCompareQueryResult => this.model.compareQuery.updateOneByPk(primaryKeyValue, updateFields, updateOptions),
 	};
 
 	/**
@@ -178,7 +323,7 @@ export class BaseTable<
 	 * @throws {Error} If the record could not be saved to the database.
 	 */
 	async createOne<T extends Extract<keyof BTG["CoreFields"], string>[] = Extract<keyof BTG["CoreFields"], string>[]>(
-		recordParams: ConditionalRawParamsType<BTG["CreateFields"], BTG["CoreFields"]>,
+		recordParams: Types.TConditionalRawParamsType<BTG["CreateFields"], BTG["CoreFields"]>,
 		saveOptions?: { returningFields?: T; },
 	): Promise<T extends undefined ? BTG["CoreFields"] : Pick<BTG["CoreFields"], T[0]>> {
 		const res = await this.model.createOne<T extends undefined ? BTG["CoreFields"] : Pick<BTG["CoreFields"], T[0]>>(recordParams, saveOptions);
@@ -200,7 +345,7 @@ export class BaseTable<
 	 * @throws {Error} If the records could not be saved to the database.
 	 */
 	async createMany<T extends Extract<keyof BTG["CoreFields"], string>[] = Extract<keyof BTG["CoreFields"], string>[]>(
-		recordParams: ConditionalRawParamsType<BTG["CreateFields"], BTG["CoreFields"]>[],
+		recordParams: Types.TConditionalRawParamsType<BTG["CreateFields"], BTG["CoreFields"]>[],
 		saveOptions?: { returningFields?: T; },
 	): Promise<(T extends undefined ? BTG["CoreFields"][] : Pick<BTG["CoreFields"], T[0]>[])[]> {
 		const res = await this.model.createMany<T extends undefined ? BTG["CoreFields"][] : Pick<BTG["CoreFields"], T[0]>[]>(recordParams, saveOptions);
@@ -229,8 +374,8 @@ export class BaseTable<
 	 * @returns A promise that resolves to `null` when the deletion is complete.
 	 */
 	async deleteByParams(options: {
-		params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
+		params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
+		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
 	}): Promise<null> {
 		return this.model.deleteByParams(
 			{ $and: options.params, $or: options.paramsOr },
@@ -263,8 +408,8 @@ export class BaseTable<
 	 * @returns A promise that resolves to an array of records with the selected fields.
 	 */
 	async getArrByParams<T extends keyof BTG["CoreFields"]>(this: BaseTable<M, BTG>, options: {
-		params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
+		params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
+		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
 		selected?: [T, ...T[]];
 		pagination?: SharedTypes.TPagination;
 		order?: {
@@ -304,8 +449,8 @@ export class BaseTable<
 	async getCountByPksAndParams<T>(
 		pks: T[],
 		options: {
-			params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
+			params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
+			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
 		},
 	): Promise<number> {
 		return this.model.getCountByPksAndParams(
@@ -324,15 +469,25 @@ export class BaseTable<
 	 * @returns A promise that resolves to the number of matching records.
 	 */
 	async getCountByParams(options: {
-		params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
+		params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
+		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
 	}): Promise<number> {
 		return this.model.getCountByParams({ $and: options.params, $or: options.paramsOr });
 	}
 
+	/**
+	 * Retrieves a single record based on the specified search parameters.
+	 *
+	 * @param options - The options for retrieving the record.
+	 * @param options.params - The search parameters to match the record.
+	 * @param [options.paramsOr] - An optional array of search parameters, where at least one must be matched.
+	 * @param [options.selected] - The fields to return for the matched record.
+	 *
+	 * @returns A promise that resolves to an object containing either a message (if not found) or the matched record.
+	 */
 	async getOneByParams<T extends keyof BTG["CoreFields"]>(options: {
-		params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
+		params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
+		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
 		selected?: [T, ...T[]];
 	}): Promise<{ message?: string; one?: Pick<BTG["CoreFields"], T>; }> {
 		const one = await this.model.getOneByParams<Pick<BTG["CoreFields"], T>>(
@@ -376,11 +531,11 @@ export class BaseTable<
 	 */
 	async updateByParams<T extends Extract<keyof BTG["CoreFields"], string>[] = Extract<keyof BTG["CoreFields"], string>[]>(
 		queryConditions: {
-			params: Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
+			params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
+			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>>;
 			returningFields?: T;
 		},
-		updateFields: ConditionalRawParamsType<BTG["UpdateFields"], BTG["CoreFields"]>,
+		updateFields: Types.TConditionalRawParamsType<BTG["UpdateFields"], BTG["CoreFields"]>,
 	): Promise<BTG["CoreFields"][]> {
 		return this.model.updateByParams({ $and: queryConditions.params, $or: queryConditions.paramsOr, returningFields: queryConditions.returningFields }, updateFields);
 	}
@@ -397,7 +552,7 @@ export class BaseTable<
 	 */
 	async updateOneByPk<T, R extends Extract<keyof BTG["CoreFields"], string>[] = Extract<keyof BTG["CoreFields"], string>[]>(
 		primaryKeyValue: T,
-		updateFields: ConditionalRawParamsType<BTG["UpdateFields"], BTG["CoreFields"]>,
+		updateFields: Types.TConditionalRawParamsType<BTG["UpdateFields"], BTG["CoreFields"]>,
 		updateOptions?: { returningFields?: R; },
 	): Promise<BTG["CoreFields"] | undefined> {
 		const one = await this.model.updateOneByPk<BTG["CoreFields"], T>(primaryKeyValue, updateFields, updateOptions);
