@@ -43,7 +43,7 @@ export class BaseView<
 	}
 
 	/**
-	 * Compare query operations for the table.
+	 * Compare query operations for the view.
 	 */
 	compareQuery = {
 
