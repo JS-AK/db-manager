@@ -297,14 +297,15 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 		await testContext.test(
 			"dropTable",
 			async () => {
-				const pool = PG.BaseModel.getStandardPool(creds);
-
-				await pool.query(`DROP TABLE IF EXISTS ${admin.tableName};`);
-				await pool.query(`DROP TABLE IF EXISTS ${user.tableName};`);
-				await pool.query(`DROP TABLE IF EXISTS ${userTest.tableName};`);
+				await admin.dropTable({ cascade: true });
+				await user.dropTable({ cascade: true });
+				await userTest.dropTable({ cascade: true });
 			},
 		);
 
-		await testContext.test("PG.connection shutdown", async () => await PG.connection.shutdown());
+		await testContext.test(
+			"PG.connection shutdown",
+			async () => { await PG.connection.shutdown(); },
+		);
 	});
 };

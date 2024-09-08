@@ -1,4 +1,3 @@
-import * as DomainTypes from "../domain/types.js";
 import * as Helpers from "../helpers/index.js";
 import * as ModelTypes from "../model/types.js";
 import * as SharedHelpers from "../../../shared-helpers/index.js";
@@ -695,7 +694,7 @@ export class QueryHandler {
 	 */
 	where(data: {
 		params?: ModelTypes.TSearchParams;
-		paramsOr?: DomainTypes.TArray2OrMore<ModelTypes.TSearchParams>;
+		paramsOr?: ModelTypes.TSearchParams[];
 	}): void {
 		const { queryArray, queryOrArray, values } = Helpers.compareFields(
 			data.params as ModelTypes.TSearchParams,
@@ -903,7 +902,7 @@ export class QueryHandler {
 	 */
 	having(data: {
 		params?: ModelTypes.TSearchParams;
-		paramsOr?: DomainTypes.TArray2OrMore<ModelTypes.TSearchParams>;
+		paramsOr?: ModelTypes.TSearchParams[];
 	}): void {
 		const { queryArray, queryOrArray, values } = Helpers.compareFields(
 			data.params as ModelTypes.TSearchParams,

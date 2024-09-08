@@ -354,7 +354,7 @@ export class QueryBuilder {
 	 */
 	where<T extends ModelTypes.TSearchParams>(data: {
 		params?: ModelTypes.TSearchParams | DomainTypes.TSearchParams<T>;
-		paramsOr?: DomainTypes.TArray2OrMore<ModelTypes.TSearchParams | DomainTypes.TSearchParams<T>>;
+		paramsOr?: (ModelTypes.TSearchParams | DomainTypes.TSearchParams<T>)[];
 	}): QueryBuilder {
 		this.#queryHandler.where(data);
 
@@ -418,13 +418,15 @@ export class QueryBuilder {
 	/**
 	 * Specifies pagination for the SQL query.
 	 *
-	 * @param data - The data for pagination.
-	 * @param data.limit - The maximum number of rows to return.
-	 * @param data.offset - The number of rows to skip before starting to return rows.
+	 * @param [data] - The data for pagination.
+	 * @param [data].limit - The maximum number of rows to return.
+	 * @param [data].offset - The number of rows to skip before starting to return rows.
 	 *
 	 * @returns The current QueryBuilder instance for method chaining.
 	 */
-	pagination(data: { limit: number; offset: number; }): QueryBuilder {
+	pagination(data?: { limit: number; offset: number; }): QueryBuilder {
+		if (!data) return this;
+
 		this.#queryHandler.pagination(data);
 
 		return this;
@@ -433,16 +435,18 @@ export class QueryBuilder {
 	/**
 	 * Specifies an `ORDER BY` clause for the SQL query.
 	 *
-	 * @param data - An array of objects specifying the columns and sorting order.
-	 * @param data[].column - The column name to order by.
-	 * @param data[].sorting - The sorting direction (`ASC` or `DESC`).
+	 * @param [data] - An array of objects specifying the columns and sorting order.
+	 * @param [data][].column - The column name to order by.
+	 * @param [data][].sorting - The sorting direction (`ASC` or `DESC`).
 	 *
 	 * @returns The current QueryBuilder instance for method chaining.
 	 */
-	orderBy(data: {
+	orderBy(data?: {
 		column: string;
 		sorting: SharedTypes.TOrdering;
 	}[]): QueryBuilder {
+		if (!data?.length) return this;
+
 		this.#queryHandler.orderBy(data);
 
 		return this;
@@ -451,11 +455,13 @@ export class QueryBuilder {
 	/**
 	 * Specifies a `GROUP BY` clause for the SQL query.
 	 *
-	 * @param data - An array of column names to group by.
+	 * @param [data] - An array of column names to group by.
 	 *
 	 * @returns The current QueryBuilder instance for method chaining.
 	 */
-	groupBy(data: string[]): QueryBuilder {
+	groupBy(data?: string[]): QueryBuilder {
+		if (!data?.length) return this;
+
 		this.#queryHandler.groupBy(data);
 
 		return this;
@@ -472,7 +478,7 @@ export class QueryBuilder {
 	 */
 	having<T extends ModelTypes.TSearchParams>(data: {
 		params?: ModelTypes.TSearchParams | DomainTypes.TSearchParams<T>;
-		paramsOr?: DomainTypes.TArray2OrMore<ModelTypes.TSearchParams | DomainTypes.TSearchParams<T>>;
+		paramsOr?: (ModelTypes.TSearchParams | DomainTypes.TSearchParams<T>)[];
 	}): QueryBuilder {
 		this.#queryHandler.having(data);
 
@@ -517,5 +523,21 @@ export class QueryBuilder {
 		const sql = this.compareQuery();
 
 		return (await this.#executeSql<T>(sql)).rows;
+	}
+
+	/**
+	 * Executes a SQL custom query with specified data and values, and returns the result.
+	 *
+	 * This method executes a SQL query provided as a string with optional parameter values, and returns the result rows.
+	 *
+	 * @note All previously passed options are ignored.
+	 *
+	 * @param data - The SQL query string to execute.
+	 * @param [values=[]] - Optional array of values to be used in the query.
+	 *
+	 * @returns A promise that resolves to an array of result rows.
+	 */
+	async executeRawQuery<T extends pg.QueryResultRow>(data: string, values?: unknown[]): Promise<T[]> {
+		return (await this.#executeSql<T>({ query: data, values: values || [] })).rows;
 	}
 }

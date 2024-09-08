@@ -9,9 +9,13 @@ export type TDomain<Model> = { model: Model; };
 export type TDomainFields = { [key: string]: any; };
 
 export type TSearchParams<T> =
-	& { [key in keyof T]: (null extends T[key] ? (null | { $eq: null; }) | TSearchParamValue<NonNullable<T[key]>> : TSearchParamValue<NonNullable<T[key]>>)}
-	& Partial<Record<JsonKeysToStringResult<Required<T>>, TDefault>>
+	& TSearchParamsStrict<T>
+	// & Partial<Record<JsonKeysToStringResult<Required<T>>, TDefault>>
 	& { [key: string]: TDefault | undefined; };
+
+export type TSearchParamsStrict<T> = {
+	[key in keyof T]: (null extends T[key] ? (null | { $eq: null; }) | TSearchParamValue<NonNullable<T[key]>> : TSearchParamValue<NonNullable<T[key]>>)
+};
 
 type TSearchParamValue<T> = T extends object
 	? TSearchParamObjectValue<T>
@@ -103,7 +107,7 @@ type BaseBoolean<T> =
 	| { $ne: NonNullable<T> | null; }
 	| { $custom: { sign: string; value: string | number; }; };
 
-type Join<K extends string, P extends string> = `${K}${P}`;
+/* type Join<K extends string, P extends string> = `${K}${P}`;
 
 type JsonKeysToStringStart<T, P extends string = ""> = {
 	[K in keyof T]: K extends string
@@ -123,7 +127,7 @@ type JsonKeysToStringResult<T> = {
 					? K | `${K}->${JsonKeysToStringStart<T[K]>}`
 					: never
 		: never
-}[keyof T];
+}[keyof T]; */
 
 type ClearBuffer = Omit<Buffer, Extract<keyof Buffer, string>>;
 type ClearDate = Omit<Date, Extract<keyof Date, string>>;

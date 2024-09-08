@@ -75,7 +75,7 @@ export class BaseDomain<TC extends {
 
 	async getArrByParams<T extends keyof TC["TableFields"]>(options: {
 		params: Types.TSearchParams<ConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>>;
+		paramsOr?: Types.TSearchParams<ConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>[];
 		selected?: [T, ...T[]];
 		pagination?: SharedTypes.TPagination;
 		order?: {
@@ -93,7 +93,7 @@ export class BaseDomain<TC extends {
 
 	async getCountByParams(options: {
 		params: Types.TSearchParams<ConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>>;
+		paramsOr?: Types.TSearchParams<ConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>[];
 	}): Promise<number> {
 		return this.model.getCountByParams({ $and: options.params, $or: options.paramsOr });
 	}
@@ -103,7 +103,7 @@ export class BaseDomain<TC extends {
 	 */
 	async getGuaranteedOneByParams<T extends keyof TC["TableFields"]>(options: {
 		params: Types.TSearchParams<ConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>>;
+		paramsOr?: Types.TSearchParams<ConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>[];
 		selected?: [T, ...T[]];
 	}): Promise<Pick<TC["TableFields"], T>> {
 		return this.model.getOneByParams(
@@ -114,7 +114,7 @@ export class BaseDomain<TC extends {
 
 	async getOneByParams<T extends keyof TC["TableFields"]>(options: {
 		params: Types.TSearchParams<ConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<ConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>>;
+		paramsOr?: Types.TSearchParams<ConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>[];
 		selected?: [T, ...T[]];
 	}): Promise<{ message?: string; one?: Pick<TC["TableFields"], T>; }> {
 		const one = await this.model.getOneByParams(

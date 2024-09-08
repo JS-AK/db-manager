@@ -127,7 +127,7 @@ export class BaseDomain<TC extends {
 		 */
 		deleteByParams: (options: {
 			params: Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>>;
+			paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>[];
 		}): Types.TCompareQueryResult => this.model.compareQuery.deleteByParams({ $and: options.params, $or: options.paramsOr }),
 
 		/**
@@ -153,7 +153,7 @@ export class BaseDomain<TC extends {
 		 */
 		getArrByParams: <T extends keyof TC["TableFields"]>(options: {
 			params: Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>>;
+			paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>[];
 			selected?: [T, ...T[]];
 			pagination?: SharedTypes.TPagination;
 			order?: {
@@ -173,7 +173,7 @@ export class BaseDomain<TC extends {
 		 */
 		getCountByParams: (options: {
 			params: Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>>;
+			paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>[];
 		}): Types.TCompareQueryResult => this.model.compareQuery.getCountByParams({ $and: options.params, $or: options.paramsOr }),
 
 		/**
@@ -199,7 +199,7 @@ export class BaseDomain<TC extends {
 			pks: T[],
 			options: {
 				params: Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>;
-				paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>>;
+				paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>[];
 			},
 		): Types.TCompareQueryResult => this.model.compareQuery.getCountByPksAndParams(pks, { $and: options.params, $or: options.paramsOr }),
 
@@ -215,7 +215,7 @@ export class BaseDomain<TC extends {
 		 */
 		getOneByParams: <T extends keyof TC["TableFields"]>(options: {
 			params: Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>>;
+			paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>[];
 			selected?: [T, ...T[]];
 		}): Types.TCompareQueryResult => this.model.compareQuery.getOneByParams({ $and: options.params, $or: options.paramsOr }, options.selected as string[]),
 
@@ -242,7 +242,7 @@ export class BaseDomain<TC extends {
 		updateByParams: <T extends Extract<keyof TC["TableFields"], string>[] = Extract<keyof TC["TableFields"], string>[]>(
 			queryConditions: {
 				params: Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>;
-				paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>>;
+				paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>[];
 				returningFields?: T;
 			},
 			updateFields: Types.TConditionalRawParamsType<TC["UpdateFields"], TC["TableFields"]>,
@@ -307,7 +307,7 @@ export class BaseDomain<TC extends {
 	 */
 	async deleteByParams(options: {
 		params: Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>>;
+		paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>[];
 	}): Promise<null> {
 		return this.model.deleteByParams(
 			{ $and: options.params, $or: options.paramsOr },
@@ -341,7 +341,7 @@ export class BaseDomain<TC extends {
 	 */
 	async getArrByParams<T extends keyof TC["TableFields"]>(options: {
 		params: Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>>;
+		paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>[];
 		selected?: [T, ...T[]];
 		pagination?: SharedTypes.TPagination;
 		order?: {
@@ -382,7 +382,7 @@ export class BaseDomain<TC extends {
 		pks: T[],
 		options: {
 			params: Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>>;
+			paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>[];
 		},
 	): Promise<number> {
 		return this.model.getCountByPksAndParams(
@@ -402,7 +402,7 @@ export class BaseDomain<TC extends {
 	 */
 	async getCountByParams(options: {
 		params: Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>>;
+		paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>[];
 	}): Promise<number> {
 		return this.model.getCountByParams({ $and: options.params, $or: options.paramsOr });
 	}
@@ -412,7 +412,7 @@ export class BaseDomain<TC extends {
 	 */
 	async getGuaranteedOneByParams<T extends keyof TC["TableFields"]>(options: {
 		params: Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>>;
+		paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>[];
 		selected?: [T, ...T[]];
 	}): Promise<Pick<TC["TableFields"], T>> {
 		const one = await this.model.getOneByParams<Pick<TC["TableFields"], T>>(
@@ -437,7 +437,7 @@ export class BaseDomain<TC extends {
 	 */
 	async getOneByParams<T extends keyof TC["TableFields"]>(options: {
 		params: Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>>;
+		paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>[];
 		selected?: [T, ...T[]];
 	}): Promise<{ message?: string; one?: Pick<TC["TableFields"], T>; }> {
 		const one = await this.model.getOneByParams<Pick<TC["TableFields"], T>>(
@@ -482,7 +482,7 @@ export class BaseDomain<TC extends {
 	async updateByParams<T extends Extract<keyof TC["TableFields"], string>[] = Extract<keyof TC["TableFields"], string>[]>(
 		queryConditions: {
 			params: Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>>;
+			paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>[];
 			returningFields?: T;
 		},
 		updateFields: Types.TConditionalRawParamsType<TC["UpdateFields"], TC["TableFields"]>,
