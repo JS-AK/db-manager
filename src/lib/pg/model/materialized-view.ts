@@ -246,7 +246,7 @@ export class BaseMaterializedView {
 	async refresh(concurrently: boolean = false): Promise<void> {
 		const query = `REFRESH MATERIALIZED VIEW ${concurrently ? "CONCURRENTLY" : ""} ${this.name}`;
 
-		await this.pool.query(query);
+		await this.#executeSql({ query, values: [] });
 	}
 
 	/**

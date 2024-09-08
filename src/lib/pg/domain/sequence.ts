@@ -90,6 +90,7 @@ export class BaseSequence<
 	 * Sets the sequence to a specific value.
 	 *
 	 * @param value - The value to set the sequence to.
+	 * 
 	 * @returns
 	 */
 	async setValue(value: BSG): Promise<void> {

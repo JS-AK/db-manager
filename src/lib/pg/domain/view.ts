@@ -9,6 +9,8 @@ type BaseViewGeneric = {
 };
 
 /**
+ * A class representing a base view with generic type parameters for handling database operations.
+ *
  * @experimental
  */
 export class BaseView<
@@ -23,6 +25,13 @@ export class BaseView<
 	 */
 	model;
 
+	/**
+	 * Initializes a new instance of the `BaseView` class.
+	 *
+	 * @param data - The domain data object containing the model.
+	 *
+	 * @throws {Error} If `data.model` is not an instance of `Model`.
+	 */
 	constructor(data: Types.TDomain<M>) {
 		if (!(data.model instanceof Model)) {
 			throw new Error("You need pass data.model extended of PG.Model.BaseView");
@@ -34,10 +43,20 @@ export class BaseView<
 		this.#coreFields = this.model.coreFields;
 	}
 
+	/**
+	 * Gets the name of the database view.
+	 *
+	 * @returns The name of the view.
+	 */
 	get name() {
 		return this.#name;
 	}
 
+	/**
+	 * Gets the fields of the database view.
+	 *
+	 * @returns An array of field names in the view.
+	 */
 	get coreFields() {
 		return this.#coreFields;
 	}
@@ -61,7 +80,7 @@ export class BaseView<
 		 */
 		getArrByParams: <T extends keyof BVG["CoreFields"]>(options: {
 			params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>>;
+			paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>[];
 			selected?: [T, ...T[]];
 			pagination?: SharedTypes.TPagination;
 			order?: {
@@ -81,7 +100,7 @@ export class BaseView<
 		 */
 		getCountByParams: (options: {
 			params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>>;
+			paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>[];
 		}): Types.TCompareQueryResult => this.model.compareQuery.getCountByParams({ $and: options.params, $or: options.paramsOr }),
 
 		/**
@@ -96,7 +115,7 @@ export class BaseView<
 		 */
 		getOneByParams: <T extends keyof BVG["CoreFields"]>(options: {
 			params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>>;
+			paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>[];
 			selected?: [T, ...T[]];
 		}): Types.TCompareQueryResult => this.model.compareQuery.getOneByParams({ $and: options.params, $or: options.paramsOr }, options.selected as string[]),
 	};
@@ -117,7 +136,7 @@ export class BaseView<
 	 */
 	async getArrByParams<T extends keyof BVG["CoreFields"]>(options: {
 		params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>>;
+		paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>[];
 		selected?: [T, ...T[]];
 		pagination?: SharedTypes.TPagination; order?: {
 			orderBy: Extract<keyof BVG["CoreFields"], string> | (BVG["AdditionalSortingFields"] extends string ? BVG["AdditionalSortingFields"] : never);
@@ -143,7 +162,7 @@ export class BaseView<
 	 */
 	async getCountByParams(options: {
 		params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>>;
+		paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>[];
 	}): Promise<number> {
 		return this.model.getCountByParams({ $and: options.params, $or: options.paramsOr });
 	}
@@ -160,7 +179,7 @@ export class BaseView<
 	 */
 	async getOneByParams<T extends keyof BVG["CoreFields"]>(options: {
 		params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>>;
+		paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>[];
 		selected?: [T, ...T[]];
 	}): Promise<{ message?: string; one?: Pick<BVG["CoreFields"], T>; }> {
 		const one = await this.model.getOneByParams<Pick<BVG["CoreFields"], T>>(

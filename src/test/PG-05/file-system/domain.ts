@@ -14,8 +14,28 @@ export class Domain extends DbManager.PG.Domain.BaseTable<Model, {
 
 	async getAll() {
 		return this.model.queryBuilder()
+			.select([
+				"name",
+				"path",
+			])
+			.execute<Types.GetAll>();
+	}
+
+	async getAllInsideHomePath() {
+		return this.model.queryBuilder()
+			.select([
+				"name",
+				"path",
+			])
+			.where({ params: { path: { "$<@": "root.home" } } })
+			.execute<Types.GetAllInsideHomePath>();
+	}
+
+	async getAllOutsideHomePath() {
+		return this.model.queryBuilder()
 			.select(["name", "path"])
-			.execute<Types.TableFields>();
+			.where({ params: { path: { "$@>": "root.home" } } })
+			.execute<Types.GetAllOutsideHomePath>();
 	}
 
 	async getAllWithLevel() {
@@ -25,24 +45,6 @@ export class Domain extends DbManager.PG.Domain.BaseTable<Model, {
 				"path",
 				"NLEVEL(path) as level",
 			])
-			.execute<Types.TableFields>();
-	}
-
-	async getAllInsideHomePath() {
-		return this.model.queryBuilder()
-			.select(["name", "path"])
-			.where({
-				params: { path: { "$<@": "root.home" } },
-			})
-			.execute<Types.TableFields>();
-	}
-
-	async getAllOutsideHomePath() {
-		return this.model.queryBuilder()
-			.select(["name", "path"])
-			.where({
-				params: { path: { "$@>": "root.home" } },
-			})
-			.execute<Types.TableFields>();
+			.execute<Types.GetAllWithLevel>();
 	}
 }

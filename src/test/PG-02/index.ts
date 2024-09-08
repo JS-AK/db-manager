@@ -103,6 +103,9 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 			},
 		);
 
-		await testContext.test("PG.connection shutdown", async () => await PG.connection.shutdown());
+		await testContext.test(
+			"PG.connection shutdown",
+			async () => { await PG.connection.shutdown(); },
+		);
 	});
 };

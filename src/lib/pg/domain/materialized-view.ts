@@ -9,6 +9,8 @@ export type BaseMaterializedViewGeneric = {
 };
 
 /**
+ * A class representing a base materialized view with generic type parameters for handling database operations.
+ *
  * @experimental
  */
 export class BaseMaterializedView<
@@ -18,8 +20,18 @@ export class BaseMaterializedView<
 	#name;
 	#coreFields;
 
+	/**
+	 * The model associated with this domain.
+	 */
 	model;
 
+	/**
+	 * Initializes a new instance of the `BaseMaterializedView` class.
+	 *
+	 * @param data - The domain data object containing the model.
+	 *
+	 * @throws {Error} If `data.model` is not an instance of `Model`.
+	 */
 	constructor(data: Types.TDomain<M>) {
 		if (!(data.model instanceof Model)) {
 			throw new Error("You need pass data.model extended of PG.Model.BaseMaterializedView");
@@ -31,10 +43,20 @@ export class BaseMaterializedView<
 		this.#coreFields = this.model.coreFields;
 	}
 
+	/**
+	 * Gets the name of the database materialized view.
+	 *
+	 * @returns The name of the materialized view.
+	 */
 	get name() {
 		return this.#name;
 	}
 
+	/**
+	 * Gets the fields of the database materialized view.
+	 *
+	 * @returns An array of field names in the materialized view.
+	 */
 	get coreFields() {
 		return this.#coreFields;
 	}
@@ -58,7 +80,7 @@ export class BaseMaterializedView<
 		 */
 		getArrByParams: <T extends keyof BMVG["CoreFields"]>(options: {
 			params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>>;
+			paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>[];
 			selected?: [T, ...T[]];
 			pagination?: SharedTypes.TPagination;
 			order?: {
@@ -78,7 +100,7 @@ export class BaseMaterializedView<
 		 */
 		getCountByParams: (options: {
 			params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>>;
+			paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>[];
 		}): Types.TCompareQueryResult => this.model.compareQuery.getCountByParams({ $and: options.params, $or: options.paramsOr }),
 
 		/**
@@ -93,7 +115,7 @@ export class BaseMaterializedView<
 		 */
 		getOneByParams: <T extends keyof BMVG["CoreFields"]>(options: {
 			params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>;
-			paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>>;
+			paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>[];
 			selected?: [T, ...T[]];
 		}): Types.TCompareQueryResult => this.model.compareQuery.getOneByParams({ $and: options.params, $or: options.paramsOr }, options.selected as string[]),
 	};
@@ -114,7 +136,7 @@ export class BaseMaterializedView<
 	 */
 	async getArrByParams<T extends keyof BMVG["CoreFields"]>(options: {
 		params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>>;
+		paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>[];
 		selected?: [T, ...T[]];
 		pagination?: SharedTypes.TPagination;
 		order?: {
@@ -141,7 +163,7 @@ export class BaseMaterializedView<
 	 */
 	async getCountByParams(options: {
 		params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>>;
+		paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>[];
 	}): Promise<number> {
 		return this.model.getCountByParams({ $and: options.params, $or: options.paramsOr });
 	}
@@ -158,7 +180,7 @@ export class BaseMaterializedView<
 	 */
 	async getOneByParams<T extends keyof BMVG["CoreFields"]>(options: {
 		params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>;
-		paramsOr?: Types.TArray2OrMore<Types.TSearchParams<Types.TConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>>;
+		paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>[];
 		selected?: [T, ...T[]];
 	}): Promise<{ message?: string; one?: Pick<BMVG["CoreFields"], T>; }> {
 		const one = await this.model.getOneByParams<Pick<BMVG["CoreFields"], T>>(
@@ -171,7 +193,14 @@ export class BaseMaterializedView<
 		return { one };
 	}
 
-	async refresh(): Promise<void> {
-		return this.model.refresh();
+	/**
+	 * Refreshes the materialized view.
+	 *
+	 * @param [concurrently=false] - Whether to refresh the view concurrently.
+	 *
+	 * @returns A promise that resolves when the view is refreshed.
+	 */
+	async refresh(concurrently: boolean = false): Promise<void> {
+		return this.model.refresh(concurrently);
 	}
 }

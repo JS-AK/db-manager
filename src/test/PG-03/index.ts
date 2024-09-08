@@ -7,8 +7,8 @@ import * as UserRoleTable from "./user-role/index.js";
 import * as UserTable from "./user/index.js";
 
 export const start = async (creds: PG.ModelTypes.TDBCreds) => {
-	const User = new UserTable.Domain(creds);
-	const UserRole = new UserRoleTable.Domain(creds);
+	const User = UserTable.domain(creds);
+	const UserRole = UserRoleTable.domain(creds);
 
 	return test("PG-03", async (testContext) => {
 		await testContext.test(
@@ -109,8 +109,8 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 							"read admins getList",
 							async () => {
 								const users = await User.getList({
-									order: [{ orderBy: "u.first_name", ordering: "ASC" }],
-									params: { "ur.title": "admin" },
+									order: [{ column: "users.first_name", sorting: "ASC" }],
+									params: { "user_roles.title": "admin" },
 								});
 
 								assert.equal(users.length, 1);
@@ -118,7 +118,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 								const firstUser = users.at(0);
 
 								assert.equal(firstUser?.first_name, "Robin");
-								assert.equal(firstUser?.ur_title, "admin");
+								assert.equal(firstUser?.user_role_title, "admin");
 							},
 						);
 					}
@@ -128,8 +128,8 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 							"read heads getList",
 							async () => {
 								const users = await User.getList({
-									order: [{ orderBy: "u.first_name", ordering: "ASC" }],
-									params: { "ur.title": "head" },
+									order: [{ column: "users.first_name", sorting: "ASC" }],
+									params: { "user_roles.title": "head" },
 								});
 
 								assert.equal(users.length, 1);
@@ -137,7 +137,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 								const firstUser = users.at(0);
 
 								assert.equal(firstUser?.first_name, "Bob");
-								assert.equal(firstUser?.ur_title, "head");
+								assert.equal(firstUser?.user_role_title, "head");
 							},
 						);
 					}
@@ -147,8 +147,8 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 							"read users getList",
 							async () => {
 								const users = await User.getList({
-									order: [{ orderBy: "u.first_name", ordering: "ASC" }],
-									params: { "ur.title": "user" },
+									order: [{ column: "users.first_name", sorting: "ASC" }],
+									params: { "user_roles.title": "user" },
 								});
 
 								assert.equal(users.length, 5);
@@ -156,12 +156,12 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 								const firstUser = users.at(0);
 
 								assert.equal(firstUser?.first_name, "Ann");
-								assert.equal(firstUser?.ur_title, "user");
+								assert.equal(firstUser?.user_role_title, "user");
 
 								const lastUser = users.at(-1);
 
 								assert.equal(lastUser?.first_name, "Peter");
-								assert.equal(lastUser?.ur_title, "user");
+								assert.equal(lastUser?.user_role_title, "user");
 							},
 						);
 					}
@@ -231,8 +231,8 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 							"read admins getList",
 							async () => {
 								const users = await User.getList({
-									order: [{ orderBy: "u.first_name", ordering: "ASC" }],
-									params: { "ur.title": "admin" },
+									order: [{ column: "users.first_name", sorting: "ASC" }],
+									params: { "user_roles.title": "admin" },
 								});
 
 								assert.equal(users.length, 1);
@@ -240,7 +240,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 								const firstUser = users.at(0);
 
 								assert.equal(firstUser?.first_name, "Robin");
-								assert.equal(firstUser?.ur_title, "admin");
+								assert.equal(firstUser?.user_role_title, "admin");
 							},
 						);
 					}
@@ -501,13 +501,14 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 		await testContext.test(
 			"drop tables",
 			async () => {
-				const pool = PG.BaseModel.getStandardPool(creds);
-
-				await pool.query(`DROP TABLE IF EXISTS ${User.tableName};`);
-				await pool.query(`DROP TABLE IF EXISTS ${UserRole.tableName};`);
+				await User.dropTable({ cascade: true });
+				await UserRole.dropTable({ cascade: true });
 			},
 		);
 
-		await testContext.test("PG.connection shutdown", async () => await PG.connection.shutdown());
+		await testContext.test(
+			"PG.connection shutdown",
+			async () => { await PG.connection.shutdown(); },
+		);
 	});
 };

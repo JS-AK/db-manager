@@ -1,4 +1,4 @@
-import * as DbManager from "../../../../index.js";
+import { PG } from "../../../index.js";
 
 export type CreateFields = Pick<TableFields,
 	| "first_name"
@@ -10,21 +10,22 @@ export type CreateFields = Pick<TableFields,
 export type ListedEntity = {
 	id: TableFields["id"];
 
-	first_name: NonNullable<TableFields["first_name"]>;
-	last_name: NonNullable<TableFields["last_name"]>;
+	first_name: TableFields["first_name"];
+	last_name: TableFields["last_name"];
+	is_deleted: TableFields["is_deleted"];
 
-	ur_id: string;
-	ur_title: string;
+	user_role_id: string;
+	user_role_title: string;
 };
 
 export type SearchFields = Partial<TableFields>;
 
-export type SearchFieldsList = DbManager.PG.DomainTypes.TSearchParams<SearchListFields>;
-export type SearchFieldsListOr = DbManager.PG.DomainTypes.TArray2OrMore<SearchFieldsList>;
+export type SearchFieldsList = PG.DomainTypes.TSearchParamsStrict<SearchListFields>;
+export type SearchFieldsListOr = SearchFieldsList[] | undefined;
 
 export type SearchListFields = {
-	"u.is_deleted"?: boolean;
-	"ur.title"?: string;
+	"users.is_deleted"?: boolean;
+	"user_roles.title"?: string;
 };
 
 export type TableFields = {

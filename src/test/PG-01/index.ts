@@ -536,7 +536,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 				{
 					const params: {
 						params: PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
-						paramsOr: PG.DomainTypes.TArray2OrMore<PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>>;
+						paramsOr: PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>[];
 					} = {
 						params: { number_key: { $in: [1, 2] } },
 						paramsOr: [{ number_key: 1 }, { number_key: 2 }],
@@ -556,7 +556,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 					const params: {
 						pagination: Types.TPagination;
 						params: PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
-						paramsOr: PG.DomainTypes.TArray2OrMore<PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>>;
+						paramsOr: PG.DomainTypes.TSearchParams<TestTable.Types.SearchFields>[];
 					} = {
 						pagination: { limit: 1, offset: 1 },
 						params: { number_key: { $in: [1, 2] } },
@@ -998,14 +998,15 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 		);
 
 		await testContext.test(
-			"dropTable",
+			"drop tables",
 			async () => {
-				const pool = PG.BaseModel.getStandardPool(creds);
-
-				await pool.query(`DROP TABLE IF EXISTS ${testTable.tableName};`);
+				await testTable.dropTable({ cascade: true });
 			},
 		);
 
-		await testContext.test("PG.connection shutdown", async () => await PG.connection.shutdown());
+		await testContext.test(
+			"PG.connection shutdown",
+			async () => { await PG.connection.shutdown(); },
+		);
 	});
 };

@@ -4,6 +4,11 @@ export type CreateFields = Pick<TableFields,
 	| "path"
 >;
 
+export type GetAll = Pick<TableFields, "name" | "path">;
+export type GetAllInsideHomePath = Pick<TableFields, "name" | "path">;
+export type GetAllOutsideHomePath = Pick<TableFields, "name" | "path">;
+export type GetAllWithLevel = Pick<TableFields, "name" | "path"> & { level: number; };
+
 export type TableFields = {
 	id: string;
 

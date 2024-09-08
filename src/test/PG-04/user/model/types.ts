@@ -21,7 +21,7 @@ export type ListedEntity = {
 export type SearchFields = Partial<TableFields>;
 
 export type SearchFieldsList = DbManager.PG.DomainTypes.TSearchParams<SearchListFields>;
-export type SearchFieldsListOr = DbManager.PG.DomainTypes.TArray2OrMore<SearchFieldsList>;
+export type SearchFieldsListOr = SearchFieldsList[] | undefined;
 
 export type SearchListFields = {
 	"u.id"?: TableFields["id"];
