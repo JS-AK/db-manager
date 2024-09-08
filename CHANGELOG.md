@@ -1,3 +1,10 @@
+# [3.38.0](https://github.com/JS-AK/db-manager/compare/v3.37.4...v3.38.0) (2024-09-08)
+
+
+### Features
+
+* updated pg-core domain methods ([eb2bc3e](https://github.com/JS-AK/db-manager/commit/eb2bc3e421d40b9a76c53c42328f7ce25342e2b6))
+
 ## [3.37.4](https://github.com/JS-AK/db-manager/compare/v3.37.3...v3.37.4) (2024-09-04)
 
 
