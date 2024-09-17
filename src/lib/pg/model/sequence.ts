@@ -67,7 +67,7 @@ export class BaseSequence {
 	}
 
 	queryBuilder(options?: {
-		client?: pg.Pool | pg.PoolClient;
+		client?: pg.Pool | pg.PoolClient | pg.Client;
 		name?: string;
 	}) {
 		const { client, name } = options || {};

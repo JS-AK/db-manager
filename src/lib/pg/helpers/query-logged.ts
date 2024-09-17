@@ -4,7 +4,7 @@ import * as SharedTypes from "../../../shared-types/index.js";
 
 async function queryLogged<T extends pg.QueryResultRow>(
 	this: {
-		client: pg.Pool | pg.PoolClient;
+		client: pg.Pool | pg.PoolClient | pg.Client;
 		logger: SharedTypes.TLogger;
 	},
 	query: string,
@@ -29,7 +29,7 @@ async function queryLogged<T extends pg.QueryResultRow>(
 }
 
 export function setLoggerAndExecutor(
-	pool: pg.Pool | pg.PoolClient,
+	pool: pg.Pool | pg.PoolClient | pg.Client,
 	options?: {
 		isLoggerEnabled?: true;
 		logger?: SharedTypes.TLogger;

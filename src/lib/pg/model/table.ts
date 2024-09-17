@@ -23,7 +23,7 @@ export class BaseTable<T extends readonly string[] = readonly string[]> {
 	#initialArgs;
 
 	createField;
-	pool: pg.Pool | pg.PoolClient;
+	pool: pg.Pool | pg.PoolClient | pg.Client;
 	primaryKey;
 	tableName;
 	tableFields: readonly string[];
@@ -62,10 +62,10 @@ export class BaseTable<T extends readonly string[] = readonly string[]> {
 		dbCreds: Types.TDBCreds,
 		options?: Types.TDBOptions,
 	) {
-		const { insertOptions, isLoggerEnabled, logger, poolClient } = options || {};
+		const { client, insertOptions, isLoggerEnabled, logger } = options || {};
 
 		this.createField = data.createField;
-		this.pool = poolClient || connection.getStandardPool(dbCreds);
+		this.pool = client || connection.getStandardPool(dbCreds);
 		this.primaryKey = data.primaryKey;
 		this.tableName = data.tableName;
 		this.tableFields = [...data.tableFields];
@@ -89,35 +89,43 @@ export class BaseTable<T extends readonly string[] = readonly string[]> {
 		this.#logger = preparedOptions.logger;
 	}
 
+	get executeSql() {
+		return this.#executeSql;
+	}
+
 	/**
-	 * Sets the pool client in the current class.
-	 * @experimental
-	 * @param poolClient - The pool client.
+	 * Sets the client in the current class.
 	 *
-	 * @returns The current instance with the new pool client.
+	 * @experimental
+	 *
+	 * @param client - The client connection to set.
+	 *
+	 * @returns The current instance with the new connection client.
 	 */
-	setPoolClientInCurrentClass(poolClient: pg.PoolClient): this {
+	setClientInCurrentClass(client: pg.Pool | pg.PoolClient | pg.Client): this {
 		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 		// @ts-expect-error
 		return new this.constructor(
 			{ ...this.#initialArgs.data },
 			{ ...this.#initialArgs.dbCreds },
-			{ ...this.#initialArgs.options, poolClient },
+			{ ...this.#initialArgs.options, client },
 		);
 	}
 
 	/**
-	 * Sets the pool client in the base class.
-	 * @experimental
-	 * @param poolClient - The pool client.
+	 * Sets the client in the base class.
 	 *
-	 * @returns A new instance of the base class with the new pool client.
+	 * @experimental
+	 *
+	 * @param client - The client connection to set.
+	 *
+	 * @returns A new instance of the base class with the new connection client.
 	 */
-	setPoolClientInBaseClass(poolClient: pg.PoolClient): BaseTable<T> {
+	setClientInBaseClass(client: pg.Pool | pg.PoolClient | pg.Client): BaseTable<T> {
 		return new BaseTable(
 			{ ...this.#initialArgs.data },
 			{ ...this.#initialArgs.dbCreds },
-			{ ...this.#initialArgs.options, poolClient },
+			{ ...this.#initialArgs.options, client },
 		);
 	}
 
@@ -158,6 +166,7 @@ export class BaseTable<T extends readonly string[] = readonly string[]> {
 							case "timestamp":
 								paramsPrepared.push(new Date().toISOString());
 								break;
+
 							case "unix_timestamp":
 								paramsPrepared.push(Date.now());
 								break;
@@ -695,7 +704,7 @@ export class BaseTable<T extends readonly string[] = readonly string[]> {
 	 * @returns A new query builder instance.
 	 */
 	queryBuilder(options?: {
-		client?: pg.Pool | pg.PoolClient;
+		client?: pg.Pool | pg.PoolClient | pg.Client;
 		tableName?: string;
 	}): QueryBuilder {
 		const { client, tableName } = options || {};
@@ -855,7 +864,7 @@ export class BaseTable<T extends readonly string[] = readonly string[]> {
 	 * @param [data.updateField] - The field to update with a timestamp.
 	 * @param data.updateField.title - The field name to update.
 	 * @param data.updateField.type - The type of the timestamp.
-	 * 
+	 *
 	 * @returns An object containing the SQL update query and its values.
 	 */
 	static getUpdateFields<

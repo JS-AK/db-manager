@@ -54,6 +54,10 @@ export class BaseModel<T extends readonly string[] = readonly string[]> {
 		this.#logger = preparedOptions.logger;
 	}
 
+	get executeSql() {
+		return this.#executeSql;
+	}
+
 	compareFields = Helpers.compareFields;
 	getFieldsToSearch = Helpers.getFieldsToSearch;
 
@@ -361,7 +365,7 @@ export class BaseModel<T extends readonly string[] = readonly string[]> {
 	 * @experimental
 	 */
 	queryBuilder(options?: {
-		client?: pg.Pool | pg.PoolClient;
+		client?: pg.Pool | pg.PoolClient | pg.Client;
 		tableName?: string;
 	}) {
 		const { client, tableName } = options || {};
