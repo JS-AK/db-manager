@@ -49,7 +49,7 @@ export class BaseSequence {
 	 *
 	 * @returns The current instance with the new connection client.
 	 */
-	setClientCurrentClass(client: mysql.Pool | mysql.PoolConnection | mysql.Connection): this {
+	setClientInCurrentClass(client: mysql.Pool | mysql.PoolConnection | mysql.Connection): this {
 		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 		// @ts-expect-error
 		return new this.constructor(
@@ -93,13 +93,13 @@ export class BaseSequence {
 	}
 
 	async setValue<T extends string | number>(value: T): Promise<void> {
-		const query = `SELECT setval('${this.name}', $1)`;
+		const query = `SELECT setval('${this.name}', ?)`;
 
 		await this.#executeSql({ query, values: [value] });
 	}
 
 	async incrementBy<T extends string | number>(value: T): Promise<void> {
-		const query = `SELECT setval('${this.name}', nextval('${this.name}') + $1)`;
+		const query = `SELECT setval('${this.name}', nextval('${this.name}') + ?)`;
 
 		await this.#executeSql({ query, values: [value] });
 	}

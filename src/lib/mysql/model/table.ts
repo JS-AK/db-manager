@@ -106,7 +106,7 @@ export class BaseTable<T extends readonly string[] = readonly string[]> {
 	 *
 	 * @returns The current instance with the new connection client.
 	 */
-	setClientCurrentClass(client: mysql.Pool | mysql.PoolConnection | mysql.Connection): this {
+	setClientInCurrentClass(client: mysql.Pool | mysql.PoolConnection | mysql.Connection): this {
 		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 		// @ts-expect-error
 		return new this.constructor(
