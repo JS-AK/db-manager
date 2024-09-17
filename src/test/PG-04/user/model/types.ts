@@ -1,4 +1,4 @@
-import * as DbManager from "../../../../index.js";
+import { PG } from "../../../../index.js";
 
 export type CreateFields = Pick<TableFields,
 	| "first_name"
@@ -20,7 +20,7 @@ export type ListedEntity = {
 
 export type SearchFields = Partial<TableFields>;
 
-export type SearchFieldsList = DbManager.PG.DomainTypes.TSearchParams<SearchListFields>;
+export type SearchFieldsList = PG.DomainTypes.TSearchParams<SearchListFields>;
 export type SearchFieldsListOr = SearchFieldsList[] | undefined;
 
 export type SearchListFields = {
