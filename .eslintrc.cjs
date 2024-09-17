@@ -61,6 +61,14 @@ module.exports = {
 			},
 		],
 		"@typescript-eslint/semi": ["error", "always"],
+		"@typescript-eslint/space-before-function-paren": [
+			"warn",
+			{
+				anonymous: "never",
+				asyncArrow: "always",
+				named: "never",
+			},
+		],
 		"@typescript-eslint/type-annotation-spacing": "error",
 		"array-bracket-spacing": ["error", "never"],
 		"arrow-parens": ["error", "always"],
@@ -123,14 +131,6 @@ module.exports = {
 			functions: "always",
 			keywords: "always",
 		}],
-		"space-before-function-paren": [
-			"warn",
-			{
-				anonymous: "never",
-				asyncArrow: "always",
-				named: "never",
-			},
-		],
 		"space-in-parens": ["error", "never"],
 		"space-infix-ops": "error",
 	},
