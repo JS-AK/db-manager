@@ -1,3 +1,19 @@
+# [3.39.0](https://github.com/JS-AK/db-manager/compare/v3.38.0...v3.39.0) (2024-09-18)
+
+
+### Bug Fixes
+
+* pg tests ([bb5a110](https://github.com/JS-AK/db-manager/commit/bb5a110523ddb9566c0b5ee8f3d09bbf3876464d))
+* removed bugs ([4ec647e](https://github.com/JS-AK/db-manager/commit/4ec647efb019a6f703ae432e1d78f033220c1430))
+* updated .eslintrc ([be2c35d](https://github.com/JS-AK/db-manager/commit/be2c35dbd09b703e604e5d05b621c9c71a526705))
+* updated pg-core types and jsdoc ([c0fc376](https://github.com/JS-AK/db-manager/commit/c0fc376ce5b30d6e23ba1648bbf5f5edd36f18eb))
+
+
+### Features
+
+* bump deps ([e5aaff6](https://github.com/JS-AK/db-manager/commit/e5aaff6afc886a5d2fe4d5158188240c3f3bbbf9))
+* updated mysql-core ([6a5012b](https://github.com/JS-AK/db-manager/commit/6a5012b46ca54ace40f89cc55c429efd71666b77))
+
 # [3.38.0](https://github.com/JS-AK/db-manager/compare/v3.37.4...v3.38.0) (2024-09-08)
 
 
