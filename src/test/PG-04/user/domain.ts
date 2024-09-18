@@ -1,8 +1,8 @@
-import * as DbManager from "../../../index.js";
+import { Types as CoreTypes, PG } from "../../../index.js";
 
 import { Model, Types } from "./model/index.js";
 
-export class Domain extends DbManager.PG.BaseDomain<{
+export class Domain extends PG.BaseDomain<{
 	Model: Model;
 	CreateFields: Types.CreateFields;
 	SearchFields: Types.SearchFields;
@@ -10,7 +10,7 @@ export class Domain extends DbManager.PG.BaseDomain<{
 	UpdateFields: Types.UpdateFields;
 }> {
 
-	constructor(creds: DbManager.PG.ModelTypes.TDBCreds) {
+	constructor(creds: PG.ModelTypes.TDBCreds) {
 		super({ model: new Model(creds) });
 	}
 
@@ -103,8 +103,8 @@ export class Domain extends DbManager.PG.BaseDomain<{
 	}
 
 	async getList(data: {
-		order: { column: Types.ListOrderBy; sorting: DbManager.Types.TOrdering; }[];
-		pagination: DbManager.Types.TPagination;
+		order: { column: Types.ListOrderBy; sorting: CoreTypes.TOrdering; }[];
+		pagination: CoreTypes.TPagination;
 		params: {
 			ids?: string[];
 			userRoleTitle?: string;
@@ -138,8 +138,8 @@ export class Domain extends DbManager.PG.BaseDomain<{
 	}
 
 	async getListAndCount(data: {
-		order: { column: Types.ListOrderBy; sorting: DbManager.Types.TOrdering; }[];
-		pagination: DbManager.Types.TPagination;
+		order: { column: Types.ListOrderBy; sorting: CoreTypes.TOrdering; }[];
+		pagination: CoreTypes.TPagination;
 		params: { ids?: string[]; userRoleTitle?: string; };
 	}): Promise<[Types.ListedEntity[], number]> {
 		const params: Types.SearchFieldsList = {
@@ -174,7 +174,7 @@ export class Domain extends DbManager.PG.BaseDomain<{
 				.pagination(data.pagination)
 				.execute<Types.ListedEntity>(),
 			queryTotal
-				.select(["COUNT(*)"])
+				.select(["COUNT(*) as count"])
 				.execute<{ count: string; }>(),
 		]);
 

@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
 import * as SharedTypes from "../../../shared-types/index.js";
 
 export type TArray2OrMore<T> = { 0: T; 1: T; } & Array<T>;

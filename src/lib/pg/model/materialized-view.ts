@@ -66,6 +66,10 @@ export class BaseMaterializedView {
 		this.#logger = logger;
 	}
 
+	get executeSql() {
+		return this.#executeSql;
+	}
+
 	/**
 	 * Compare fields for queries.
 	 */
@@ -259,7 +263,7 @@ export class BaseMaterializedView {
 	 * @returns A new `QueryBuilder` instance.
 	 */
 	queryBuilder(options?: {
-		client?: pg.Pool | pg.PoolClient;
+		client?: pg.Pool | pg.PoolClient | pg.Client;
 		name?: string;
 	}): QueryBuilder {
 		const { client, name } = options || {};

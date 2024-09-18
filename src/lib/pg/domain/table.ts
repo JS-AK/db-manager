@@ -289,26 +289,28 @@ export class BaseTable<
 	 * Sets the pool client in the current class.
 	 *
 	 * @experimental
-	 * @param poolClient - The pool client to set.
 	 *
-	 * @returns A new instance of the current class with the updated pool client.
+	 * @param client - The client connection to set.
+	 *
+	 * @returns A new instance of the current class with the updated client.
 	 */
-	setPoolClientInCurrentClass(poolClient: pg.PoolClient): this {
+	setClientInCurrentClass(client: pg.Pool | pg.PoolClient | pg.Client): this {
 		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 		// @ts-expect-error
-		return new this.constructor({ model: this.model.setPoolClientInCurrentClass(poolClient) });
+		return new this.constructor({ model: this.model.setClientInCurrentClass(client) });
 	}
 
 	/**
 	 * Sets the pool client in the base class.
 	 *
 	 * @experimental
-	 * @param poolClient - The pool client to set.
+	 * 
+	 * @param client - The client connection to set.
 	 *
-	 * @returns A new instance of the BaseTable class with the updated pool client.
+	 * @returns A new instance of the BaseTable class with the updated client.
 	 */
-	setPoolClientInBaseClass(poolClient: pg.PoolClient): BaseTable<Model, BTG> {
-		return new BaseTable({ model: this.model.setPoolClientInBaseClass(poolClient) });
+	setClientInBaseClass(client: pg.Pool | pg.PoolClient | pg.Client): BaseTable<Model, BTG> {
+		return new BaseTable({ model: this.model.setClientInBaseClass(client) });
 	}
 
 	/**
@@ -391,7 +393,7 @@ export class BaseTable<
 	 * @param [options.restrict] - Whether to restrict the truncate to prevent truncating the table if there are any dependent objects.
 	 * @param [options.only] - Whether to truncate only the specified table and not any of its descendant tables.
 	 * @param [options.restartIdentity] - Whether to restart identity values.
-	 * 
+	 *
 	 * @returns A promise that resolves when the table is truncated.
 	 */
 	async truncateTable(options: {

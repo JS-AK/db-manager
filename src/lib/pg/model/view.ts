@@ -66,6 +66,10 @@ export class BaseView {
 		this.#logger = logger;
 	}
 
+	get executeSql() {
+		return this.#executeSql;
+	}
+
 	/**
 	 * Compare fields for queries.
 	 */
@@ -247,7 +251,7 @@ export class BaseView {
 	 */
 	queryBuilder(options?: {
 		name?: string;
-		client?: pg.Pool | pg.PoolClient;
+		client?: pg.Pool | pg.PoolClient | pg.Client;
 	}): QueryBuilder {
 		const { client, name } = options || {};
 

@@ -32,7 +32,7 @@ export class QueryBuilder {
 	 */
 	constructor(
 		dataSource: string,
-		client: pg.Pool | pg.PoolClient,
+		client: pg.Pool | pg.PoolClient | pg.Client,
 		options?: {
 			isLoggerEnabled?: true;
 			logger?: SharedTypes.TLogger;

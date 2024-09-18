@@ -23,28 +23,13 @@ export const createClient = (config: string | pg.ClientConfig): pg.Client => {
  *
  * @returns The retrieved or newly created standard connection pool.
  */
-export const getStandardPool = (config: PG.ModelTypes.TDBCreds, poolName = "00"): pg.Pool => {
-	const { database, host, password, port, user } = config;
+export const getStandardPool = (
+	config: PG.ModelTypes.TDBCreds,
+	poolName = "00",
+): pg.Pool => {
 	const poolNameResult = "st" + poolName;
-	const credsString = _createCredsString(poolNameResult, {
-		database,
-		host,
-		password,
-		port,
-		user,
-	});
 
-	const poolCandidate = pools.get(credsString);
-
-	if (poolCandidate) {
-		return poolCandidate;
-	} else {
-		const pool = new pg.Pool(config);
-
-		pools.set(credsString, pool);
-
-		return pool;
-	}
+	return getPool(config, poolNameResult);
 };
 
 /**
@@ -55,28 +40,13 @@ export const getStandardPool = (config: PG.ModelTypes.TDBCreds, poolName = "00")
  *
  * @returns The retrieved or newly created transaction connection pool.
  */
-export const getTransactionPool = (config: PG.ModelTypes.TDBCreds, poolName: string = "00"): pg.Pool => {
-	const { database, host, password, port, user } = config;
+export const getTransactionPool = (
+	config: PG.ModelTypes.TDBCreds,
+	poolName: string = "00",
+): pg.Pool => {
 	const poolNameResult = "tr" + poolName;
-	const credsString = _createCredsString(poolNameResult, {
-		database,
-		host,
-		password,
-		port,
-		user,
-	});
 
-	const poolCandidate = pools.get(credsString);
-
-	if (poolCandidate) {
-		return poolCandidate;
-	} else {
-		const pool = new pg.Pool(config);
-
-		pools.set(credsString, pool);
-
-		return pool;
-	}
+	return getPool(config, poolNameResult);
 };
 
 /**
@@ -87,24 +57,13 @@ export const getTransactionPool = (config: PG.ModelTypes.TDBCreds, poolName: str
  *
  * @returns A promise that resolves when the pool is closed.
  */
-export const removeStandardPool = async (config: PG.ModelTypes.TDBCreds, poolName: string = "00"): Promise<void> => {
-	const { database, host, password, port, user } = config;
+export const removeStandardPool = async (
+	config: PG.ModelTypes.TDBCreds,
+	poolName: string = "00",
+): Promise<void> => {
 	const poolNameResult = "st" + poolName;
-	const credsString = _createCredsString(poolNameResult, {
-		database,
-		host,
-		password,
-		port,
-		user,
-	});
 
-	const pool = pools.get(credsString);
-
-	if (pool) {
-		pools.delete(credsString);
-
-		await pool.end();
-	}
+	return removePool(config, poolNameResult);
 };
 
 /**
@@ -115,24 +74,13 @@ export const removeStandardPool = async (config: PG.ModelTypes.TDBCreds, poolNam
  *
  * @returns A promise that resolves when the pool is closed.
  */
-export const removeTransactionPool = async (config: PG.ModelTypes.TDBCreds, poolName: string = "00"): Promise<void> => {
-	const { database, host, password, port, user } = config;
+export const removeTransactionPool = async (
+	config: PG.ModelTypes.TDBCreds,
+	poolName: string = "00",
+): Promise<void> => {
 	const poolNameResult = "tr" + poolName;
-	const credsString = _createCredsString(poolNameResult, {
-		database,
-		host,
-		password,
-		port,
-		user,
-	});
 
-	const pool = pools.get(credsString);
-
-	if (pool) {
-		pools.delete(credsString);
-
-		await pool.end();
-	}
+	return removePool(config, poolNameResult);
 };
 
 /**
@@ -168,7 +116,10 @@ export const shutdown = async (): Promise<void> => {
  *
  * @returns The constructed credentials string.
  */
-const _createCredsString = (poolName: string, creds: { user: string; password: string; host: string; port: number; database: string; }): string => {
+const createCredsString = (
+	poolName: string,
+	creds: { user: string; password: string; host: string; port: number; database: string; },
+): string => {
 	return `${poolName}#${creds.user}:${creds.password}@${creds.host}:${creds.port}/${creds.database}`;
 };
 
@@ -181,4 +132,68 @@ const _createCredsString = (poolName: string, creds: { user: string; password: s
  */
 const _maskSensitiveInfo = (credsString: string): string => {
 	return credsString.replace(/:.+@/, ":<hidden>@");
+};
+
+/**
+ * Retrieves or creates a named connection pool.
+ *
+ * @param config - The database credentials configuration object.
+ * @param poolName - The name suffix for the pool.
+ *
+ * @returns The retrieved or newly created standard connection pool.
+ */
+const getPool = (
+	config: PG.ModelTypes.TDBCreds,
+	poolName: string,
+): pg.Pool => {
+	const { database, host, password, port, user } = config;
+	const credsString = createCredsString(poolName, {
+		database,
+		host,
+		password,
+		port,
+		user,
+	});
+
+	const poolCandidate = pools.get(credsString);
+
+	if (poolCandidate) {
+		return poolCandidate;
+	} else {
+		const pool = new pg.Pool(config);
+
+		pools.set(credsString, pool);
+
+		return pool;
+	}
+};
+
+/**
+ * Removes and closes a named connection pool.
+ *
+ * @param config - The database credentials configuration object.
+ * @param poolName - The name suffix for the pool.
+ *
+ * @returns A promise that resolves when the pool is closed.
+ */
+const removePool = async (
+	config: PG.ModelTypes.TDBCreds,
+	poolName: string,
+): Promise<void> => {
+	const { database, host, password, port, user } = config;
+	const credsString = createCredsString(poolName, {
+		database,
+		host,
+		password,
+		port,
+		user,
+	});
+
+	const pool = pools.get(credsString);
+
+	if (pool) {
+		pools.delete(credsString);
+
+		await pool.end();
+	}
 };

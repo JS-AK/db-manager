@@ -1,55 +1,58 @@
 import * as SharedTypes from "../../../shared-types/index.js";
 
+export const generateTimestampQuery = (type: "timestamp" | "unix_timestamp") => {
+	switch (type) {
+		case "timestamp":
+			return "UTC_TIMESTAMP()";
+		case "unix_timestamp":
+			return "ROUND(UNIX_TIMESTAMP(CURTIME(4)) * 1000)";
+
+		default:
+			throw new Error("Invalid type: " + type);
+	}
+};
+
 export default {
-	deleteAll(tableName: string) {
-		return `DELETE FROM ${tableName};`;
+	/**
+	 * Generates an SQL `INSERT` statement for inserting multiple rows into a table.
+	 *
+	 * @param data - Data required to build the SQL query.
+	 * @param data.fields - An array of arrays where each sub-array represents the values for one row.
+	 * @param data.headers - An array of strings representing the column names.
+	 * @param data.onConflict - A string to handle conflicts (e.g., "ON CONFLICT DO NOTHING").
+	 * @param data.tableName - The name of the table to insert into.
+	 *
+	 * @returns The generated SQL `INSERT` statement.
+	 */
+	createMany(data: {
+		fields: string[][];
+		headers: string[];
+		onConflict: string;
+		tableName: string;
+	}): string {
+		return `INSERT INTO ${data.tableName} (${data.headers.join(",")}) VALUES (${data.fields.map((e) => e.map(() => "?")).join("),(")}) ${data.onConflict};`;
 	},
 
-	deleteByPk(
-		tableName: string,
-		primaryKeyField: SharedTypes.TPrimaryKeyField,
-	) {
-		if (Array.isArray(primaryKeyField)) {
-			const query = primaryKeyField.map((e) => `${e} = ?`);
-
-			return `DELETE FROM ${tableName} WHERE ${query.join(" AND ")};`;
-		}
-
-		return `DELETE FROM ${tableName} WHERE ${primaryKeyField} = ?;`;
-	},
-
-	getByParams(
-		tableName: string,
-		selectedFields: string,
-		searchFields: string,
-		orderByFields: string,
-		paginationFields: string,
-	) {
-		return `SELECT ${selectedFields} FROM ${tableName}${searchFields}${orderByFields}${paginationFields};`;
-	},
-
-	getCountByParams(tableName: string, searchFields: string) {
-		return `SELECT COUNT(*) AS count FROM ${tableName}${searchFields};`;
-	},
-
-	getOneByPk(
-		tableName: string,
-		primaryKeyField: SharedTypes.TPrimaryKeyField,
-	) {
-		if (Array.isArray(primaryKeyField)) {
-			const query = primaryKeyField.map((e) => `${e} = ?`);
-
-			return `SELECT * FROM ${tableName} WHERE ${query.join(" AND ")};`;
-		}
-
-		return `SELECT * FROM ${tableName} WHERE ${primaryKeyField} = ? LIMIT 1;`;
-	},
-
-	save(
+	/**
+	 * Generates an SQL `INSERT` statement for inserting a single row into a table.
+	 *
+	 * @param tableName - The name of the table to insert into.
+	 * @param fields - An array of strings representing the column names to insert values into.
+	 * @param createField - An optional field to automatically set a timestamp or unix timestamp.
+	 * @param createField.title - The name of the column for the timestamp.
+	 * @param createField.type - The type of timestamp to insert.
+	 * @param onConflict - A string to handle conflicts (e.g., "ON CONFLICT DO NOTHING").
+	 *
+	 * @returns The generated SQL `INSERT` statement.
+	 *
+	 * @throws {Error} If an invalid `createField.type` is provided.
+	 */
+	createOne(
 		tableName: string,
 		fields: string[],
 		createField: { title: string; type: "unix_timestamp" | "timestamp"; } | null,
-	) {
+		onConflict: string,
+	): string {
 		const intoFields = [];
 		const valuesFields = [];
 
@@ -60,43 +63,258 @@ export default {
 
 		if (createField) {
 			intoFields.push(createField.title);
-
-			switch (createField.type) {
-				case "timestamp":
-					valuesFields.push("UTC_TIMESTAMP()");
-					break;
-				case "unix_timestamp":
-					valuesFields.push("ROUND(UNIX_TIMESTAMP(CURTIME(4)) * 1000)");
-					break;
-
-				default:
-					throw new Error("Invalid type: " + createField.type);
-			}
+			valuesFields.push(generateTimestampQuery(createField.type));
 		}
 
-		return `INSERT INTO ${tableName} (${intoFields.join(",")}) VALUES (${valuesFields.join(",")});`;
+		return `INSERT INTO ${tableName} (${intoFields.join(",")}) VALUES (${valuesFields.join(",")}) ${onConflict};`;
 	},
 
-	update(
+	/**
+	 * Generates an SQL `DELETE` statement to delete all rows from a table.
+	 *
+	 * @param tableName - The name of the table to delete from.
+	 *
+	 * @returns The generated SQL `DELETE` statement.
+	 */
+	deleteAll(tableName: string): string {
+		return `DELETE FROM ${tableName};`;
+	},
+
+	/**
+	 * Generates an SQL `DELETE` statement based on provided search conditions.
+	 *
+	 * @param tableName - The name of the table to delete from.
+	 * @param searchFields - The search conditions for the `WHERE` clause.
+	 *
+	 * @returns The generated SQL `DELETE` statement.
+	 */
+	deleteByParams(
+		tableName: string,
+		searchFields: string,
+	): string {
+		return `DELETE FROM ${tableName}${searchFields};`;
+	},
+
+	/**
+	 * Generates an SQL `DELETE` statement to delete a row or rows based on primary key(s).
+	 *
+	 * @param tableName - The name of the table to delete from.
+	 * @param primaryKeyField - The primary key(s) of the row(s) to delete.
+	 *
+	 * @returns The generated SQL `DELETE` statement.
+	 */
+	deleteByPk(
+		tableName: string,
+		primaryKeyField: SharedTypes.TPrimaryKeyField,
+	): string {
+		if (Array.isArray(primaryKeyField)) {
+			const query = primaryKeyField.map((e) => `${e} = ?`);
+
+			return `DELETE FROM ${tableName} WHERE ${query.join(" AND ")};`;
+		}
+
+		return `DELETE FROM ${tableName} WHERE ${primaryKeyField} = ?;`;
+	},
+
+	/**
+	 * Generates an SQL `SELECT` statement to retrieve rows based on search conditions, ordering, and pagination.
+	 *
+	 * @param tableName - The name of the table to select from.
+	 * @param selectedFields - The columns to select.
+	 * @param searchFields - The search conditions for the `WHERE` clause.
+	 * @param orderByFields - The ordering for the `ORDER BY` clause.
+	 * @param paginationFields - The pagination for the `LIMIT` and `OFFSET` clauses.
+	 *
+	 * @returns The generated SQL `SELECT` statement.
+	 */
+	getByParams(
+		tableName: string,
+		selectedFields: string,
+		searchFields: string,
+		orderByFields: string,
+		paginationFields: string,
+	): string {
+		return `SELECT ${selectedFields} FROM ${tableName}${searchFields}${orderByFields}${paginationFields};`;
+	},
+
+	/**
+	 * Generates an SQL `SELECT COUNT` statement to count rows that match specific composite primary keys.
+	 *
+	 * @param primaryKeyFields - The primary key fields to use for the condition.
+	 * @param tableName - The name of the table to count rows from.
+	 * @param pksCount - The number of primary key sets to match.
+	 *
+	 * @returns The generated SQL `SELECT COUNT` statement.
+	 */
+	getCountByCompositePks(
+		primaryKeyFields: string[],
+		tableName: string,
+		pksCount: number,
+	): string {
+		const conditions = [];
+
+		for (let i = 0; i < pksCount; i++) {
+			const condition = primaryKeyFields
+				.map((field) => `${field} = ?`)
+				.join(" AND ");
+
+			conditions.push(`(${condition})`);
+		}
+
+		const whereClause = conditions.join(" OR ");
+
+		return `SELECT COUNT(*) AS count FROM ${tableName} WHERE ${whereClause};`;
+	},
+
+	/**
+	 * Generates an SQL `SELECT COUNT` statement to count rows that match specific composite primary keys and additional conditions.
+	 *
+	 * @param primaryKeyFields - The primary key fields to use for the condition.
+	 * @param tableName - The name of the table to count rows from.
+	 * @param searchFields - The search conditions for the `WHERE` clause.
+	 * @param pksCount - The number of primary key sets to match.
+	 *
+	 * @returns The generated SQL `SELECT COUNT` statement.
+	 */
+	getCountByCompositePksAndParams(
+		primaryKeyFields: string[],
+		tableName: string,
+		searchFields: string,
+		pksCount: number,
+	): string {
+		const conditions = [];
+
+		for (let i = 0; i < pksCount; i++) {
+			const condition = primaryKeyFields
+				.map((field) => `${field} = ?`)
+				.join(" AND ");
+
+			conditions.push(`(${condition})`);
+		}
+
+		const compositePkCondition = conditions.join(" OR ");
+
+		return `SELECT COUNT(*) AS count FROM ${tableName} ${searchFields} AND (${compositePkCondition});`;
+	},
+
+	/**
+	 * Generates an SQL `SELECT COUNT` statement to count rows based on search conditions.
+	 *
+	 * @param tableName - The name of the table to count rows from.
+	 * @param searchFields - The search conditions for the `WHERE` clause.
+	 *
+	 * @returns The generated SQL `SELECT COUNT` statement.
+	 */
+	getCountByParams(tableName: string, searchFields: string): string {
+		return `SELECT COUNT(*) AS count FROM ${tableName}${searchFields};`;
+	},
+
+	/**
+	 * Generates an SQL `SELECT COUNT` statement to count rows that match a list of primary keys.
+	 *
+	 * @param primaryKeyField - The primary key field to match.
+	 * @param tableName - The name of the table to count rows from.
+	 *
+	 * @returns The generated SQL `SELECT COUNT` statement.
+	 */
+	getCountByPks(
+		primaryKeyField: string,
+		tableName: string,
+	): string {
+		return `SELECT COUNT(*) AS count FROM ${tableName} WHERE ${primaryKeyField} IN (?);`;
+	},
+
+	/**
+	 * Generates an SQL `SELECT COUNT` statement to count rows that match a list of primary keys and additional conditions.
+	 *
+	 * @param primaryKeyField - The primary key field to match.
+	 * @param tableName - The name of the table to count rows from.
+	 * @param searchFields - The search conditions for the `WHERE` clause.
+	 *
+	 * @returns The generated SQL `SELECT COUNT` statement.
+	 */
+	getCountByPksAndParams(
+		primaryKeyField: string,
+		tableName: string,
+		searchFields: string,
+	): string {
+		return `SELECT COUNT(*) AS count FROM ${tableName}${searchFields} AND ${primaryKeyField} IN (?);`;
+	},
+
+	/**
+	 * Generates an SQL `SELECT` statement to retrieve a single row based on the primary key(s).
+	 *
+	 * @param tableName - The name of the table to select from.
+	 * @param primaryKeyField - The primary key(s) of the row to retrieve.
+	 *
+	 * @returns The generated SQL `SELECT` statement.
+	 */
+	getOneByPk(
+		tableName: string,
+		primaryKeyField: SharedTypes.TPrimaryKeyField,
+	): string {
+		if (Array.isArray(primaryKeyField)) {
+			const query = primaryKeyField.map((e) => `${e} = ?`);
+
+			return `SELECT * FROM ${tableName} WHERE ${query.join(" AND ")} LIMIT 1;`;
+		}
+
+		return `SELECT * FROM ${tableName} WHERE ${primaryKeyField} = ? LIMIT 1;`;
+	},
+
+	/**
+	 * Generates an SQL `UPDATE` statement to update rows based on search conditions.
+	 *
+	 * @param tableName - The name of the table to update.
+	 * @param fields - The columns to update.
+	 * @param searchFields - The search conditions for the `WHERE` clause.
+	 * @param updateField - An optional field to automatically set a timestamp or unix timestamp.
+	 * @param updateField.title - The name of the column for the timestamp.
+	 * @param updateField.type - The type of timestamp to insert.
+	 *
+	 * @returns The generated SQL `UPDATE` statement.
+	 *
+	 * @throws {Error} If an invalid `updateField.type` is provided.
+	 */
+	updateByParams(
+		tableName: string,
+		fields: string[],
+		searchFields: string,
+		updateField: { title: string; type: "unix_timestamp" | "timestamp"; } | null,
+	): string {
+		let updateFields = fields.map((e: string) => `${e} = ?`).join(",");
+
+		if (updateField) {
+			updateFields += `, ${updateField.title} = ${generateTimestampQuery(updateField.type)}`;
+		}
+
+		return `UPDATE ${tableName} SET ${updateFields}${searchFields};`;
+	},
+
+	/**
+	 * Generates an SQL `UPDATE` statement to update a row or rows based on primary key(s).
+	 *
+	 * @param tableName - The name of the table to update.
+	 * @param fields - The columns to update.
+	 * @param primaryKeyField - The primary key(s) of the row(s) to update.
+	 * @param updateField - An optional field to automatically set a timestamp or unix timestamp.
+	 * @param updateField.title - The name of the column for the timestamp.
+	 * @param updateField.type - The type of timestamp to insert.
+	 *
+	 * @returns The generated SQL `UPDATE` statement.
+	 *
+	 * @throws {Error} If an invalid `updateField.type` is provided.
+	 */
+	updateByPk(
 		tableName: string,
 		fields: string[],
 		primaryKeyField: SharedTypes.TPrimaryKeyField,
 		updateField: { title: string; type: "unix_timestamp" | "timestamp"; } | null,
-	) {
+	): string {
 		let updateFields = fields.map((e: string) => `${e} = ?`).join(",");
 
 		if (updateField) {
-			switch (updateField.type) {
-				case "timestamp":
-					updateFields += `, ${updateField.title} = UTC_TIMESTAMP()`;
-					break;
-				case "unix_timestamp":
-					updateFields += `, ${updateField.title} = ROUND(UNIX_TIMESTAMP(CURTIME(4)) * 1000)`;
-					break;
-
-				default:
-					throw new Error("Invalid type: " + updateField.type);
-			}
+			updateFields += `, ${updateField.title} = ${generateTimestampQuery(updateField.type)}`;
 		}
 
 		if (Array.isArray(primaryKeyField)) {

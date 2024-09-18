@@ -1,14 +1,14 @@
-import * as DbManager from "../../../index.js";
+import { PG } from "../../../index.js";
 
 import { Model, Types } from "./model/index.js";
 
-export class Domain extends DbManager.PG.Domain.BaseTable<Model, {
+export class Domain extends PG.Domain.BaseTable<Model, {
 	CreateFields: Types.CreateFields;
 	CoreFields: Types.TableFields;
 	UpdateFields: Types.UpdateFields;
 }> {
 
-	constructor(creds: DbManager.PG.ModelTypes.TDBCreds) {
+	constructor(creds: PG.ModelTypes.TDBCreds) {
 		super({ model: new Model(creds) });
 	}
 

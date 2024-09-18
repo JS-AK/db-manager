@@ -7,7 +7,7 @@ import { QueryBuilder } from "./query-builder.js";
  * Factory class to create instances of QueryBuilder.
  */
 export class QueryBuilderFactory {
-	#client: pg.Pool | pg.PoolClient;
+	#client: pg.Pool | pg.PoolClient | pg.Client;
 	#isLoggerEnabled;
 	#logger?: SharedTypes.TLogger;
 
@@ -17,7 +17,7 @@ export class QueryBuilderFactory {
 	 * @param client - The PostgreSQL client or pool.
 	 */
 	constructor(
-		client: pg.Pool | pg.PoolClient,
+		client: pg.Pool | pg.PoolClient | pg.Client,
 		options?: {
 			isLoggerEnabled?: true;
 			logger?: SharedTypes.TLogger;
@@ -49,7 +49,7 @@ export class QueryBuilderFactory {
 	 * @returns A new instance of QueryBuilder.
 	 */
 	createQueryBuilder(options?: {
-		client?: pg.Pool | pg.PoolClient;
+		client?: pg.Pool | pg.PoolClient | pg.Client;
 		dataSource?: string;
 	}): QueryBuilder {
 		const { client, dataSource } = options || {};
