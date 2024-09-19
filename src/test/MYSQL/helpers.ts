@@ -1,6 +1,6 @@
 import path, { basename, dirname } from "node:path";
 
-import { MYSQL } from "../../index.js";
+import { MYSQL } from "./index.js";
 
 export const connectionShutdown = async () => {
 	await MYSQL.connection.shutdown();

@@ -2,7 +2,7 @@ import assert from "node:assert";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
-import { MYSQL } from "../mysql.js";
+import { MYSQL } from "../index.js";
 
 import * as Helpers from "../helpers.js";
 

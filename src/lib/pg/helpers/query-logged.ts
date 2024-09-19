@@ -8,7 +8,7 @@ async function queryLogged<T extends pg.QueryResultRow>(
 		logger: SharedTypes.TLogger;
 	},
 	query: string,
-	values: unknown[],
+	values?: unknown[],
 ) {
 	const start = performance.now();
 
@@ -44,7 +44,7 @@ export function setLoggerAndExecutor(
 		return {
 			executeSql: async <T extends pg.QueryResultRow>(sql: {
 				query: string;
-				values: unknown[];
+				values?: unknown[];
 			}) => (await (queryLogged<T>).bind({ client: pool, logger: resultLogger })(sql.query, sql.values)),
 			isLoggerEnabled,
 			logger: resultLogger,
@@ -53,7 +53,7 @@ export function setLoggerAndExecutor(
 		return {
 			executeSql: async <T extends pg.QueryResultRow>(sql: {
 				query: string;
-				values: unknown[];
+				values?: unknown[];
 			}) => (await pool.query<T>(sql.query, sql.values)),
 			isLoggerEnabled,
 		};

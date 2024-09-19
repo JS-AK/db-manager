@@ -3,7 +3,7 @@
 import * as SharedTypes from "../../../shared-types/index.js";
 
 export type TArray2OrMore<T> = { 0: T; 1: T; } & Array<T>;
-export type TCompareQueryResult = { query: string; values: unknown[]; };
+export type TCompareQueryResult = { query: string; values?: unknown[]; };
 export type TConditionalDomainFieldsType<First, Second> = First extends TDomainFields ? First : Partial<Second>;
 export type TConditionalRawParamsType<First, Second> = First extends SharedTypes.TRawParams ? First : Partial<Second>;
 export type TDomain<Model> = { model: Model; };

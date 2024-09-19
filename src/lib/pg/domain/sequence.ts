@@ -1,3 +1,5 @@
+import pg from "pg";
+
 import * as Types from "./types.js";
 import { BaseSequence as Model } from "../model/index.js";
 
@@ -47,6 +49,34 @@ export class BaseSequence<
 	}
 
 	/**
+	 * Sets the pool client in the current class.
+	 *
+	 * @experimental
+	 *
+	 * @param client - The client connection to set.
+	 *
+	 * @returns A new instance of the current class with the updated client.
+	 */
+	setClientInCurrentClass(client: pg.Pool | pg.PoolClient | pg.Client): this {
+		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+		// @ts-expect-error
+		return new this.constructor({ model: this.model.setClientInCurrentClass(client) });
+	}
+
+	/**
+	 * Sets the pool client in the base class.
+	 *
+	 * @experimental
+	 *
+	 * @param client - The client connection to set.
+	 *
+	 * @returns A new instance of the BaseSequence class with the updated client.
+	 */
+	setClientInBaseClass(client: pg.Pool | pg.PoolClient | pg.Client): BaseSequence<Model, BSG> {
+		return new BaseSequence({ model: this.model.setClientInBaseClass(client) });
+	}
+
+	/**
 	 * Retrieves the current value of the sequence.
 	 *
 	 * @returns The current value of the sequence or null if no value is set.
@@ -90,7 +120,7 @@ export class BaseSequence<
 	 * Sets the sequence to a specific value.
 	 *
 	 * @param value - The value to set the sequence to.
-	 * 
+	 *
 	 * @returns
 	 */
 	async setValue(value: BSG): Promise<void> {

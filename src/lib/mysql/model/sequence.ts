@@ -78,14 +78,14 @@ export class BaseSequence {
 
 	async getCurrentValue<T extends string | number>(): Promise<T | null> {
 		const query = `SELECT last_value FROM ${this.name}`;
-		const [[entity]] = await this.#executeSql<{ last_value: T; } & mysql.RowDataPacket>({ query, values: [] });
+		const [[entity]] = await this.#executeSql<{ last_value: T; } & mysql.RowDataPacket>({ query });
 
 		return entity ? entity.last_value : null;
 	}
 
 	async getNextValue<T extends string | number>(): Promise<T> {
 		const query = `SELECT nextval('${this.name}')`;
-		const [[entity]] = await this.#executeSql<{ nextval: T; } & mysql.RowDataPacket>({ query, values: [] });
+		const [[entity]] = await this.#executeSql<{ nextval: T; } & mysql.RowDataPacket>({ query });
 
 		if (!entity) throw new Error("Could not get next value");
 
@@ -107,7 +107,7 @@ export class BaseSequence {
 	async restartWith<T extends string | number>(value: T): Promise<void> {
 		const query = `ALTER SEQUENCE ${this.name} RESTART WITH ${Number(value)}`;
 
-		await this.#executeSql({ query, values: [] });
+		await this.#executeSql({ query });
 	}
 
 	queryBuilder(options?: {

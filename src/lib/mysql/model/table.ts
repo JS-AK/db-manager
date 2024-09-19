@@ -226,8 +226,8 @@ export class BaseTable<T extends readonly string[] = readonly string[]> {
 				values: Object.values(clearedParams),
 			};
 		},
-		deleteAll: (): { query: string; values: unknown[]; } => {
-			return { query: queries.deleteAll(this.tableName), values: [] };
+		deleteAll: (): { query: string; } => {
+			return { query: queries.deleteAll(this.tableName) };
 		},
 		deleteByParams: (
 			{ $and = {}, $or }: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
@@ -466,7 +466,7 @@ export class BaseTable<T extends readonly string[] = readonly string[]> {
 		const behaviorOption = cascade ? "CASCADE" : restrict ? "RESTRICT" : "";
 		const query = `DROP TABLE ${ifExists ? "IF EXISTS " : ""}${this.tableName} ${behaviorOption};`;
 
-		await this.#executeSql({ query, values: [] });
+		await this.#executeSql({ query });
 	}
 
 	/**
@@ -501,7 +501,7 @@ export class BaseTable<T extends readonly string[] = readonly string[]> {
 
 		const query = `TRUNCATE ${only ? "ONLY " : ""}${this.tableName} ${truncateOptions};`;
 
-		await this.#executeSql({ query, values: [] });
+		await this.#executeSql({ query });
 	}
 
 	/**
