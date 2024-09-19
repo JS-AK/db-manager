@@ -1,3 +1,10 @@
+## [3.39.1](https://github.com/JS-AK/db-manager/compare/v3.39.0...v3.39.1) (2024-09-19)
+
+
+### Bug Fixes
+
+* standardisated mysql / pg core and tests ([f864119](https://github.com/JS-AK/db-manager/commit/f864119d9d20bbe7695ec6acee4012f0b1e320ff))
+
 # [3.39.0](https://github.com/JS-AK/db-manager/compare/v3.38.0...v3.39.0) (2024-09-18)
 
 
