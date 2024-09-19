@@ -1,4 +1,4 @@
-import { MYSQL } from "../../mysql.js";
+import { MYSQL } from "../../index.js";
 
 export type CreateFields = Pick<TableFields,
 	| "first_name"

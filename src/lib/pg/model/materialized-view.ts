@@ -20,6 +20,8 @@ export class BaseMaterializedView {
 	#logger?: SharedTypes.TLogger;
 	#executeSql;
 
+	#initialArgs;
+
 	/**
 	 * The PostgreSQL connection pool.
 	 */
@@ -59,6 +61,8 @@ export class BaseMaterializedView {
 			...(data.additionalSortingFields || []),
 		] as const);
 
+		this.#initialArgs = { data, dbCreds, options };
+
 		const { executeSql, isLoggerEnabled, logger } = setLoggerAndExecutor(this.pool, options);
 
 		this.#executeSql = executeSql;
@@ -68,6 +72,42 @@ export class BaseMaterializedView {
 
 	get executeSql() {
 		return this.#executeSql;
+	}
+
+	/**
+	 * Sets the client in the current class.
+	 *
+	 * @experimental
+	 *
+	 * @param client - The client connection to set.
+	 *
+	 * @returns The current instance with the new connection client.
+	 */
+	setClientInCurrentClass(client: pg.Pool | pg.PoolClient | pg.Client): this {
+		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+		// @ts-expect-error
+		return new this.constructor(
+			{ ...this.#initialArgs.data },
+			{ ...this.#initialArgs.dbCreds },
+			{ ...this.#initialArgs.options, client },
+		);
+	}
+
+	/**
+	 * Sets the client in the base class.
+	 *
+	 * @experimental
+	 *
+	 * @param client - The client connection to set.
+	 *
+	 * @returns A new instance of the base class with the new connection client.
+	 */
+	setClientInBaseClass(client: pg.Pool | pg.PoolClient | pg.Client): BaseMaterializedView {
+		return new BaseMaterializedView(
+			{ ...this.#initialArgs.data },
+			{ ...this.#initialArgs.dbCreds },
+			{ ...this.#initialArgs.options, client },
+		);
 	}
 
 	/**
@@ -250,7 +290,7 @@ export class BaseMaterializedView {
 	async refresh(concurrently: boolean = false): Promise<void> {
 		const query = `REFRESH MATERIALIZED VIEW ${concurrently ? "CONCURRENTLY" : ""} ${this.name}`;
 
-		await this.#executeSql({ query, values: [] });
+		await this.#executeSql({ query });
 	}
 
 	/**

@@ -1,3 +1,5 @@
+import pg from "pg";
+
 import * as SharedTypes from "../../../shared-types/index.js";
 import * as Types from "./types.js";
 import { BaseView as Model } from "../model/index.js";
@@ -119,6 +121,34 @@ export class BaseView<
 			selected?: [T, ...T[]];
 		}): Types.TCompareQueryResult => this.model.compareQuery.getOneByParams({ $and: options.params, $or: options.paramsOr }, options.selected as string[]),
 	};
+
+	/**
+	 * Sets the pool client in the current class.
+	 *
+	 * @experimental
+	 *
+	 * @param client - The client connection to set.
+	 *
+	 * @returns A new instance of the current class with the updated client.
+	 */
+	setClientInCurrentClass(client: pg.Pool | pg.PoolClient | pg.Client): this {
+		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+		// @ts-expect-error
+		return new this.constructor({ model: this.model.setClientInCurrentClass(client) });
+	}
+
+	/**
+	 * Sets the pool client in the base class.
+	 *
+	 * @experimental
+	 *
+	 * @param client - The client connection to set.
+	 *
+	 * @returns A new instance of the BaseView class with the updated client.
+	 */
+	setClientInBaseClass(client: pg.Pool | pg.PoolClient | pg.Client): BaseView<Model, BVG> {
+		return new BaseView({ model: this.model.setClientInBaseClass(client) });
+	}
 
 	/**
 	 * Retrieves an array of records based on the specified search parameters.

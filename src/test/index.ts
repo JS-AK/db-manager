@@ -4,12 +4,12 @@ import { start as startMYSQL03A } from "./MYSQL/03-A/index.js";
 import { start as startMYSQL03B } from "./MYSQL/03-B/index.js";
 import { start as startMYSQL04 } from "./MYSQL/04/index.js";
 
-import { start as startPG01 } from "./PG-01/index.js";
-import { start as startPG02 } from "./PG-02/index.js";
-import { start as startPG03 } from "./PG-03/index.js";
-import { start as startPG04 } from "./PG-04/index.js";
-import { start as startPG05 } from "./PG-05/index.js";
-import { start as startPG06 } from "./PG-06/index.js";
+import { start as startPG01 } from "./PG/01/index.js";
+import { start as startPG02 } from "./PG/02/index.js";
+import { start as startPG03 } from "./PG/03/index.js";
+import { start as startPG04 } from "./PG/04/index.js";
+import { start as startPG05 } from "./PG/05/index.js";
+import { start as startPG06 } from "./PG/06/index.js";
 
 const startMYSQLTests = async () => {
 	const creds = {

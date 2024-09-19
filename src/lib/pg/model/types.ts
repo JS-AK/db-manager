@@ -14,12 +14,12 @@ export type SNDBArray = SNDArray | ClearBoolean[];
 export type TDBCreds = pg.PoolConfig & { database: string; host: string; password: string; port: number; user: string; };
 export type TDBOptions = TMVOptions & {
 	insertOptions?: { onConflict: string; };
-	client?: pg.Pool | pg.PoolClient | pg.Client;
 };
 export type TField = { key: string; sign?: string; operator: TOperator; };
 export type TMVOptions = {
 	isLoggerEnabled?: true;
 	logger?: SharedTypes.TLogger;
+	client?: pg.Pool | pg.PoolClient | pg.Client;
 };
 export type TOperator =
 	| "="

@@ -66,8 +66,8 @@ export class BaseModel<T extends readonly string[] = readonly string[]> {
 	getFieldsToSearch = Helpers.getFieldsToSearch;
 
 	compareQuery = {
-		deleteAll: (): { query: string; values: unknown[]; } => {
-			return { query: queries.deleteAll(this.tableName), values: [] };
+		deleteAll: (): { query: string; } => {
+			return { query: queries.deleteAll(this.tableName) };
 		},
 		deleteByParams: (
 			{ $and = {}, $or }: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
