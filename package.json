@@ -46,7 +46,7 @@
     "@js-ak/mysql-migration-system": "1.2.0",
     "@js-ak/pg-migration-system": "1.5.0",
     "@types/pg": "8.11.6",
-    "mysql2": "3.10.1",
+    "mysql2": "3.11.3",
     "pg": "8.12.0"
   },
   "devDependencies": {
