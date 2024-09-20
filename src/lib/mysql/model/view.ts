@@ -84,9 +84,11 @@ export class BaseView {
 	 * @returns The current instance with the new connection client.
 	 */
 	setClientInCurrentClass(client: mysql.Pool | mysql.PoolConnection | mysql.Connection): this {
-		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-		// @ts-expect-error
-		return new this.constructor(
+		return new (this.constructor as new (
+			data: { additionalSortingFields?: string[]; coreFields: string[]; name: string; },
+			dbCreds: Types.TDBCreds,
+			options?: Types.TVOptions,
+		) => this)(
 			{ ...this.#initialArgs.data },
 			{ ...this.#initialArgs.dbCreds },
 			{ ...this.#initialArgs.options, client },
