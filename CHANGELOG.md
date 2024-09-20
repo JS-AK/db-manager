@@ -1,3 +1,10 @@
+## [3.39.2](https://github.com/JS-AK/db-manager/compare/v3.39.1...v3.39.2) (2024-09-20)
+
+
+### Bug Fixes
+
+* updated types in setClientInCurrentClass ([e32bfab](https://github.com/JS-AK/db-manager/commit/e32bfab9cee31156cf1398f8f846523845022e15))
+
 ## [3.39.1](https://github.com/JS-AK/db-manager/compare/v3.39.0...v3.39.1) (2024-09-19)
 
 
