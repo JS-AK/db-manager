@@ -295,16 +295,16 @@ export class BaseTable<
 	 * @returns A new instance of the current class with the updated client.
 	 */
 	setClientInCurrentClass(client: pg.Pool | pg.PoolClient | pg.Client): this {
-		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-		// @ts-expect-error
-		return new this.constructor({ model: this.model.setClientInCurrentClass(client) });
+		return new (this.constructor as new (data: Types.TDomain<M>) => this)({
+			model: this.model.setClientInCurrentClass(client),
+		});
 	}
 
 	/**
 	 * Sets the pool client in the base class.
 	 *
 	 * @experimental
-	 * 
+	 *
 	 * @param client - The client connection to set.
 	 *
 	 * @returns A new instance of the BaseTable class with the updated client.
