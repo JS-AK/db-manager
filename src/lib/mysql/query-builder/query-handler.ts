@@ -595,6 +595,33 @@ export class QueryHandler {
 	}
 
 	/**
+	 * Appends a CROSS JOIN clause to the current SQL query.
+	 *
+	 * This method constructs and appends a CROSS JOIN clause, using the specified table and field names.
+	 * It supports table aliasing and defaults to the main data source if the initial table is not provided.
+	 *
+	 * @param data - The details for constructing the CROSS JOIN clause.
+	 * @param data.targetTableName - The name of the target table to join with.
+	 * @param [data.targetTableNameAs] - Optional alias for the target table.
+	 * @param data.targetField - The field in the target table to join on.
+	 * @param [data.initialTableName] - Optional name of the initial table, defaults to the main data source.
+	 * @param data.initialField - The field in the initial table to join on.
+	 *
+	 * @returns
+	 */
+	crossJoin(data: {
+		targetTableName: string;
+		targetTableNameAs?: string;
+		targetField: string;
+		initialTableName?: string;
+		initialField: string;
+	}): void {
+		const targetTableName = data.targetTableName + (data.targetTableNameAs ? ` AS ${data.targetTableNameAs}` : "");
+
+		this.#join.push(`CROSS JOIN ${targetTableName} ON ${data.targetTableNameAs || data.targetTableName}.${data.targetField} = ${data.initialTableName || this.#dataSourcePrepared}.${data.initialField}`);
+	}
+
+	/**
 	 * Constructs and appends a WHERE clause to the current SQL query with AND/OR conditions.
 	 *
 	 * This method builds a WHERE clause based on the provided search parameters. It supports both AND and OR
