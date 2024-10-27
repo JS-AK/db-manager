@@ -1,3 +1,10 @@
+# [3.40.0](https://github.com/JS-AK/db-manager/compare/v3.39.2...v3.40.0) (2024-10-27)
+
+
+### Features
+
+* added join to qb ([f846eda](https://github.com/JS-AK/db-manager/commit/f846edad9e484aaffd9d7aff122191bd651db292))
+
 ## [3.39.2](https://github.com/JS-AK/db-manager/compare/v3.39.1...v3.39.2) (2024-09-20)
 
 
