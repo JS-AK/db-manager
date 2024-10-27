@@ -1,6 +1,7 @@
 import mysql from "mysql2/promise";
 
 import * as DomainTypes from "../domain/types.js";
+import * as Helpers from "../helpers/index.js";
 import * as ModelTypes from "../model/types.js";
 import * as SharedTypes from "../../../shared-types/index.js";
 import { QueryHandler } from "./query-handler.js";
@@ -19,6 +20,14 @@ export class QueryBuilder {
 	#queryHandler;
 	#logger?: SharedTypes.TLogger;
 	#executeSql;
+
+	#joinTypes = {
+		CROSS: "CROSS",
+		"FULL OUTER": "FULL OUTER",
+		INNER: "INNER",
+		LEFT: "LEFT",
+		RIGHT: "RIGHT",
+	} as const;
 
 	/**
 	 * Creates an instance of QueryBuilder.
@@ -344,6 +353,93 @@ export class QueryBuilder {
 	}
 
 	/**
+	 * Specifies a `CROSS JOIN` clause in the SQL query.
+	 *
+	 * @param data - The data for the `CROSS JOIN` clause.
+	 * @param data.targetTableName - The name of the table to join with.
+	 * @param [data.targetTableNameAs] - Optional alias for the target table.
+	 * @param data.targetField - The field in the target table to join on.
+	 * @param [data.initialTableName] - Optional name of the initial table.
+	 * @param data.initialField - The field in the initial table to join on.
+	 *
+	 * @returns The current QueryBuilder instance for method chaining.
+	 */
+	crossJoin(data: {
+		targetTableName: string;
+		targetTableNameAs?: string;
+		targetField: string;
+		initialTableName?: string;
+		initialField: string;
+	}): QueryBuilder {
+		this.#queryHandler.crossJoin(data);
+
+		return this;
+	}
+
+	/**
+	 * Specifies a JOIN clause in the SQL query with options for join type and lateral joins.
+	 *
+	 * @param data - The configuration for the JOIN clause.
+	 * @param [data.alias] - Optional alias for the target table or subquery.
+	 * @param [data.isLateral] - Indicates if the join should be a lateral join. Throws an error if set to true and the target is not a QueryBuilder instance.
+	 * @param [data.onCondition] - An optional condition for the join operation. Includes query and values for parameterized queries.
+	 * @param data.target - The target table or subquery to join with. Can be a string or a QueryBuilder instance.
+	 * @param [data.type] - The type of join operation to perform (e.g., "CROSS", "FULL OUTER", "INNER", "LEFT", "RIGHT"). Defaults to "INNER".
+	 *
+	 * @returns The current QueryBuilder instance for method chaining.
+	 *
+	 * @throws Error if an unsupported join type is provided or if isLateral is true and target is not a QueryBuilder instance.
+	 */
+	join(data: {
+		alias?: string;
+		isLateral?: boolean;
+		onCondition?: { query: string; values?: unknown[]; };
+		target: string | QueryBuilder;
+		type?: "CROSS" | "FULL OUTER" | "INNER" | "LEFT" | "RIGHT";
+	}): QueryBuilder {
+		const isTargetQb = data.target instanceof QueryBuilder;
+
+		if (!isTargetQb && data.isLateral) {
+			throw new Error("target must be a instance of QueryBuilder");
+		}
+
+		const type = data.type || "INNER";
+
+		if (!this.#joinTypes[type]) {
+			throw new Error(`Unsupported join type: ${type}`);
+		}
+
+		const { query: targetQuery, values: targetValues } = isTargetQb
+			? (data.target as QueryBuilder).compareQuery()
+			: { query: data.target, values: [] };
+
+		const join = `${type} JOIN ${data.isLateral ? "LATERAL " : ""}`;
+
+		const {
+			query: onConditionQuery,
+			values: onConditionValues,
+		} = data.onCondition || { query: "" };
+
+		const isConditionQueryParamsExists = onConditionQuery.includes("?");
+		const isConditionValuesExists = !!onConditionValues?.length;
+
+		if (isConditionQueryParamsExists && !isConditionValuesExists) {
+			throw new Error("onCondition.query must be parameterized");
+		}
+
+		if (!isConditionQueryParamsExists && isConditionValuesExists) {
+			throw new Error("onCondition.values must be parameterized");
+		}
+
+		const query = `${join}${targetQuery}${data.alias ? ` AS ${data.alias}` : ""}${onConditionQuery}`;
+		const values = [...(targetValues || []), ...(onConditionValues || [])];
+
+		this.#queryHandler.rawJoin(query, values);
+
+		return this;
+	}
+
+	/**
 	 * Specifies a `WHERE` clause for the SQL query.
 	 *
 	 * @param data - The data for the `WHERE` clause.
@@ -526,9 +622,41 @@ export class QueryBuilder {
 	 *
 	 * @returns A promise that resolves to an array of result rows.
 	 */
-	async executeRawQuery<T>(data: string, values?: unknown[]): Promise<T extends mysql.ResultSetHeader ? T : T[]> {
+	async executeRawQuery<T>(
+		data: string,
+		values?: unknown[],
+	): Promise<T extends mysql.ResultSetHeader ? T : T[]> {
 		const [rows] = await this.#executeSql<T extends mysql.ResultSetHeader ? T : T & mysql.RowDataPacket>({ query: data, values });
 
 		return rows as T extends mysql.ResultSetHeader ? T : T[];
+	}
+
+	/**
+	 * Processes the input `data` using `compareFields` and `getFieldsToSearch` helpers and returns an object with the query string, order number and values.
+	 *
+	 * @param data - The input data to be processed.
+	 * @param [options] - Optional object containing the start order number.
+	 *
+	 * @returns An object containing the query string, order number and values.
+	 */
+	compareParams(data: {
+		params?: ModelTypes.TSearchParams;
+		paramsOr?: ModelTypes.TSearchParams[];
+	}): { query: string; values: unknown[]; } {
+		const { queryArray, queryOrArray, values } = Helpers.compareFields(
+			data.params,
+			data.paramsOr,
+		);
+		const {
+			searchFields,
+		} = Helpers.getFieldsToSearch({ queryArray, queryOrArray });
+
+		// Remove the "WHERE " prefix
+		const searchFieldsPrepared = searchFields.trim().slice(6);
+
+		return {
+			query: searchFieldsPrepared,
+			values,
+		};
 	}
 }
