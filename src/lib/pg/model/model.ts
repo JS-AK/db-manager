@@ -9,7 +9,7 @@ import { QueryBuilder } from "../query-builder/index.js";
 import queries from "./queries.js";
 import { setLoggerAndExecutor } from "../helpers/index.js";
 
-export class BaseModel<T extends readonly string[] = readonly string[]> {
+export class BaseModel<const T extends readonly string[] = readonly string[]> {
 	#insertOptions;
 	#sortingOrders = new Set(["ASC", "DESC"]);
 	#tableFieldsSet;

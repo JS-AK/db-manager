@@ -2,11 +2,12 @@ import mysql from "mysql2/promise";
 
 import * as SharedTypes from "../../../shared-types/index.js";
 
-type ClearDate = Omit<Date, Extract<keyof Date, string>>;
-type ClearString = Omit<string, Extract<keyof string, string>>;
-type ClearNumber = Omit<number, Extract<keyof number, string>>;
-type ClearBoolean = Omit<boolean, Extract<keyof boolean, string>>;
+export type ClearBoolean = Omit<boolean, Extract<keyof boolean, string>>;
+export type ClearDate = Omit<Date, Extract<keyof Date, string>>;
+export type ClearNumber = Omit<number, Extract<keyof number, string>>;
+export type ClearString = Omit<string, Extract<keyof string, string>>;
 
+export type Join = "CROSS" | "FULL OUTER" | "INNER" | "LEFT" | "RIGHT";
 export type ResultSetHeader = mysql.ResultSetHeader;
 export type RowDataPacket = mysql.RowDataPacket;
 

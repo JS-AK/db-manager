@@ -12,7 +12,7 @@ import { setLoggerAndExecutor } from "../helpers/index.js";
 /**
  * Represents a base table with common database operations.
  */
-export class BaseTable<T extends readonly string[] = readonly string[]> {
+export class BaseTable<const T extends readonly string[] = readonly string[]> {
 	#insertOptions;
 	#sortingOrders = new Set(["ASC", "DESC"]);
 	#tableFieldsSet;

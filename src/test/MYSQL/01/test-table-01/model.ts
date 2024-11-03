@@ -11,7 +11,7 @@ export const model = (creds: MYSQL.ModelTypes.TDBCreds) => new MYSQL.Model.BaseT
 
 			"created_at", // -> create date
 			"updated_at", // -> update date
-		] as const,
+		],
 		tableName: "test_table_01",
 		updateField: { title: "updated_at", type: "timestamp" },
 	},
