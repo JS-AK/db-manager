@@ -1,3 +1,10 @@
+## [3.40.1](https://github.com/JS-AK/db-manager/compare/v3.40.0...v3.40.1) (2024-11-03)
+
+
+### Bug Fixes
+
+* updated model types ([d96b2e1](https://github.com/JS-AK/db-manager/commit/d96b2e1a22fb8bce9420883a305fbdd77b0989ba))
+
 # [3.40.0](https://github.com/JS-AK/db-manager/compare/v3.39.2...v3.40.0) (2024-10-27)
 
 
