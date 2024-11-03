@@ -21,7 +21,7 @@ export class QueryBuilder {
 	#logger?: SharedTypes.TLogger;
 	#executeSql;
 
-	#joinTypes = {
+	#joinTypes: Record<ModelTypes.Join, string> = {
 		CROSS: "CROSS",
 		"FULL OUTER": "FULL OUTER",
 		INNER: "INNER",
@@ -395,7 +395,7 @@ export class QueryBuilder {
 		isLateral?: boolean;
 		onCondition?: { query: string; values?: unknown[]; };
 		target: string | QueryBuilder;
-		type?: "CROSS" | "FULL OUTER" | "INNER" | "LEFT" | "RIGHT";
+		type?: ModelTypes.Join;
 	}): QueryBuilder {
 		const isTargetQb = data.target instanceof QueryBuilder;
 
