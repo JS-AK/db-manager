@@ -1,3 +1,10 @@
+## [3.40.2](https://github.com/JS-AK/db-manager/compare/v3.40.1...v3.40.2) (2024-11-30)
+
+
+### Bug Fixes
+
+* updated qb insert ([fd85ed3](https://github.com/JS-AK/db-manager/commit/fd85ed3393d3f173cc27dd0c8fb86b8c428a2685))
+
 ## [3.40.1](https://github.com/JS-AK/db-manager/compare/v3.40.0...v3.40.1) (2024-11-03)
 
 
