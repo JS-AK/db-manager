@@ -1,5 +1,16 @@
 import * as SharedTypes from "../../../shared-types/index.js";
 
+export const generateTimestampQuery = (type: "timestamp" | "unix_timestamp") => {
+	switch (type) {
+		case "timestamp":
+			return "NOW()";
+		case "unix_timestamp":
+			return "ROUND((EXTRACT(EPOCH FROM NOW()) * (1000)::NUMERIC))";
+		default:
+			throw new Error("Invalid type: " + type);
+	}
+};
+
 export default {
 	/**
 	 * Generates an SQL `INSERT` statement for inserting multiple rows into a table.
@@ -326,7 +337,7 @@ export default {
 	 * @param updateField.title - The name of the column for the timestamp.
 	 * @param updateField.type - The type of timestamp to insert.
 	 * @param [returning] - An optional array of column names to return after the update.
-	 * 
+	 *
 	 * @returns The generated SQL `UPDATE` statement.
 	 *
 	 * @throws {Error} If an invalid `updateField.type` is provided.

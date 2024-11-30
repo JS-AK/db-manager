@@ -135,6 +135,7 @@ export class QueryBuilder {
 	 * Inserts records into the database.
 	 *
 	 * @param options - The options for the insert operation.
+	 * @param [options.isUseDefaultValues] - Use default values for missing columns when options.params is an array. Defaults to false.
 	 * @param [options.onConflict] - Conflict resolution strategy.
 	 * @param options.params - The parameters to insert.
 	 * @param [options.updateColumn] - Optional default system column for updates.
@@ -142,6 +143,7 @@ export class QueryBuilder {
 	 * @returns The current QueryBuilder instance for method chaining.
 	 */
 	insert<T extends SharedTypes.TRawParams = SharedTypes.TRawParams>(options: {
+		isUseDefaultValues?: boolean;
 		onConflict?: string;
 		params: T | T[];
 		updateColumn?: { title: string; type: "unix_timestamp" | "timestamp"; } | null;
