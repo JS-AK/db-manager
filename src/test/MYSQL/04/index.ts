@@ -72,11 +72,17 @@ export const start = async (creds: MYSQL.ModelTypes.TDBCreds) => {
 
 							const { affectedRows } = await User.model.queryBuilder()
 								.insert<UserTable.Types.CreateFields>({
-									params: firstNames.map((e) => ({ first_name: e, id_user_role: userRole.id })),
+									isUseDefaultValues: true,
+									params: firstNames.map((e) => ({
+										first_name: e,
+										id_user_role: userRole.id,
+										last_name: undefined,
+									})),
+									updateColumn: { title: "updated_at", type: "timestamp" },
 								})
 								.execute<MYSQL.ModelTypes.ResultSetHeader>();
 
-							assert.strictEqual(affectedRows, 5);
+							assert.strictEqual(affectedRows, firstNames.length);
 						},
 					);
 
@@ -87,14 +93,16 @@ export const start = async (creds: MYSQL.ModelTypes.TDBCreds) => {
 								const users = await User.getAll();
 								const firstUser = users.at(0);
 
+								if (!firstUser) throw new Error("FirstUser not found");
+
 								assert.strictEqual(users.length, 7);
-								assert.strictEqual(typeof firstUser?.id, "number");
-								assert.strictEqual(typeof firstUser?.id_user_role, "number");
-								assert.strictEqual(typeof firstUser?.is_deleted, "number");
-								assert.strictEqual(typeof firstUser?.first_name, "string");
-								assert.strictEqual(firstUser?.last_name, null);
-								assert.strictEqual(typeof firstUser?.created_at, "object");
-								assert.strictEqual(firstUser?.updated_at, null);
+								assert.strictEqual(typeof firstUser.id, "number");
+								assert.strictEqual(typeof firstUser.id_user_role, "number");
+								assert.strictEqual(typeof firstUser.is_deleted, "number");
+								assert.strictEqual(typeof firstUser.first_name, "string");
+								assert.strictEqual(firstUser.last_name, null);
+								assert.strictEqual(typeof firstUser.created_at, "object");
+								assert.strictEqual(firstUser.updated_at, null);
 							},
 						);
 					}
@@ -106,14 +114,16 @@ export const start = async (creds: MYSQL.ModelTypes.TDBCreds) => {
 								const users = await User.getAllNotDeletedWithRole();
 								const firstUser = users.at(0);
 
+								if (!firstUser) throw new Error("FirstUser not found");
+
 								assert.strictEqual(users.length, 7);
-								assert.strictEqual(typeof firstUser?.id, "number");
-								assert.strictEqual(typeof firstUser?.id_user_role, "number");
-								assert.strictEqual(typeof firstUser?.is_deleted, "number");
-								assert.strictEqual(typeof firstUser?.first_name, "string");
-								assert.strictEqual(firstUser?.last_name, null);
-								assert.strictEqual(typeof firstUser?.created_at, "object");
-								assert.strictEqual(firstUser?.updated_at, null);
+								assert.strictEqual(typeof firstUser.id, "number");
+								assert.strictEqual(typeof firstUser.id_user_role, "number");
+								assert.strictEqual(typeof firstUser.is_deleted, "number");
+								assert.strictEqual(typeof firstUser.first_name, "string");
+								assert.strictEqual(firstUser.last_name, null);
+								assert.strictEqual(typeof firstUser.created_at, "object");
+								assert.strictEqual(firstUser.updated_at, null);
 							},
 						);
 					}

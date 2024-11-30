@@ -6,7 +6,6 @@ export const generateTimestampQuery = (type: "timestamp" | "unix_timestamp") => 
 			return "UTC_TIMESTAMP()";
 		case "unix_timestamp":
 			return "ROUND(UNIX_TIMESTAMP(CURTIME(4)) * 1000)";
-
 		default:
 			throw new Error("Invalid type: " + type);
 	}

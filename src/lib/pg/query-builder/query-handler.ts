@@ -2,6 +2,7 @@ import * as Helpers from "../helpers/index.js";
 import * as ModelTypes from "../model/types.js";
 import * as SharedHelpers from "../../../shared-helpers/index.js";
 import * as SharedTypes from "../../../shared-types/index.js";
+import { generateTimestampQuery } from "../model/queries.js";
 
 /**
  * Class to handle SQL query construction.
@@ -261,6 +262,7 @@ export class QueryHandler {
 	 * conflict handling using the `onConflict` option, and automatic updates of timestamp columns if specified.
 	 *
 	 * @param options - Options for constructing the INSERT query.
+	 * @param [options.isUseDefaultValues] - Use default values for missing columns when options.params is an array.
 	 * @param options.params - The parameters for the INSERT operation, which can be a single object or an array of objects.
 	 * @param [options.onConflict] - Optional SQL clause to handle conflicts, typically used to specify `ON CONFLICT DO UPDATE`.
 	 * @param [options.updateColumn] -
@@ -272,54 +274,70 @@ export class QueryHandler {
 	 * @throws {Error} Throws an error if parameters are invalid or if fields are undefined.
 	 */
 	insert<T extends SharedTypes.TRawParams = SharedTypes.TRawParams>(options: {
+		isUseDefaultValues?: boolean;
 		onConflict?: string;
 		params: T | T[];
 		updateColumn?: { title: string; type: "unix_timestamp" | "timestamp"; } | null;
 	}): void {
 		const v = [];
-		const k = [];
 		const headers = new Set<string>();
 
 		let insertQuery = "";
 
 		if (Array.isArray(options.params)) {
-			const [example] = options.params;
+			const k: [string, string | undefined][][] = [];
 
-			if (!example) throw new Error("Invalid parameters");
+			const collectHeaders = (params: T[]) => {
+				for (const p of params) {
+					const keys = Object.keys(p);
 
-			const params = SharedHelpers.clearUndefinedFields(example);
-
-			Object.keys(params).forEach((e) => headers.add(e));
-
-			for (const pR of options.params) {
-				const params = SharedHelpers.clearUndefinedFields(pR);
-				const keys = Object.keys(params);
-
-				if (!keys.length) throw new Error(`Invalid params, all fields are undefined - ${Object.keys(pR).join(", ")}`);
-
-				for (const key of keys) {
-					if (!headers.has(key)) {
-						throw new Error(`Invalid params, all fields are undefined - ${Object.keys(pR).join(", ")}`);
+					for (const key of keys) {
+						headers.add(key);
 					}
 				}
 
-				v.push(...Object.values(params));
+				return headers;
+			};
+
+			collectHeaders(options.params);
+
+			if (options.updateColumn) {
+				headers.add(options.updateColumn.title);
+			}
+
+			const headersArray = Array.from(headers);
+
+			for (const p of options.params) {
+				const keys: [string, string | undefined][] = [];
+
+				const preparedParams = headersArray.reduce<SharedTypes.TRawParams>((acc, e) => {
+					const value = p[e];
+
+					if (options.updateColumn?.title === e) {
+						return acc;
+					}
+
+					if (value === undefined) {
+						if (options.isUseDefaultValues) {
+							keys.push([e, "DEFAULT"]);
+						} else {
+							throw new Error(`Invalid parameters - ${e} is undefined at ${JSON.stringify(p)} for INSERT INTO ${this.#dataSourceRaw}(${Array.from(headers).join(",")})`);
+						}
+
+						return acc;
+					}
+
+					acc[e] = value;
+
+					keys.push([e, undefined]);
+
+					return acc;
+				}, {});
+
+				v.push(...Object.values(preparedParams));
 
 				if (options.updateColumn) {
-					switch (options.updateColumn.type) {
-						case "timestamp": {
-							keys.push(`${options.updateColumn.title} = NOW()`);
-							break;
-						}
-						case "unix_timestamp": {
-							keys.push(`${options.updateColumn.title} = ROUND((EXTRACT(EPOCH FROM NOW()) * (1000)::NUMERIC))`);
-							break;
-						}
-
-						default: {
-							throw new Error("Invalid type: " + options.updateColumn.type);
-						}
-					}
+					keys.push([options.updateColumn.title, generateTimestampQuery(options.updateColumn.type)]);
 				}
 
 				k.push(keys);
@@ -329,36 +347,38 @@ export class QueryHandler {
 
 			let idx = valuesOrder;
 
-			insertQuery += k.map((e) => e.map(() => "$" + (++idx))).join("),(");
+			insertQuery += k.map((e) => e.map((el) => {
+				if (el[1]) return el[1];
+
+				return "$" + (++idx);
+			})).join("),(");
 		} else {
+			const k: [string, string | undefined][] = [];
+
 			const params = SharedHelpers.clearUndefinedFields(options.params);
 
-			Object.keys(params).forEach((e) => { headers.add(e); k.push(e); });
+			Object.keys(params).forEach((e) => { headers.add(e); k.push([e, undefined]); });
 			v.push(...Object.values(params));
 
 			if (!headers.size) throw new Error(`Invalid params, all fields are undefined - ${Object.keys(options.params).join(", ")}`);
 
 			if (options.updateColumn) {
-				switch (options.updateColumn.type) {
-					case "timestamp": {
-						k.push(`${options.updateColumn.title} = NOW()`);
-						break;
-					}
+				headers.add(options.updateColumn.title);
 
-					case "unix_timestamp": {
-						k.push(`${options.updateColumn.title} = ROUND((EXTRACT(EPOCH FROM NOW()) * (1000)::NUMERIC))`);
-						break;
-					}
-
-					default: {
-						throw new Error("Invalid type: " + options.updateColumn.type);
-					}
-				}
+				k.push([options.updateColumn.title, generateTimestampQuery(options.updateColumn.type)]);
 			}
 
 			const valuesOrder = this.#valuesOrder;
 
-			insertQuery += k.map((_, idx) => "$" + (idx + 1 + valuesOrder)).join(",");
+			let idx = valuesOrder;
+
+			insertQuery += k.map((e) => {
+				if (e[1]) return e[1];
+
+				idx += 1;
+
+				return "$" + (idx);
+			}).join(",");
 		}
 
 		this.#mainQuery = `INSERT INTO ${this.#dataSourceRaw}(${Array.from(headers).join(",")}) VALUES(${insertQuery})`;
@@ -425,20 +445,7 @@ export class QueryHandler {
 		let updateQuery = k.map((e: string, idx: number) => `${e} = $${idx + 1 + valuesOrder}`).join(",");
 
 		if (options.updateColumn) {
-			switch (options.updateColumn.type) {
-				case "timestamp": {
-					updateQuery += `, ${options.updateColumn.title} = NOW()`;
-					break;
-				}
-				case "unix_timestamp": {
-					updateQuery += `, ${options.updateColumn.title} = ROUND((EXTRACT(EPOCH FROM NOW()) * (1000)::NUMERIC))`;
-					break;
-				}
-
-				default: {
-					throw new Error("Invalid type: " + options.updateColumn.type);
-				}
-			}
+			updateQuery += `, ${options.updateColumn.title} = ${generateTimestampQuery(options.updateColumn.type)}`;
 		}
 
 		this.#mainQuery = `UPDATE ${this.#dataSourceRaw} SET ${updateQuery}`;
