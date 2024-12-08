@@ -1,4 +1,5 @@
 import assert from "node:assert";
+import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { setTimeout } from "node:timers/promises";
 import test from "node:test";
