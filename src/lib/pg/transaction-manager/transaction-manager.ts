@@ -1,5 +1,7 @@
 import pg from "pg";
 
+import * as SharedTypes from "../../../shared-types/index.js";
+
 /**
  * Enumeration of valid transaction isolation levels.
  */
@@ -76,8 +78,12 @@ export class TransactionManager {
 	 *
 	 * @param fn - The function to execute within the transaction.
 	 * @param options - Configuration options for the transaction.
-	 * @param options.pool - The PostgreSQL connection pool.
+	 * @param [options.isLoggerEnabled] - Optional flag to enable logging.
 	 * @param [options.isolationLevel] - Optional isolation level for the transaction.
+	 * @param [options.logger] - Optional logger function.
+	 * @param options.pool - The PostgreSQL connection pool.
+	 * @param [options.transactionId] - Optional transaction ID.
+	 * @param [options.timeToRollback] - Optional time to wait before rolling back the transaction in milliseconds.
 	 *
 	 * @returns The result of the function.
 	 *
@@ -86,25 +92,113 @@ export class TransactionManager {
 	static async execute<R>(
 		fn: (client: pg.PoolClient) => Promise<R>,
 		options: {
-			pool: pg.Pool;
+			isLoggerEnabled?: true;
 			isolationLevel?: keyof typeof TransactionIsolationLevel;
+			logger?: SharedTypes.TLogger;
+			pool: pg.Pool;
+			transactionId?: string;
+			timeToRollback?: number;
 		},
 	): Promise<R> {
 		const client = await options.pool.connect();
 		const manager = new TransactionManager(client, options.isolationLevel);
 
-		try {
-			await manager.#beginTransaction();
-			const result = await fn(client);
+		if (options.isLoggerEnabled) {
+			const start = performance.now();
 
-			await manager.#commitTransaction();
+			const { logger } = options || {};
 
-			return result;
-		} catch (error) {
-			await manager.#rollbackTransaction();
-			throw error;
-		} finally {
-			manager.#endConnection();
+			// eslint-disable-next-line no-console
+			const resultLogger = logger || { error: console.error, info: console.log };
+
+			const transactionId = options.transactionId || "::transactionId is not defined::";
+
+			let isTransactionFailed = false;
+
+			try {
+				await manager.#beginTransaction();
+
+				if (options.timeToRollback) {
+					let timeout: NodeJS.Timeout | null = null;
+
+					const result = await Promise.race([
+						fn(client),
+						new Promise((_, reject) => {
+							timeout = setTimeout(
+								() => reject(new Error(`Transaction (${options.transactionId || "::transactionId is not defined::"}) timed out`)),
+								options.timeToRollback,
+							);
+
+							return timeout;
+						}),
+					]) as R;
+
+					timeout && clearTimeout(timeout);
+
+					await manager.#commitTransaction();
+
+					return result;
+				} else {
+					const result = await fn(client);
+
+					await manager.#commitTransaction();
+
+					return result;
+				}
+			} catch (error) {
+				isTransactionFailed = true;
+
+				await manager.#rollbackTransaction();
+
+				throw error;
+			} finally {
+				manager.#endConnection();
+
+				const execTime = Math.round(performance.now() - start);
+
+				if (!isTransactionFailed) {
+					resultLogger.info(`Transaction (${transactionId}) executed successfully in ${execTime} ms.`);
+				} else {
+					resultLogger.error(`Transaction (${transactionId}) failed in ${execTime} ms.`);
+				}
+			}
+		} else {
+			try {
+				await manager.#beginTransaction();
+
+				if (options.timeToRollback) {
+					let timeout: NodeJS.Timeout | null = null;
+
+					const result = await Promise.race([
+						fn(client),
+						new Promise((_, reject) => {
+							timeout = setTimeout(
+								() => reject(new Error(`Transaction (${options.transactionId || "::transactionId is not defined::"}) timed out`)),
+								options.timeToRollback,
+							);
+
+							return timeout;
+						}),
+					]) as R;
+
+					timeout && clearTimeout(timeout);
+
+					await manager.#commitTransaction();
+
+					return result;
+				} else {
+					const result = await fn(client);
+
+					await manager.#commitTransaction();
+
+					return result;
+				}
+			} catch (error) {
+				await manager.#rollbackTransaction();
+				throw error;
+			} finally {
+				manager.#endConnection();
+			}
 		}
 	}
 }

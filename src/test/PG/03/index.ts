@@ -1,5 +1,7 @@
 import assert from "node:assert";
+import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { setTimeout } from "node:timers/promises";
 import test from "node:test";
 
 import { PG } from "../index.js";
@@ -470,6 +472,427 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 				} finally {
 					client.release();
 				}
+
+				await User.deleteAll();
+			},
+		);
+
+		await testContext.test(
+			"CRUD in transaction PG.TransactionManager.execute success",
+			async () => {
+				await PG.TransactionManager.execute(
+					async (client) => {
+						{
+							const [userRole] = await UserRole.model.queryBuilder({ client })
+								.select(["id"])
+								.where({ params: { title: "admin" } })
+								.execute<{ id: string; }>();
+
+							if (!userRole) throw new Error("User role not found");
+
+							const [userCreated] = await User.model.queryBuilder({ client })
+								.insert({ params: { first_name: "Robin admin", id_user_role: userRole.id } })
+								.returning(["id"])
+								.execute();
+
+							if (!userCreated) throw new Error("User not create");
+
+							assert.strictEqual(typeof userCreated.id, "string");
+						}
+
+						{
+							const [userRole] = await UserRole.model.queryBuilder({ client })
+								.select(["id"])
+								.where({ params: { title: "head" } })
+								.execute<{ id: string; }>();
+
+							if (!userRole) throw new Error("User role not found");
+
+							const [userCreated] = await User.model.queryBuilder({ client })
+								.insert<UserTable.Types.CreateFields>({ params: { first_name: "Bob head", id_user_role: userRole.id } })
+								.returning(["id"])
+								.execute<{ id: string; }>();
+
+							if (!userCreated) throw new Error("User not create");
+
+							assert.strictEqual(typeof userCreated.id, "string");
+						}
+
+						{
+							const [userRole] = await UserRole.model.queryBuilder({ client })
+								.select(["id"])
+								.where({ params: { title: "user" } })
+								.execute<{ id: string; }>();
+
+							if (!userRole) throw new Error("User role not found");
+
+							const firstNames = ["John", "Mary", "Peter", "Max", "Ann"];
+
+							const users = await User.model.queryBuilder({ client })
+								.insert<UserTable.Types.CreateFields>({
+									params: firstNames.map((e) => ({ first_name: e, id_user_role: userRole.id })),
+								})
+								.returning(["id"])
+								.execute<{ id: string; }>();
+
+							assert.strictEqual(users.length, 5);
+						}
+
+						{
+							const admins = await User.model.queryBuilder({ client, tableName: "users u" })
+								.select([
+									"u.id         AS id",
+									"u.first_name AS first_name",
+									"ur.id        AS ur_id",
+									"ur.title     AS ur_title",
+								])
+								.innerJoin({
+									initialField: "id_user_role",
+									targetField: "id",
+									targetTableName: "user_roles",
+									targetTableNameAs: "ur",
+								})
+								.where({ params: { "ur.title": "admin" } })
+								.orderBy([{ column: "u.first_name", sorting: "ASC" }])
+								.execute<{ id: string; first_name: string; ur_id: string; ur_title: string; }>();
+
+							const [admin] = admins;
+
+							assert.strictEqual(admins.length, 1);
+							assert.strictEqual(admin?.first_name, "Robin admin");
+							assert.strictEqual(admin?.ur_title, "admin");
+						}
+
+						{
+							const heads = await User.model.queryBuilder({ client, tableName: "users u" })
+								.select([
+									"u.id         AS id",
+									"u.first_name AS first_name",
+									"ur.id        AS ur_id",
+									"ur.title     AS ur_title",
+								])
+								.innerJoin({
+									initialField: "id_user_role",
+									targetField: "id",
+									targetTableName: "user_roles",
+									targetTableNameAs: "ur",
+								})
+								.where({ params: { "ur.title": "head" } })
+								.orderBy([{ column: "u.first_name", sorting: "ASC" }])
+								.execute<{ id: string; first_name: string; ur_id: string; ur_title: string; }>();
+
+							const [head] = heads;
+
+							assert.strictEqual(heads.length, 1);
+							assert.strictEqual(head?.first_name, "Bob head");
+							assert.strictEqual(head?.ur_title, "head");
+						}
+
+						{
+							const users = await User
+								.model
+								.queryBuilder({ client, tableName: "users u" })
+								.select([
+									"u.id         AS id",
+									"u.first_name AS first_name",
+									"ur.id        AS ur_id",
+									"ur.title     AS ur_title",
+								])
+								.innerJoin({
+									initialField: "id_user_role",
+									targetField: "id",
+									targetTableName: "user_roles",
+									targetTableNameAs: "ur",
+								})
+								.where({ params: { "ur.title": "user" } })
+								.orderBy([{ column: "u.first_name", sorting: "ASC" }])
+								.execute<{ id: string; first_name: string; ur_id: string; ur_title: string; }>();
+
+							const firstUser = users.at(0);
+							const lastUser = users.at(-1);
+
+							assert.strictEqual(users.length, 5);
+							assert.strictEqual(firstUser?.first_name, "Ann");
+							assert.strictEqual(firstUser?.ur_title, "user");
+							assert.strictEqual(lastUser?.first_name, "Peter");
+							assert.strictEqual(lastUser?.ur_title, "user");
+						}
+
+						{
+							const [userRole] = await UserRole.model.queryBuilder({ client })
+								.select(["id"])
+								.where({ params: { title: "admin" } })
+								.execute<{ id: string; }>();
+
+							if (!userRole) throw new Error("User role not found");
+
+							const [userInitial] = await User.model.queryBuilder({ client })
+								.select(["id", "first_name"])
+								.where({ params: { id_user_role: userRole.id } })
+								.execute<{ id: string; first_name: string; }>();
+
+							if (!userInitial) throw new Error("User not found");
+
+							{
+								const [userUpdated] = await User.model.queryBuilder({ client })
+									.update({
+										params: { last_name: "Brown" },
+										updateColumn: { title: "updated_at", type: "unix_timestamp" },
+									})
+									.where({ params: { id: userInitial.id } })
+									.returning(["id", "first_name", "last_name"])
+									.execute<{ id: string; first_name: string; last_name: string; }>();
+
+								if (!userUpdated) throw new Error("userUpdated not found");
+
+								assert.strictEqual(userUpdated.id, userInitial.id);
+								assert.strictEqual(userUpdated.first_name, userInitial.first_name);
+								assert.strictEqual(userUpdated.last_name, "Brown");
+							}
+
+							{
+								const [userUpdated] = await User.model.queryBuilder({ client })
+									.select(["id", "first_name", "last_name"])
+									.where({ params: { id_user_role: userRole.id } })
+									.execute<{ id: string; first_name: string; last_name: string; }>();
+
+								if (!userUpdated) throw new Error("userUpdated not found");
+
+								assert.strictEqual(userUpdated.id, userInitial.id);
+								assert.strictEqual(userUpdated.first_name, userInitial.first_name);
+								assert.strictEqual(userUpdated.last_name, "Brown");
+							}
+						}
+					},
+					{
+						pool: PG.BaseModel.getTransactionPool(creds),
+						timeToRollback: 10000,
+					},
+				);
+
+				await User.deleteAll();
+			},
+		);
+
+		await testContext.test(
+			"CRUD in transaction PG.TransactionManager.execute fail (timeToRollback)",
+			async () => {
+				const transactionId = crypto.randomUUID();
+
+				await assert.rejects(
+					async () => {
+						await PG.TransactionManager.execute(
+							async (client) => {
+								{
+									const [userRole] = await UserRole.model.queryBuilder({ client })
+										.select(["id"])
+										.where({ params: { title: "admin" } })
+										.execute<{ id: string; }>();
+
+									if (!userRole) throw new Error("User role not found");
+
+									const [userCreated] = await User.model.queryBuilder({ client })
+										.insert({ params: { first_name: "Robin admin", id_user_role: userRole.id } })
+										.returning(["id"])
+										.execute();
+
+									if (!userCreated) throw new Error("User not create");
+
+									assert.strictEqual(typeof userCreated.id, "string");
+								}
+
+								await setTimeout(100);
+
+								{
+									const [userRole] = await UserRole.model.queryBuilder({ client })
+										.select(["id"])
+										.where({ params: { title: "head" } })
+										.execute<{ id: string; }>();
+
+									if (!userRole) throw new Error("User role not found");
+
+									const [userCreated] = await User.model.queryBuilder({ client })
+										.insert<UserTable.Types.CreateFields>({ params: { first_name: "Bob head", id_user_role: userRole.id } })
+										.returning(["id"])
+										.execute<{ id: string; }>();
+
+									if (!userCreated) throw new Error("User not create");
+
+									assert.strictEqual(typeof userCreated.id, "string");
+								}
+
+								await setTimeout(100);
+
+								{
+									const [userRole] = await UserRole.model.queryBuilder({ client })
+										.select(["id"])
+										.where({ params: { title: "user" } })
+										.execute<{ id: string; }>();
+
+									if (!userRole) throw new Error("User role not found");
+
+									const firstNames = ["John", "Mary", "Peter", "Max", "Ann"];
+
+									const users = await User.model.queryBuilder({ client })
+										.insert<UserTable.Types.CreateFields>({
+											params: firstNames.map((e) => ({ first_name: e, id_user_role: userRole.id })),
+										})
+										.returning(["id"])
+										.execute<{ id: string; }>();
+
+									assert.strictEqual(users.length, 5);
+								}
+
+								await setTimeout(100);
+
+								{
+									const admins = await User.model.queryBuilder({ client, tableName: "users u" })
+										.select([
+											"u.id         AS id",
+											"u.first_name AS first_name",
+											"ur.id        AS ur_id",
+											"ur.title     AS ur_title",
+										])
+										.innerJoin({
+											initialField: "id_user_role",
+											targetField: "id",
+											targetTableName: "user_roles",
+											targetTableNameAs: "ur",
+										})
+										.where({ params: { "ur.title": "admin" } })
+										.orderBy([{ column: "u.first_name", sorting: "ASC" }])
+										.execute<{ id: string; first_name: string; ur_id: string; ur_title: string; }>();
+
+									const [admin] = admins;
+
+									assert.strictEqual(admins.length, 1);
+									assert.strictEqual(admin?.first_name, "Robin admin");
+									assert.strictEqual(admin?.ur_title, "admin");
+								}
+
+								await setTimeout(100);
+
+								{
+									const heads = await User.model.queryBuilder({ client, tableName: "users u" })
+										.select([
+											"u.id         AS id",
+											"u.first_name AS first_name",
+											"ur.id        AS ur_id",
+											"ur.title     AS ur_title",
+										])
+										.innerJoin({
+											initialField: "id_user_role",
+											targetField: "id",
+											targetTableName: "user_roles",
+											targetTableNameAs: "ur",
+										})
+										.where({ params: { "ur.title": "head" } })
+										.orderBy([{ column: "u.first_name", sorting: "ASC" }])
+										.execute<{ id: string; first_name: string; ur_id: string; ur_title: string; }>();
+
+									const [head] = heads;
+
+									assert.strictEqual(heads.length, 1);
+									assert.strictEqual(head?.first_name, "Bob head");
+									assert.strictEqual(head?.ur_title, "head");
+								}
+
+								await setTimeout(100);
+
+								{
+									const users = await User
+										.model
+										.queryBuilder({ client, tableName: "users u" })
+										.select([
+											"u.id         AS id",
+											"u.first_name AS first_name",
+											"ur.id        AS ur_id",
+											"ur.title     AS ur_title",
+										])
+										.innerJoin({
+											initialField: "id_user_role",
+											targetField: "id",
+											targetTableName: "user_roles",
+											targetTableNameAs: "ur",
+										})
+										.where({ params: { "ur.title": "user" } })
+										.orderBy([{ column: "u.first_name", sorting: "ASC" }])
+										.execute<{ id: string; first_name: string; ur_id: string; ur_title: string; }>();
+
+									const firstUser = users.at(0);
+									const lastUser = users.at(-1);
+
+									assert.strictEqual(users.length, 5);
+									assert.strictEqual(firstUser?.first_name, "Ann");
+									assert.strictEqual(firstUser?.ur_title, "user");
+									assert.strictEqual(lastUser?.first_name, "Peter");
+									assert.strictEqual(lastUser?.ur_title, "user");
+								}
+
+								await setTimeout(100);
+
+								{
+									const [userRole] = await UserRole.model.queryBuilder({ client })
+										.select(["id"])
+										.where({ params: { title: "admin" } })
+										.execute<{ id: string; }>();
+
+									if (!userRole) throw new Error("User role not found");
+
+									const [userInitial] = await User.model.queryBuilder({ client })
+										.select(["id", "first_name"])
+										.where({ params: { id_user_role: userRole.id } })
+										.execute<{ id: string; first_name: string; }>();
+
+									if (!userInitial) throw new Error("User not found");
+
+									{
+										const [userUpdated] = await User.model.queryBuilder({ client })
+											.update({
+												params: { last_name: "Brown" },
+												updateColumn: { title: "updated_at", type: "unix_timestamp" },
+											})
+											.where({ params: { id: userInitial.id } })
+											.returning(["id", "first_name", "last_name"])
+											.execute<{ id: string; first_name: string; last_name: string; }>();
+
+										if (!userUpdated) throw new Error("userUpdated not found");
+
+										assert.strictEqual(userUpdated.id, userInitial.id);
+										assert.strictEqual(userUpdated.first_name, userInitial.first_name);
+										assert.strictEqual(userUpdated.last_name, "Brown");
+									}
+
+									{
+										const [userUpdated] = await User.model.queryBuilder({ client })
+											.select(["id", "first_name", "last_name"])
+											.where({ params: { id_user_role: userRole.id } })
+											.execute<{ id: string; first_name: string; last_name: string; }>();
+
+										if (!userUpdated) throw new Error("userUpdated not found");
+
+										assert.strictEqual(userUpdated.id, userInitial.id);
+										assert.strictEqual(userUpdated.first_name, userInitial.first_name);
+										assert.strictEqual(userUpdated.last_name, "Brown");
+									}
+								}
+							},
+							{
+								pool: PG.BaseModel.getTransactionPool(creds),
+								timeToRollback: 500,
+								transactionId,
+							},
+						);
+					},
+					(error: Error) => {
+						assert.equal(error.name, "Error");
+						assert.equal(error.message, `Transaction (${transactionId}) timed out`);
+
+						return true;
+					},
+				);
+
+				await User.deleteAll();
 			},
 		);
 
