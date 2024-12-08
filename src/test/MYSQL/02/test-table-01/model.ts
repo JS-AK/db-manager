@@ -5,7 +5,7 @@ export const model = (creds: MYSQL.ModelTypes.TDBCreds) => new MYSQL.Model.BaseT
 		createField: null,
 		isPKAutoIncremented: false,
 		primaryKey: null,
-		tableFields: ["title"] as const,
+		tableFields: ["title"],
 		tableName: "test_table_01",
 		updateField: null,
 	},
