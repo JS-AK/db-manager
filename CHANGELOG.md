@@ -1,3 +1,15 @@
+# [3.41.0](https://github.com/JS-AK/db-manager/compare/v3.40.2...v3.41.0) (2024-12-08)
+
+
+### Bug Fixes
+
+* updated crypto at tests ([416b2cc](https://github.com/JS-AK/db-manager/commit/416b2cc085c8d54f0b9ae97fffdc90d4831aa521))
+
+
+### Features
+
+* updated pg and mysql TransactionManager execute ([ba49c5d](https://github.com/JS-AK/db-manager/commit/ba49c5dbe088ffafdcc5764f784c5a742cab0bd8))
+
 ## [3.40.2](https://github.com/JS-AK/db-manager/compare/v3.40.1...v3.40.2) (2024-11-30)
 
 
