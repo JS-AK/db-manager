@@ -60,7 +60,7 @@ export class RepositoryManager<T extends Record<string, { model: Model; }>> {
 			logger: this.#logger,
 		});
 
-		this.#setupErrorHandling();
+		// this.#setupErrorHandling();
 
 		if (options.isLoggerEnabled) {
 			for (const r of Object.values(repository)) {
@@ -112,7 +112,7 @@ export class RepositoryManager<T extends Record<string, { model: Model; }>> {
 	/**
 	 * Sets up error handling for the standard and transaction pools.
 	 */
-	#setupErrorHandling() {
+	/* #setupErrorHandling() {
 		const handleError = (error: Error) => this.#logger.error(error.message);
 
 		const setupPoolErrorHandling = (pool: ReturnType<typeof connection.getStandardPool>) => {
@@ -122,7 +122,7 @@ export class RepositoryManager<T extends Record<string, { model: Model; }>> {
 
 		setupPoolErrorHandling(this.standardPool);
 		setupPoolErrorHandling(this.transactionPool);
-	}
+	} */
 
 	/**
 	 * Checks the connection to the database.
@@ -130,9 +130,9 @@ export class RepositoryManager<T extends Record<string, { model: Model; }>> {
 	 * @returns A promise that resolves to a boolean indicating whether the connection is successful.
 	 */
 	async #checkConnection() {
-		const client = connection.createClient(this.#config);
-
 		try {
+			const client = connection.createClient(this.#config);
+
 			await client.query("SELECT 1");
 			await client.end();
 

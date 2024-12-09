@@ -114,9 +114,9 @@ export class RepositoryManager<T extends Record<string, { model: Model; }>> {
 	 * @returns A promise that resolves to a boolean indicating whether the connection is successful.
 	 */
 	async #checkConnection() {
-		const client = await connection.createConnection(this.#config);
-
 		try {
+			const client = await connection.createConnection(this.#config);
+
 			await client.query("SELECT 1");
 			await client.end();
 
