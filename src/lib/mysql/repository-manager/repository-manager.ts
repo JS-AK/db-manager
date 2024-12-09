@@ -113,12 +113,9 @@ export class RepositoryManager<T extends Record<string, { model: Model; }>> {
 	 *
 	 * @returns A promise that resolves to a boolean indicating whether the connection is successful.
 	 */
-	/* async #checkConnection() {
+	async #checkConnection() {
 		try {
-			const client = await connection.createConnection(this.#config);
-
-			await client.query("SELECT 1");
-			await client.end();
+			await this.#standardPool.query("SELECT 1");
 
 			return true;
 		} catch (error) {
@@ -128,7 +125,7 @@ export class RepositoryManager<T extends Record<string, { model: Model; }>> {
 
 			return false;
 		}
-	} */
+	}
 
 	/**
 	 * Initializes the RepositoryManager instance.
@@ -138,9 +135,7 @@ export class RepositoryManager<T extends Record<string, { model: Model; }>> {
 	 * @returns A promise that resolves when the connection is successful.
 	 */
 	async init() {
-		// const connected = await this.#checkConnection();
-
-		const connected = true;
+		const connected = await this.#checkConnection();
 
 		if (!connected) throw new Error(`Failed to connect to MYSQL database ${this.#config.database} at ${this.#config.host}:${this.#config.port}`);
 	}
