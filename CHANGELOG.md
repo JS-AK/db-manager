@@ -1,3 +1,18 @@
+# [3.42.0](https://github.com/JS-AK/db-manager/compare/v3.41.0...v3.42.0) (2024-12-09)
+
+
+### Bug Fixes
+
+* disable checkConnection ([36ec1e5](https://github.com/JS-AK/db-manager/commit/36ec1e570dfc116e3cbc518e37e4da9bffcab1ab))
+* disable setupErrorHandling ([2b65dc1](https://github.com/JS-AK/db-manager/commit/2b65dc10ee10e7e313985a8c47099139159cf54f))
+* updated checkConnection ([fd68735](https://github.com/JS-AK/db-manager/commit/fd68735c933790f32f7113cb8e831524816afb66))
+* updated pg and mysql repository manager ([4d71636](https://github.com/JS-AK/db-manager/commit/4d71636b85ecaff1741c284f88d1e9d94d78647f))
+
+
+### Features
+
+* added pg and mysql repository manager ([6f91e26](https://github.com/JS-AK/db-manager/commit/6f91e262db09a1849350f800f8006222cdfcaf96))
+
 # [3.41.0](https://github.com/JS-AK/db-manager/compare/v3.40.2...v3.41.0) (2024-12-08)
 
 
