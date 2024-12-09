@@ -118,6 +118,7 @@ export class RepositoryManager<T extends Record<string, { model: Model; }>> {
 
 		try {
 			await client.query("SELECT 1");
+			await client.end();
 
 			return true;
 		} catch (error) {
@@ -126,8 +127,6 @@ export class RepositoryManager<T extends Record<string, { model: Model; }>> {
 			this.#logger.error(message);
 
 			return false;
-		} finally {
-			await client.end();
 		}
 	}
 

@@ -23,4 +23,8 @@ export class RepositoryManager {
 	async init() {
 		await this.#repositoryManager.init();
 	}
+
+	async shutdown() {
+		await this.#repositoryManager.shutdown();
+	}
 }
