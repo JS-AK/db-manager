@@ -6,14 +6,17 @@ import { MYSQL } from "../index.js";
 
 import * as Helpers from "../helpers.js";
 
-import * as UserRoleTable from "./user-role/index.js";
-import * as UserTable from "./user/index.js";
+import { Repository, RepositoryManager } from "./data-access-layer/index.js";
 
 const TEST_NAME = Helpers.getParentDirectoryName(fileURLToPath(import.meta.url));
 
 export const start = async (creds: MYSQL.ModelTypes.TDBCreds) => {
-	const User = UserTable.domain(creds);
-	const UserRole = UserRoleTable.domain(creds);
+	const repositoryManager = new RepositoryManager(creds);
+
+	await repositoryManager.init();
+
+	const userRepository = repositoryManager.repository.user;
+	const userRoleRepository = repositoryManager.repository.userRole;
 
 	return test("MYSQL-" + TEST_NAME, async (testContext) => {
 		await testContext.test(
@@ -28,14 +31,14 @@ export const start = async (creds: MYSQL.ModelTypes.TDBCreds) => {
 					await testContext.test(
 						"create admin user",
 						async () => {
-							const { one: userRole } = await UserRole.getOneByParams({
+							const { one: userRole } = await userRoleRepository.getOneByParams({
 								params: { title: "admin" },
 								selected: ["id"],
 							});
 
 							if (!userRole) throw new Error("User role not found");
 
-							await Promise.all(["Robin"].map((e) => User.createOne({ first_name: e, id_user_role: userRole.id })),
+							await Promise.all(["Robin"].map((e) => userRepository.createOne({ first_name: e, id_user_role: userRole.id })),
 							);
 						},
 					);
@@ -43,7 +46,7 @@ export const start = async (creds: MYSQL.ModelTypes.TDBCreds) => {
 					await testContext.test(
 						"create head user",
 						async () => {
-							const { one: userRole } = await UserRole.getOneByParams({
+							const { one: userRole } = await userRoleRepository.getOneByParams({
 								params: { title: "head" },
 								selected: ["id"],
 							});
@@ -52,7 +55,7 @@ export const start = async (creds: MYSQL.ModelTypes.TDBCreds) => {
 
 							await Promise.all(
 								["Bob"].map((e) =>
-									User.createOne({ first_name: e, id_user_role: userRole.id }),
+									userRepository.createOne({ first_name: e, id_user_role: userRole.id }),
 								),
 							);
 						},
@@ -61,7 +64,7 @@ export const start = async (creds: MYSQL.ModelTypes.TDBCreds) => {
 					await testContext.test(
 						"create users",
 						async () => {
-							const { one: userRole } = await UserRole.getOneByParams({
+							const { one: userRole } = await userRoleRepository.getOneByParams({
 								params: { title: "user" },
 								selected: ["id"],
 							});
@@ -70,8 +73,8 @@ export const start = async (creds: MYSQL.ModelTypes.TDBCreds) => {
 
 							const firstNames = ["John", "Mary", "Peter", "Max", "Ann"];
 
-							const { affectedRows } = await User.model.queryBuilder()
-								.insert<UserTable.Types.CreateFields>({
+							const { affectedRows } = await userRepository.model.queryBuilder()
+								.insert<Repository.User.Types.CreateFields>({
 									isUseDefaultValues: true,
 									params: firstNames.map((e) => ({
 										first_name: e,
@@ -90,7 +93,7 @@ export const start = async (creds: MYSQL.ModelTypes.TDBCreds) => {
 						await testContext.test(
 							"select",
 							async () => {
-								const users = await User.getAll();
+								const users = await userRepository.getAll();
 								const firstUser = users.at(0);
 
 								if (!firstUser) throw new Error("FirstUser not found");
@@ -111,7 +114,7 @@ export const start = async (creds: MYSQL.ModelTypes.TDBCreds) => {
 						await testContext.test(
 							"select + where",
 							async () => {
-								const users = await User.getAllNotDeletedWithRole();
+								const users = await userRepository.getAllNotDeletedWithRole();
 								const firstUser = users.at(0);
 
 								if (!firstUser) throw new Error("FirstUser not found");
@@ -132,15 +135,15 @@ export const start = async (creds: MYSQL.ModelTypes.TDBCreds) => {
 						await testContext.test(
 							"select + where + second",
 							async () => {
-								const users = await User.model.queryBuilder()
+								const users = await userRepository.model.queryBuilder()
 									.select(["id"])
 									.where({ params: {} })
 									.execute<{ id: string; }>();
 
 								{
-									await User.model.queryBuilder()
+									await userRepository.model.queryBuilder()
 										.select(["*"])
-										.where<UserTable.Types.TableFields>({
+										.where<Repository.User.Types.TableFields>({
 											params: {
 												first_name: { $ilike: "Max" },
 												id: { $in: users.map((e) => e.id) },
@@ -151,7 +154,7 @@ export const start = async (creds: MYSQL.ModelTypes.TDBCreds) => {
 								}
 
 								{
-									await User.model.queryBuilder()
+									await userRepository.model.queryBuilder()
 										.select(["*"])
 										.where({
 											params: {
@@ -170,7 +173,7 @@ export const start = async (creds: MYSQL.ModelTypes.TDBCreds) => {
 						await testContext.test(
 							"User.getList",
 							async () => {
-								const users = await User.getList({
+								const users = await userRepository.getList({
 									order: [{ column: "u.created_at", sorting: "ASC" }],
 									pagination: { limit: 10, offset: 0 },
 									params: {},
@@ -185,7 +188,7 @@ export const start = async (creds: MYSQL.ModelTypes.TDBCreds) => {
 						await testContext.test(
 							"User.getListAndCount",
 							async () => {
-								const [list, count] = await User.getListAndCount({
+								const [list, count] = await userRepository.getListAndCount({
 									order: [{ column: "u.created_at", sorting: "ASC" }],
 									pagination: { limit: 10, offset: 0 },
 									params: {},
@@ -201,7 +204,7 @@ export const start = async (creds: MYSQL.ModelTypes.TDBCreds) => {
 						await testContext.test(
 							"select + rightJoin + where + orderBy",
 							async () => {
-								const users = await User.getAllWithTitleUser();
+								const users = await userRepository.getAllWithTitleUser();
 
 								assert.strictEqual(users.length, 5);
 
@@ -222,7 +225,7 @@ export const start = async (creds: MYSQL.ModelTypes.TDBCreds) => {
 						await testContext.test(
 							"select + rightJoin + where + orderBy + pagination",
 							async () => {
-								const users = await User.getAllWithTitleUserWithPagination();
+								const users = await userRepository.getAllWithTitleUserWithPagination();
 
 								assert.strictEqual(users.length, 3);
 
@@ -243,7 +246,7 @@ export const start = async (creds: MYSQL.ModelTypes.TDBCreds) => {
 						await testContext.test(
 							"select + rightJoin + where + orderBy + groupBy",
 							async () => {
-								const stat = await User.getCountByUserRolesTitle();
+								const stat = await userRepository.getCountByUserRolesTitle();
 
 								assert.strictEqual(stat.length, 3);
 
@@ -269,7 +272,7 @@ export const start = async (creds: MYSQL.ModelTypes.TDBCreds) => {
 						await testContext.test(
 							"select + rightJoin + where + orderBy + groupBy + having",
 							async () => {
-								const stat = await User.getCountByUserRolesTitleWithCountGte5();
+								const stat = await userRepository.getCountByUserRolesTitleWithCountGte5();
 
 								assert.strictEqual(stat.length, 1);
 
@@ -280,7 +283,7 @@ export const start = async (creds: MYSQL.ModelTypes.TDBCreds) => {
 							},
 						);
 					}
-					await User.deleteAll();
+					await userRepository.deleteAll();
 				}
 			},
 		);

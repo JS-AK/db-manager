@@ -92,7 +92,7 @@ export class TransactionManager {
 	static async execute<R>(
 		fn: (client: pg.PoolClient) => Promise<R>,
 		options: {
-			isLoggerEnabled?: true;
+			isLoggerEnabled?: boolean;
 			isolationLevel?: keyof typeof TransactionIsolationLevel;
 			logger?: SharedTypes.TLogger;
 			pool: pg.Pool;

@@ -18,7 +18,7 @@ export type TDBOptions = TMVOptions & {
 };
 export type TField = { key: string; sign?: string; operator: TOperator; };
 export type TMVOptions = {
-	isLoggerEnabled?: true;
+	isLoggerEnabled?: boolean;
 	logger?: SharedTypes.TLogger;
 	client?: pg.Pool | pg.PoolClient | pg.Client;
 };

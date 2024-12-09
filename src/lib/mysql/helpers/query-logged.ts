@@ -31,7 +31,7 @@ async function queryLogged<T extends (mysql.RowDataPacket | mysql.ResultSetHeade
 export function setLoggerAndExecutor(
 	pool: mysql.Pool | mysql.PoolConnection | mysql.Connection,
 	options?: {
-		isLoggerEnabled?: true;
+		isLoggerEnabled?: boolean;
 		logger?: SharedTypes.TLogger;
 	},
 ) {
@@ -46,7 +46,7 @@ export function setLoggerAndExecutor(
 				query: string;
 				values?: unknown[];
 			}) => (await (queryLogged<T>).bind({ client: pool, logger: resultLogger })(sql.query, sql.values)),
-			isLoggerEnabled,
+			isLoggerEnabled: true,
 			logger: resultLogger,
 		};
 	} else {

@@ -1,4 +1,4 @@
-import { MYSQL } from "../../index.js";
+import { MYSQL } from "../../../../index.js";
 
 import * as Types from "./types.js";
 

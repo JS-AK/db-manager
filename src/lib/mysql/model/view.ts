@@ -16,7 +16,7 @@ import { setLoggerAndExecutor } from "../helpers/index.js";
 export class BaseView {
 	#sortingOrders = new Set(["ASC", "DESC"]);
 	#coreFieldsSet;
-	#isLoggerEnabled;
+	#isLoggerEnabled: boolean | undefined;
 	#logger?: SharedTypes.TLogger;
 	#executeSql;
 
@@ -68,6 +68,27 @@ export class BaseView {
 		this.#executeSql = executeSql;
 		this.#isLoggerEnabled = isLoggerEnabled;
 		this.#logger = logger;
+	}
+
+	set isLoggerEnabled(value: boolean) {
+		const prev = this.#isLoggerEnabled;
+
+		if (prev === value) {
+			return;
+		}
+
+		const preparedOptions = setLoggerAndExecutor(
+			this.pool,
+			{ isLoggerEnabled: value, logger: this.#logger },
+		);
+
+		this.#executeSql = preparedOptions.executeSql;
+		this.#isLoggerEnabled = preparedOptions.isLoggerEnabled;
+		this.#logger = preparedOptions.logger;
+	}
+
+	get isLoggerEnabled(): boolean | undefined {
+		return this.#isLoggerEnabled;
 	}
 
 	get executeSql() {

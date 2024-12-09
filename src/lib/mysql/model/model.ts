@@ -13,7 +13,7 @@ export class BaseModel<const T extends readonly string[] = readonly string[]> {
 	#insertOptions;
 	#sortingOrders = new Set(["ASC", "DESC"]);
 	#tableFieldsSet;
-	#isLoggerEnabled;
+	#isLoggerEnabled: boolean | undefined;
 	#logger?: SharedTypes.TLogger;
 	#executeSql;
 
@@ -56,6 +56,27 @@ export class BaseModel<const T extends readonly string[] = readonly string[]> {
 		this.#executeSql = preparedOptions.executeSql;
 		this.#isLoggerEnabled = preparedOptions.isLoggerEnabled;
 		this.#logger = preparedOptions.logger;
+	}
+
+	set isLoggerEnabled(value: boolean) {
+		const prev = this.#isLoggerEnabled;
+
+		if (prev === value) {
+			return;
+		}
+
+		const preparedOptions = setLoggerAndExecutor(
+			this.pool,
+			{ isLoggerEnabled: value, logger: this.#logger },
+		);
+
+		this.#executeSql = preparedOptions.executeSql;
+		this.#isLoggerEnabled = preparedOptions.isLoggerEnabled;
+		this.#logger = preparedOptions.logger;
+	}
+
+	get isLoggerEnabled(): boolean | undefined {
+		return this.#isLoggerEnabled;
 	}
 
 	get executeSql() {

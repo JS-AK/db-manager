@@ -15,11 +15,15 @@ export class QueryBuilderFactory {
 	 * Creates an instance of QueryBuilderFactory.
 	 *
 	 * @param client - The PostgreSQL client or pool.
+	 * @param [options] - Optional settings for the QueryBuilderFactory.
+	 * @param [options.isLoggerEnabled] - Enable or disable logging.
+	 * @param [options.logger] - Custom logger instance.
+	 *
 	 */
 	constructor(
 		client: pg.Pool | pg.PoolClient | pg.Client,
 		options?: {
-			isLoggerEnabled?: true;
+			isLoggerEnabled?: boolean;
 			logger?: SharedTypes.TLogger;
 		},
 	) {

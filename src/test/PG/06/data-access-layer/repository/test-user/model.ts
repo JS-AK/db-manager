@@ -1,4 +1,4 @@
-import { PG } from "../../index.js";
+import { PG } from "../../../../index.js";
 
 export const model = (creds: PG.ModelTypes.TDBCreds) => new PG.Model.BaseTable(
 	{

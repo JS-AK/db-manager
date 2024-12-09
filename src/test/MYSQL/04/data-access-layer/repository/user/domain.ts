@@ -1,4 +1,4 @@
-import { Types as CoreTypes, MYSQL } from "../../index.js";
+import { Types as CoreTypes, MYSQL } from "../../../../index.js";
 
 import * as Types from "./types.js";
 

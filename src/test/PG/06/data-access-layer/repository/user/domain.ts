@@ -1,4 +1,4 @@
-import { PG } from "../../index.js";
+import { PG } from "../../../../index.js";
 
 import * as Types from "./types.js";
 
