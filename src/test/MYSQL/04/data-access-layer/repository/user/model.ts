@@ -1,4 +1,4 @@
-import { MYSQL } from "../../index.js";
+import { MYSQL } from "../../../../index.js";
 
 export const model = (creds: MYSQL.ModelTypes.TDBCreds) => new MYSQL.Model.BaseTable(
 	{

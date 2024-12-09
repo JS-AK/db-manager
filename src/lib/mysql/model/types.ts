@@ -19,7 +19,7 @@ export type TDBCreds = mysql.PoolOptions & { database: string; host: string; pas
 export type TDBOptions = TMVOptions & { insertOptions?: { onConflict: string; }; };
 export type TField = { key: string; sign?: string; operator: TOperator; };
 export type TMVOptions = {
-	isLoggerEnabled?: true;
+	isLoggerEnabled?: boolean;
 	logger?: SharedTypes.TLogger;
 	client?: mysql.Pool | mysql.PoolConnection | mysql.Connection;
 };

@@ -19,7 +19,7 @@ export class QueryBuilderFactory {
 	constructor(
 		client: mysql.Pool | mysql.PoolConnection | mysql.Connection,
 		options?: {
-			isLoggerEnabled?: true;
+			isLoggerEnabled?: boolean;
 			logger?: SharedTypes.TLogger;
 		},
 	) {

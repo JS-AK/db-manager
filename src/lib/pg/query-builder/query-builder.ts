@@ -35,7 +35,7 @@ export class QueryBuilder {
 	 * @param dataSource - The raw SQL data source string.
 	 * @param client - The PostgreSQL client or connection pool.
 	 * @param [options] - Optional settings for the QueryBuilder.
-	 * @param [options.isLoggerEnabled=true] - Enable or disable logging.
+	 * @param [options.isLoggerEnabled] - Enable or disable logging.
 	 * @param [options.logger] - Custom logger instance.
 	 * @param [options.queryHandler] - Custom query handler instance.
 	 */
@@ -43,7 +43,7 @@ export class QueryBuilder {
 		dataSource: string,
 		client: pg.Pool | pg.PoolClient | pg.Client,
 		options?: {
-			isLoggerEnabled?: true;
+			isLoggerEnabled?: boolean;
 			logger?: SharedTypes.TLogger;
 			queryHandler?: QueryHandler;
 		},

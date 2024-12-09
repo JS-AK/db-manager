@@ -1,19 +1,18 @@
-import { PG } from "../../index.js";
+import { MYSQL } from "../../../../index.js";
 
-export const model = (creds: PG.ModelTypes.TDBCreds) => new PG.Model.BaseTable(
+export const model = (creds: MYSQL.ModelTypes.TDBCreds) => new MYSQL.Model.BaseTable(
 	{
 		createField: { title: "created_at", type: "timestamp" },
 		primaryKey: "id",
 		tableFields: [
 			"id",
 
-			"firstName",
-			"lastName",
+			"title",
 
 			"created_at",
 			"updated_at",
 		],
-		tableName: "users",
+		tableName: "user_roles",
 		updateField: { title: "updated_at", type: "timestamp" },
 	},
 	creds,

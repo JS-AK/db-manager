@@ -6,14 +6,18 @@ import { PG } from "../index.js";
 
 import * as Helpers from "../helpers.js";
 
-import * as TestUser from "./test-user/index.js";
-import * as User from "./user/index.js";
+import { RepositoryManager } from "./data-access-layer/repository-manager.js";
 
 const TEST_NAME = Helpers.getParentDirectoryName(fileURLToPath(import.meta.url));
 
 export const start = async (creds: PG.ModelTypes.TDBCreds) => {
-	const testUser = TestUser.domain(creds);
-	const user = User.domain(creds);
+	const repositoryManager = new RepositoryManager(creds);
+
+	await repositoryManager.init();
+
+	const adminRepository = repositoryManager.repository.admin;
+	const testUserRepository = repositoryManager.repository.testUser;
+	const userRepository = repositoryManager.repository.user;
 
 	return test("PG-" + TEST_NAME, async (testContext) => {
 		await testContext.test(
@@ -27,7 +31,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 				await testContext.test(
 					"1. select",
 					async () => {
-						const qb = user.model.queryBuilder()
+						const qb = userRepository.model.queryBuilder()
 							.select(["1=1"]);
 
 						const result = qb.compareQuery();
@@ -42,7 +46,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 				await testContext.test(
 					"2. select",
 					async () => {
-						const qb = user.model.queryBuilder()
+						const qb = userRepository.model.queryBuilder()
 							.select(["1=1"])
 							.select(["2=2"]);
 
@@ -58,7 +62,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 				await testContext.test(
 					"1. select & from",
 					async () => {
-						const qb = user.model.queryBuilder()
+						const qb = userRepository.model.queryBuilder()
 							.select(["1=1"])
 							.from("users AS u");
 
@@ -74,7 +78,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 				await testContext.test(
 					"2. select & from",
 					async () => {
-						const qb = user.model.queryBuilder()
+						const qb = userRepository.model.queryBuilder()
 							.from("users")
 							.select(["1=1"]);
 
@@ -90,7 +94,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 				await testContext.test(
 					"3. select & from",
 					async () => {
-						const qb = user.model.queryBuilder()
+						const qb = userRepository.model.queryBuilder()
 							.from("users")
 							.select(["1=1"])
 							.select(["2=2"]);
@@ -107,7 +111,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 				await testContext.test(
 					"4. select & from",
 					async () => {
-						const qb = user.model.queryBuilder()
+						const qb = userRepository.model.queryBuilder()
 							.select(["1=1"])
 							.select(["2=2"])
 							.from("users");
@@ -124,7 +128,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 				await testContext.test(
 					"5. select & from",
 					async () => {
-						const qb = user.model.queryBuilder()
+						const qb = adminRepository.model.queryBuilder()
 							.from("users")
 							.select(["1=1"])
 							.select(["2=2"])
@@ -142,7 +146,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 				await testContext.test(
 					"6. select & from",
 					async () => {
-						const qb = user.model.queryBuilder()
+						const qb = userRepository.model.queryBuilder()
 							.select(["1=1"])
 							.from("(SELECT SUM(id) AS a, SUM(id) AS b FROM users) u");
 
@@ -158,9 +162,9 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 				await testContext.test(
 					"7. select & from",
 					async () => {
-						const qb = user.model.queryBuilder()
+						const qb = userRepository.model.queryBuilder()
 							.select(["1=1"])
-							.from(user.model.queryBuilder()
+							.from(userRepository.model.queryBuilder()
 								.select(["2=2"])
 								.from("users")
 								.toSubquery("u"),
@@ -175,19 +179,19 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 					},
 				);
 
-				await user.deleteAll();
+				await userRepository.deleteAll();
 			},
 		);
 
 		await testContext.test(
 			"Composite pk",
 			async (testContext) => {
-				const user = await testUser.createOne({ first_name: "test" });
+				const user = await testUserRepository.createOne({ first_name: "test" });
 
 				await testContext.test(
 					"testUser.getOneByPk",
 					async () => {
-						const { one: result } = await testUser.getOneByPk([user.id, user.id_sec]);
+						const { one: result } = await testUserRepository.getOneByPk([user.id, user.id_sec]);
 
 						if (!result) throw new Error("result is empty");
 
@@ -196,9 +200,9 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 				);
 
 				await testContext.test(
-					"testUser.getOneByPk",
+					"testUserRepository.getOneByPk",
 					async () => {
-						const result = await testUser.updateOneByPk([user.id, user.id_sec], { last_name: "test" });
+						const result = await testUserRepository.updateOneByPk([user.id, user.id_sec], { last_name: "test" });
 
 						if (!result) throw new Error("result is empty");
 
@@ -208,18 +212,18 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 				);
 
 				await testContext.test(
-					"testUser.getCountByPks",
+					"testUserRepository.getCountByPks",
 					async () => {
-						const result = await testUser.getCountByPks([[user.id, user.id_sec]]);
+						const result = await testUserRepository.getCountByPks([[user.id, user.id_sec]]);
 
 						assert.strictEqual(result, 1);
 					},
 				);
 
 				await testContext.test(
-					"testUser.getCountByPksAndParams",
+					"testUserRepository.getCountByPksAndParams",
 					async () => {
-						const result = await testUser.getCountByPksAndParams([[user.id, user.id_sec]], {
+						const result = await testUserRepository.getCountByPksAndParams([[user.id, user.id_sec]], {
 							params: { created_at: { $gte: new Date("1970") } },
 						});
 
@@ -228,9 +232,9 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 				);
 
 				await testContext.test(
-					"testUser.getCountByPksAndParams",
+					"testUserRepository.getCountByPksAndParams",
 					async () => {
-						const result = await testUser.getCountByPksAndParams([[user.id, user.id_sec]], {
+						const result = await testUserRepository.getCountByPksAndParams([[user.id, user.id_sec]], {
 							params: {},
 						});
 
@@ -239,9 +243,9 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 				);
 
 				await testContext.test(
-					"testUser.deleteOneByPk",
+					"testUserRepository.deleteOneByPk",
 					async () => {
-						const result = await testUser.deleteOneByPk([user.id, user.id_sec]);
+						const result = await testUserRepository.deleteOneByPk([user.id, user.id_sec]);
 
 						if (!result) throw new Error("result is empty");
 
