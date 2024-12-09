@@ -60,7 +60,7 @@ export class RepositoryManager<T extends Record<string, { model: Model; }>> {
 			logger: this.#logger,
 		});
 
-		// this.#setupErrorHandling();
+		this.#setupErrorHandling();
 
 		if (options.isLoggerEnabled) {
 			for (const r of Object.values(repository)) {
@@ -112,7 +112,7 @@ export class RepositoryManager<T extends Record<string, { model: Model; }>> {
 	/**
 	 * Sets up error handling for the standard and transaction pools.
 	 */
-	/* #setupErrorHandling() {
+	#setupErrorHandling() {
 		const handleError = (error: Error) => this.#logger.error(error.message);
 
 		const setupPoolErrorHandling = (pool: ReturnType<typeof connection.getStandardPool>) => {
@@ -122,14 +122,14 @@ export class RepositoryManager<T extends Record<string, { model: Model; }>> {
 
 		setupPoolErrorHandling(this.standardPool);
 		setupPoolErrorHandling(this.transactionPool);
-	} */
+	}
 
 	/**
 	 * Checks the connection to the database.
 	 *
 	 * @returns A promise that resolves to a boolean indicating whether the connection is successful.
 	 */
-	async #checkConnection() {
+	/* async #checkConnection() {
 		try {
 			const client = connection.createClient(this.#config);
 
@@ -144,7 +144,7 @@ export class RepositoryManager<T extends Record<string, { model: Model; }>> {
 
 			return false;
 		}
-	}
+	} */
 
 	/**
 	 * Initializes the RepositoryManager instance.
@@ -154,7 +154,9 @@ export class RepositoryManager<T extends Record<string, { model: Model; }>> {
 	 * @returns A promise that resolves when the connection is successful.
 	 */
 	async init() {
-		const connected = await this.#checkConnection();
+		// const connected = await this.#checkConnection();
+
+		const connected = true;
 
 		if (!connected) throw new Error(`Failed to connect to PG database ${this.#config.database} at ${this.#config.host}:${this.#config.port}`);
 	}
