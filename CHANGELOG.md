@@ -1,3 +1,10 @@
+## [3.42.1](https://github.com/JS-AK/db-manager/compare/v3.42.0...v3.42.1) (2024-12-10)
+
+
+### Bug Fixes
+
+* updated RepositoryManager typing ([e6c0210](https://github.com/JS-AK/db-manager/commit/e6c021006b9ad72c63ad40a2309e6cbc5a738b54))
+
 # [3.42.0](https://github.com/JS-AK/db-manager/compare/v3.41.0...v3.42.0) (2024-12-09)
 
 
