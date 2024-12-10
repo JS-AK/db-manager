@@ -26,7 +26,7 @@ type Config = {
  * It is a class for managing MYSQL repositories, query builder factory and transaction manager.
  *
  */
-export class RepositoryManager<T extends Record<string, { model: Model; }>> {
+export class RepositoryManager<const T extends Record<string, { model: Model; }>> {
 	#config;
 	#logger;
 	#queryBuilderFactory;
