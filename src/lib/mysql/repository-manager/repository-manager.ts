@@ -5,6 +5,7 @@ import { QueryBuilderFactory } from "../query-builder/query-builder-factory.js";
 import { TransactionManager } from "../transaction-manager/transaction-manager.js";
 
 import * as SharedTypes from "../../../shared-types/index.js";
+import * as Types from "../model/types.js";
 
 type Model =
 	| Model.BaseMaterializedView
@@ -12,14 +13,6 @@ type Model =
 	| Model.BaseSequence
 	| Model.BaseTable
 	| Model.BaseView;
-
-type Config = {
-	database: string;
-	host: string;
-	password: string;
-	port: number;
-	user: string;
-};
 
 /**
  * RepositoryManager class.
@@ -46,7 +39,7 @@ export class RepositoryManager<const T extends Record<string, { model: Model; }>
 	constructor(
 		repository: T,
 		options: {
-			config: Config;
+			config: Types.TDBCreds;
 			logger: SharedTypes.TLogger;
 			isLoggerEnabled?: boolean;
 		},
@@ -67,7 +60,7 @@ export class RepositoryManager<const T extends Record<string, { model: Model; }>
 					continue;
 				}
 
-				r.model.isLoggerEnabled = true;
+				r.model.setLogger(this.#logger);
 			}
 		}
 	}
