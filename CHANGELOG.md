@@ -1,3 +1,10 @@
+## [3.42.2](https://github.com/JS-AK/db-manager/compare/v3.42.1...v3.42.2) (2024-12-10)
+
+
+### Bug Fixes
+
+* updated isLoggerEnabled to setLogger ([cf8455b](https://github.com/JS-AK/db-manager/commit/cf8455b846f6fc6d901c95c50bf8d280c18e6a64))
+
 ## [3.42.1](https://github.com/JS-AK/db-manager/compare/v3.42.0...v3.42.1) (2024-12-10)
 
 
