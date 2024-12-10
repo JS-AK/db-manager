@@ -41,16 +41,10 @@ export class BaseSequence {
 		this.#logger = preparedOptions.logger;
 	}
 
-	set isLoggerEnabled(value: boolean) {
-		const prev = this.#isLoggerEnabled;
-
-		if (prev === value) {
-			return;
-		}
-
+	setLogger(logger: SharedTypes.TLogger) {
 		const preparedOptions = setLoggerAndExecutor(
 			this.pool,
-			{ isLoggerEnabled: value, logger: this.#logger },
+			{ isLoggerEnabled: true, logger },
 		);
 
 		this.#executeSql = preparedOptions.executeSql;
