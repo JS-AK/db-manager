@@ -23,9 +23,12 @@ export class BaseView {
 	#initialArgs;
 
 	/**
-	 * The MySQL connection pool.
+	 * The MySQL executor.
+	 * - mysql.Pool
+	 * - mysql.PoolConnection
+	 * - mysql.Connection
 	 */
-	pool: mysql.Pool | mysql.PoolConnection | mysql.Connection;
+	#executor: Types.TExecutor;
 
 	/**
 	 * The name of the view.
@@ -52,7 +55,7 @@ export class BaseView {
 		dbCreds: Types.TDBCreds,
 		options?: Types.TVOptions,
 	) {
-		this.pool = connection.getStandardPool(dbCreds);
+		this.#executor = connection.getStandardPool(dbCreds);
 		this.name = data.name;
 		this.coreFields = data.coreFields;
 
@@ -63,22 +66,62 @@ export class BaseView {
 
 		this.#initialArgs = { data, dbCreds, options };
 
-		const { executeSql, isLoggerEnabled, logger } = setLoggerAndExecutor(this.pool, options);
+		const { executeSql, isLoggerEnabled, logger } = setLoggerAndExecutor(this.#executor, options);
 
 		this.#executeSql = executeSql;
 		this.#isLoggerEnabled = isLoggerEnabled;
 		this.#logger = logger;
 	}
 
+	/**
+	 * Gets the database client for the view.
+	 *
+	 * @returns The database client for the view.
+	 */
+	get pool() {
+		return this.#executor;
+	}
+
+	/**
+	 * Gets the MySQL executor for the view.
+	 *
+	 * @returns The MySQL executor for the view.
+	 */
+	get executor() {
+		return this.#executor;
+	}
+
+	/**
+	 * Sets the logger for the view.
+	 *
+	 * @param logger - The logger to use for the view.
+	 */
 	setLogger(logger: SharedTypes.TLogger) {
 		const preparedOptions = setLoggerAndExecutor(
-			this.pool,
+			this.#executor,
 			{ isLoggerEnabled: true, logger },
 		);
 
 		this.#executeSql = preparedOptions.executeSql;
 		this.#isLoggerEnabled = preparedOptions.isLoggerEnabled;
 		this.#logger = preparedOptions.logger;
+	}
+
+	/**
+	 * Sets the executor for the view.
+	 *
+	 * @param executor - The executor to use for the view.
+	 */
+	setExecutor(executor: Types.TExecutor) {
+		const preparedOptions = setLoggerAndExecutor(
+			executor,
+			{ isLoggerEnabled: this.#isLoggerEnabled, logger: this.#logger },
+		);
+
+		this.#executeSql = preparedOptions.executeSql;
+		this.#isLoggerEnabled = preparedOptions.isLoggerEnabled;
+		this.#logger = preparedOptions.logger;
+		this.#executor = executor;
 	}
 
 	get isLoggerEnabled(): boolean | undefined {
@@ -98,7 +141,7 @@ export class BaseView {
 	 *
 	 * @returns The current instance with the new connection client.
 	 */
-	setClientInCurrentClass(client: mysql.Pool | mysql.PoolConnection | mysql.Connection): this {
+	setClientInCurrentClass(client: Types.TExecutor): this {
 		return new (this.constructor as new (
 			data: { additionalSortingFields?: string[]; coreFields: string[]; name: string; },
 			dbCreds: Types.TDBCreds,
@@ -119,7 +162,7 @@ export class BaseView {
 	 *
 	 * @returns A new instance of the base class with the new connection client.
 	 */
-	setClientInBaseClass(client: mysql.Pool | mysql.PoolConnection | mysql.Connection): BaseView {
+	setClientInBaseClass(client: Types.TExecutor): BaseView {
 		return new BaseView(
 			{ ...this.#initialArgs.data },
 			{ ...this.#initialArgs.dbCreds },
@@ -272,7 +315,7 @@ export class BaseView {
 	 */
 	async getCountByParams(params: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; }): Promise<number> {
 		const sql = this.compareQuery.getCountByParams(params);
-		const [[entity]] = await this.pool.query<(mysql.RowDataPacket & { count: number; })[]>(sql.query, sql.values);
+		const [[entity]] = await this.#executeSql<(mysql.RowDataPacket & { count: number; })>(sql);
 
 		return Number(entity?.count) || 0;
 	}
@@ -307,14 +350,14 @@ export class BaseView {
 	 * @returns A new `QueryBuilder` instance.
 	 */
 	queryBuilder(options?: {
-		client?: mysql.Pool | mysql.PoolConnection | mysql.Connection;
+		client?: Types.TExecutor;
 		name?: string;
 	}): QueryBuilder {
 		const { client, name } = options || {};
 
 		return new QueryBuilder(
 			name ?? this.name,
-			client ?? this.pool,
+			client ?? this.#executor,
 			{ isLoggerEnabled: this.#isLoggerEnabled, logger: this.#logger },
 		);
 	}

@@ -8,16 +8,19 @@ import { PG } from "../index.js";
 
 import * as Helpers from "../helpers.js";
 
-import * as UserRoleTable from "./user-role/index.js";
-import * as UserTable from "./user/index.js";
+import { RepositoryManager } from "./data-access-layer/repository-manager.js";
 
 const TEST_NAME = Helpers.getParentDirectoryName(fileURLToPath(import.meta.url));
 
-export const start = async (creds: PG.ModelTypes.TDBCreds) => {
-	const User = UserTable.domain(creds);
-	const UserRole = UserRoleTable.domain(creds);
+export const start = async (creds: PG.ModelTypes.TDBCreds): Promise<void> => {
+	await test("PG-" + TEST_NAME, async (testContext) => {
+		const repositoryManager = new RepositoryManager(creds);
 
-	return test("PG-" + TEST_NAME, async (testContext) => {
+		await repositoryManager.init();
+
+		const userRepository = repositoryManager.repository.user;
+		const userRoleRepository = repositoryManager.repository.userRole;
+
 		await testContext.test(
 			"Helpers.migrationsUp",
 			async () => { await Helpers.migrationsUp(creds, TEST_NAME); },
@@ -30,7 +33,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 					await testContext.test(
 						"create admin",
 						async () => {
-							const { one: userRole } = await UserRole.getOneByParams({
+							const { one: userRole } = await userRoleRepository.getOneByParams({
 								params: { title: "admin" },
 								selected: ["id"],
 							});
@@ -39,7 +42,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 
 							await Promise.all(
 								["Robin"].map((e) =>
-									User.createOne({ first_name: e, id_user_role: userRole.id }),
+									userRepository.createOne({ first_name: e, id_user_role: userRole.id }),
 								),
 							);
 						},
@@ -48,7 +51,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 					await testContext.test(
 						"create head",
 						async () => {
-							const { one: userRole } = await UserRole.getOneByParams({
+							const { one: userRole } = await userRoleRepository.getOneByParams({
 								params: { title: "head" },
 								selected: ["id"],
 							});
@@ -57,7 +60,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 
 							await Promise.all(
 								["Bob"].map((e) =>
-									User.createOne({ first_name: e, id_user_role: userRole.id }),
+									userRepository.createOne({ first_name: e, id_user_role: userRole.id }),
 								),
 							);
 						},
@@ -66,7 +69,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 					await testContext.test(
 						"create users",
 						async () => {
-							const { one: userRole } = await UserRole.getOneByParams({
+							const { one: userRole } = await userRoleRepository.getOneByParams({
 								params: { title: "user" },
 								selected: ["id"],
 							});
@@ -75,7 +78,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 
 							await Promise.all(
 								["John", "Mary", "Peter", "Max", "Ann"].map((e) =>
-									User.createOne({ first_name: e, id_user_role: userRole.id }),
+									userRepository.createOne({ first_name: e, id_user_role: userRole.id }),
 								),
 							);
 						},
@@ -85,7 +88,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						await testContext.test(
 							"read admins getList",
 							async () => {
-								const users = await User.getList({
+								const users = await userRepository.getList({
 									order: [{ column: "users.first_name", sorting: "ASC" }],
 									params: { "user_roles.title": "admin" },
 								});
@@ -104,7 +107,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						await testContext.test(
 							"read heads getList",
 							async () => {
-								const users = await User.getList({
+								const users = await userRepository.getList({
 									order: [{ column: "users.first_name", sorting: "ASC" }],
 									params: { "user_roles.title": "head" },
 								});
@@ -123,7 +126,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						await testContext.test(
 							"read users getList",
 							async () => {
-								const users = await User.getList({
+								const users = await userRepository.getList({
 									order: [{ column: "users.first_name", sorting: "ASC" }],
 									params: { "user_roles.title": "user" },
 								});
@@ -147,21 +150,21 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						await testContext.test(
 							"update",
 							async () => {
-								const { one: userRole } = await UserRole.getOneByParams({
+								const { one: userRole } = await userRoleRepository.getOneByParams({
 									params: { title: "admin" },
 									selected: ["id"],
 								});
 
 								if (!userRole) throw new Error("User role not found");
 
-								const { one: userInitial } = await User.getOneByParams({
+								const { one: userInitial } = await userRepository.getOneByParams({
 									params: { id_user_role: userRole.id },
 									selected: ["first_name", "id"],
 								});
 
 								if (!userInitial) throw new Error("User not found");
 
-								const res = await User.updateOneByPk(userInitial.id, {
+								const res = await userRepository.updateOneByPk(userInitial.id, {
 									last_name: "Brown",
 								});
 
@@ -169,7 +172,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 								assert.strictEqual(res?.first_name, userInitial.first_name);
 								assert.strictEqual(res?.last_name, "Brown");
 
-								const { one: userUpdated } = await User.getOneByParams({
+								const { one: userUpdated } = await userRepository.getOneByParams({
 									params: { id_user_role: userRole.id },
 									selected: ["first_name", "id", "last_name"],
 								});
@@ -181,7 +184,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						);
 					}
 
-					await User.deleteAll();
+					await userRepository.deleteAll();
 				}
 			},
 		);
@@ -193,11 +196,11 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 					await testContext.test(
 						"create admin",
 						async () => {
-							const { one: userRole } = await UserRole.getOneByParams({ params: { title: "admin" }, selected: ["id"] });
+							const { one: userRole } = await userRoleRepository.getOneByParams({ params: { title: "admin" }, selected: ["id"] });
 
 							if (!userRole) throw new Error("User role not found");
 
-							const createdUser = await User.createOne({ first_name: "Robin", id_user_role: userRole.id }, { returningFields: ["first_name"] });
+							const createdUser = await userRepository.createOne({ first_name: "Robin", id_user_role: userRole.id }, { returningFields: ["first_name"] });
 
 							assert.strictEqual(createdUser?.first_name, "Robin");
 						},
@@ -207,7 +210,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						await testContext.test(
 							"read admins getList",
 							async () => {
-								const users = await User.getList({
+								const users = await userRepository.getList({
 									order: [{ column: "users.first_name", sorting: "ASC" }],
 									params: { "user_roles.title": "admin" },
 								});
@@ -226,16 +229,16 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						await testContext.test(
 							"update",
 							async () => {
-								const { one: userRole } = await UserRole.getOneByParams({ params: { title: "admin" }, selected: ["id"] });
+								const { one: userRole } = await userRoleRepository.getOneByParams({ params: { title: "admin" }, selected: ["id"] });
 
 								if (!userRole) throw new Error("User role not found");
 
-								const { one: userInitial } = await User.getOneByParams({ params: { id_user_role: userRole.id }, selected: ["first_name", "id"] });
+								const { one: userInitial } = await userRepository.getOneByParams({ params: { id_user_role: userRole.id }, selected: ["first_name", "id"] });
 
 								if (!userInitial) throw new Error("User not found");
 
 								{
-									const updatedUser = await User.updateOneByPk(userInitial.id, { last_name: "Brown" }, { returningFields: ["id", "first_name", "last_name"] });
+									const updatedUser = await userRepository.updateOneByPk(userInitial.id, { last_name: "Brown" }, { returningFields: ["id", "first_name", "last_name"] });
 
 									assert.strictEqual(updatedUser?.id, userInitial.id);
 									assert.strictEqual(updatedUser?.first_name, userInitial.first_name);
@@ -243,7 +246,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 								}
 
 								{
-									const { one: updatedUser } = await User.getOneByParams({ params: { id_user_role: userRole.id }, selected: ["first_name", "id", "last_name"] });
+									const { one: updatedUser } = await userRepository.getOneByParams({ params: { id_user_role: userRole.id }, selected: ["first_name", "id", "last_name"] });
 
 									assert.strictEqual(updatedUser?.id, userInitial.id);
 									assert.strictEqual(updatedUser?.first_name, userInitial.first_name);
@@ -251,7 +254,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 								}
 
 								{
-									const [updatedUser] = await User.updateByParams({ params: { id: userInitial.id }, returningFields: ["id", "first_name", "last_name"] }, { last_name: "Brown" });
+									const [updatedUser] = await userRepository.updateByParams({ params: { id: userInitial.id }, returningFields: ["id", "first_name", "last_name"] }, { last_name: "Brown" });
 
 									assert.strictEqual(updatedUser?.id, userInitial.id);
 									assert.strictEqual(updatedUser?.first_name, userInitial.first_name);
@@ -259,7 +262,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 								}
 
 								{
-									const { one: updatedUser } = await User.getOneByParams({ params: { id_user_role: userRole.id }, selected: ["first_name", "id", "last_name"] });
+									const { one: updatedUser } = await userRepository.getOneByParams({ params: { id_user_role: userRole.id }, selected: ["first_name", "id", "last_name"] });
 
 									assert.strictEqual(updatedUser?.id, userInitial.id);
 									assert.strictEqual(updatedUser?.first_name, userInitial.first_name);
@@ -269,7 +272,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						);
 					}
 
-					await User.deleteAll();
+					await userRepository.deleteAll();
 				}
 			},
 		);
@@ -284,14 +287,14 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 					await client.query("BEGIN");
 
 					{
-						const [userRole] = await UserRole.model.queryBuilder({ client })
+						const [userRole] = await userRoleRepository.model.queryBuilder({ client })
 							.select(["id"])
 							.where({ params: { title: "admin" } })
 							.execute<{ id: string; }>();
 
 						if (!userRole) throw new Error("User role not found");
 
-						const [userCreated] = await User.model.queryBuilder({ client })
+						const [userCreated] = await userRepository.model.queryBuilder({ client })
 							.insert({ params: { first_name: "Robin admin", id_user_role: userRole.id } })
 							.returning(["id"])
 							.execute();
@@ -302,17 +305,17 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 					}
 
 					{
-						const [userRole] = await UserRole.model.queryBuilder({ client })
+						const [userRole] = await userRoleRepository.model.queryBuilder({ client })
 							.select(["id"])
 							.where({ params: { title: "head" } })
 							.execute<{ id: string; }>();
 
 						if (!userRole) throw new Error("User role not found");
 
-						const [userCreated] = await User.model.queryBuilder({ client })
-							.insert<UserTable.Types.CreateFields>({ params: { first_name: "Bob head", id_user_role: userRole.id } })
-							.returning(["id"])
-							.execute<{ id: string; }>();
+						const [userCreated] = await userRepository.create(
+							{ first_name: "Bob head", id_user_role: userRole.id },
+							client,
+						);
 
 						if (!userCreated) throw new Error("User not create");
 
@@ -320,7 +323,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 					}
 
 					{
-						const [userRole] = await UserRole.model.queryBuilder({ client })
+						const [userRole] = await userRoleRepository.model.queryBuilder({ client })
 							.select(["id"])
 							.where({ params: { title: "user" } })
 							.execute<{ id: string; }>();
@@ -329,18 +332,16 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 
 						const firstNames = ["John", "Mary", "Peter", "Max", "Ann"];
 
-						const users = await User.model.queryBuilder({ client })
-							.insert<UserTable.Types.CreateFields>({
-								params: firstNames.map((e) => ({ first_name: e, id_user_role: userRole.id })),
-							})
-							.returning(["id"])
-							.execute<{ id: string; }>();
+						const users = await userRepository.create(
+							firstNames.map((e) => ({ first_name: e, id_user_role: userRole.id })),
+							client,
+						);
 
 						assert.strictEqual(users.length, 5);
 					}
 
 					{
-						const admins = await User.model.queryBuilder({ client, tableName: "users u" })
+						const admins = await userRepository.model.queryBuilder({ client, tableName: "users u" })
 							.select([
 								"u.id         AS id",
 								"u.first_name AS first_name",
@@ -365,7 +366,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 					}
 
 					{
-						const heads = await User.model.queryBuilder({ client, tableName: "users u" })
+						const heads = await userRepository.model.queryBuilder({ client, tableName: "users u" })
 							.select([
 								"u.id         AS id",
 								"u.first_name AS first_name",
@@ -390,7 +391,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 					}
 
 					{
-						const users = await User
+						const users = await userRepository
 							.model
 							.queryBuilder({ client, tableName: "users u" })
 							.select([
@@ -420,14 +421,14 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 					}
 
 					{
-						const [userRole] = await UserRole.model.queryBuilder({ client })
+						const [userRole] = await userRoleRepository.model.queryBuilder({ client })
 							.select(["id"])
 							.where({ params: { title: "admin" } })
 							.execute<{ id: string; }>();
 
 						if (!userRole) throw new Error("User role not found");
 
-						const [userInitial] = await User.model.queryBuilder({ client })
+						const [userInitial] = await userRepository.model.queryBuilder({ client })
 							.select(["id", "first_name"])
 							.where({ params: { id_user_role: userRole.id } })
 							.execute<{ id: string; first_name: string; }>();
@@ -435,7 +436,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						if (!userInitial) throw new Error("User not found");
 
 						{
-							const [userUpdated] = await User.model.queryBuilder({ client })
+							const [userUpdated] = await userRepository.model.queryBuilder({ client })
 								.update({
 									params: { last_name: "Brown" },
 									updateColumn: { title: "updated_at", type: "unix_timestamp" },
@@ -452,7 +453,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						}
 
 						{
-							const [userUpdated] = await User.model.queryBuilder({ client })
+							const [userUpdated] = await userRepository.model.queryBuilder({ client })
 								.select(["id", "first_name", "last_name"])
 								.where({ params: { id_user_role: userRole.id } })
 								.execute<{ id: string; first_name: string; last_name: string; }>();
@@ -473,7 +474,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 					client.release();
 				}
 
-				await User.deleteAll();
+				await userRepository.deleteAll();
 			},
 		);
 
@@ -483,14 +484,14 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 				await PG.TransactionManager.execute(
 					async (client) => {
 						{
-							const [userRole] = await UserRole.model.queryBuilder({ client })
+							const [userRole] = await userRoleRepository.model.queryBuilder({ client })
 								.select(["id"])
 								.where({ params: { title: "admin" } })
 								.execute<{ id: string; }>();
 
 							if (!userRole) throw new Error("User role not found");
 
-							const [userCreated] = await User.model.queryBuilder({ client })
+							const [userCreated] = await userRepository.model.queryBuilder({ client })
 								.insert({ params: { first_name: "Robin admin", id_user_role: userRole.id } })
 								.returning(["id"])
 								.execute();
@@ -501,17 +502,17 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						}
 
 						{
-							const [userRole] = await UserRole.model.queryBuilder({ client })
+							const [userRole] = await userRoleRepository.model.queryBuilder({ client })
 								.select(["id"])
 								.where({ params: { title: "head" } })
 								.execute<{ id: string; }>();
 
 							if (!userRole) throw new Error("User role not found");
 
-							const [userCreated] = await User.model.queryBuilder({ client })
-								.insert<UserTable.Types.CreateFields>({ params: { first_name: "Bob head", id_user_role: userRole.id } })
-								.returning(["id"])
-								.execute<{ id: string; }>();
+							const [userCreated] = await userRepository.create(
+								{ first_name: "Bob head", id_user_role: userRole.id },
+								client,
+							);
 
 							if (!userCreated) throw new Error("User not create");
 
@@ -519,7 +520,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						}
 
 						{
-							const [userRole] = await UserRole.model.queryBuilder({ client })
+							const [userRole] = await userRoleRepository.model.queryBuilder({ client })
 								.select(["id"])
 								.where({ params: { title: "user" } })
 								.execute<{ id: string; }>();
@@ -528,18 +529,16 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 
 							const firstNames = ["John", "Mary", "Peter", "Max", "Ann"];
 
-							const users = await User.model.queryBuilder({ client })
-								.insert<UserTable.Types.CreateFields>({
-									params: firstNames.map((e) => ({ first_name: e, id_user_role: userRole.id })),
-								})
-								.returning(["id"])
-								.execute<{ id: string; }>();
+							const users = await userRepository.create(
+								firstNames.map((e) => ({ first_name: e, id_user_role: userRole.id })),
+								client,
+							);
 
 							assert.strictEqual(users.length, 5);
 						}
 
 						{
-							const admins = await User.model.queryBuilder({ client, tableName: "users u" })
+							const admins = await userRepository.model.queryBuilder({ client, tableName: "users u" })
 								.select([
 									"u.id         AS id",
 									"u.first_name AS first_name",
@@ -564,7 +563,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						}
 
 						{
-							const heads = await User.model.queryBuilder({ client, tableName: "users u" })
+							const heads = await userRepository.model.queryBuilder({ client, tableName: "users u" })
 								.select([
 									"u.id         AS id",
 									"u.first_name AS first_name",
@@ -589,7 +588,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						}
 
 						{
-							const users = await User
+							const users = await userRepository
 								.model
 								.queryBuilder({ client, tableName: "users u" })
 								.select([
@@ -619,14 +618,14 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						}
 
 						{
-							const [userRole] = await UserRole.model.queryBuilder({ client })
+							const [userRole] = await userRoleRepository.model.queryBuilder({ client })
 								.select(["id"])
 								.where({ params: { title: "admin" } })
 								.execute<{ id: string; }>();
 
 							if (!userRole) throw new Error("User role not found");
 
-							const [userInitial] = await User.model.queryBuilder({ client })
+							const [userInitial] = await userRepository.model.queryBuilder({ client })
 								.select(["id", "first_name"])
 								.where({ params: { id_user_role: userRole.id } })
 								.execute<{ id: string; first_name: string; }>();
@@ -634,7 +633,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 							if (!userInitial) throw new Error("User not found");
 
 							{
-								const [userUpdated] = await User.model.queryBuilder({ client })
+								const [userUpdated] = await userRepository.model.queryBuilder({ client })
 									.update({
 										params: { last_name: "Brown" },
 										updateColumn: { title: "updated_at", type: "unix_timestamp" },
@@ -651,7 +650,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 							}
 
 							{
-								const [userUpdated] = await User.model.queryBuilder({ client })
+								const [userUpdated] = await userRepository.model.queryBuilder({ client })
 									.select(["id", "first_name", "last_name"])
 									.where({ params: { id_user_role: userRole.id } })
 									.execute<{ id: string; first_name: string; last_name: string; }>();
@@ -670,7 +669,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 					},
 				);
 
-				await User.deleteAll();
+				await userRepository.deleteAll();
 			},
 		);
 
@@ -684,14 +683,14 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						await PG.TransactionManager.execute(
 							async (client) => {
 								{
-									const [userRole] = await UserRole.model.queryBuilder({ client })
+									const [userRole] = await userRoleRepository.model.queryBuilder({ client })
 										.select(["id"])
 										.where({ params: { title: "admin" } })
 										.execute<{ id: string; }>();
 
 									if (!userRole) throw new Error("User role not found");
 
-									const [userCreated] = await User.model.queryBuilder({ client })
+									const [userCreated] = await userRepository.model.queryBuilder({ client })
 										.insert({ params: { first_name: "Robin admin", id_user_role: userRole.id } })
 										.returning(["id"])
 										.execute();
@@ -704,17 +703,17 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 								await setTimeout(100);
 
 								{
-									const [userRole] = await UserRole.model.queryBuilder({ client })
+									const [userRole] = await userRoleRepository.model.queryBuilder({ client })
 										.select(["id"])
 										.where({ params: { title: "head" } })
 										.execute<{ id: string; }>();
 
 									if (!userRole) throw new Error("User role not found");
 
-									const [userCreated] = await User.model.queryBuilder({ client })
-										.insert<UserTable.Types.CreateFields>({ params: { first_name: "Bob head", id_user_role: userRole.id } })
-										.returning(["id"])
-										.execute<{ id: string; }>();
+									const [userCreated] = await userRepository.create(
+										{ first_name: "Bob head", id_user_role: userRole.id },
+										client,
+									);
 
 									if (!userCreated) throw new Error("User not create");
 
@@ -724,7 +723,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 								await setTimeout(100);
 
 								{
-									const [userRole] = await UserRole.model.queryBuilder({ client })
+									const [userRole] = await userRoleRepository.model.queryBuilder({ client })
 										.select(["id"])
 										.where({ params: { title: "user" } })
 										.execute<{ id: string; }>();
@@ -733,12 +732,10 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 
 									const firstNames = ["John", "Mary", "Peter", "Max", "Ann"];
 
-									const users = await User.model.queryBuilder({ client })
-										.insert<UserTable.Types.CreateFields>({
-											params: firstNames.map((e) => ({ first_name: e, id_user_role: userRole.id })),
-										})
-										.returning(["id"])
-										.execute<{ id: string; }>();
+									const users = await userRepository.create(
+										firstNames.map((e) => ({ first_name: e, id_user_role: userRole.id })),
+										client,
+									);
 
 									assert.strictEqual(users.length, 5);
 								}
@@ -746,7 +743,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 								await setTimeout(100);
 
 								{
-									const admins = await User.model.queryBuilder({ client, tableName: "users u" })
+									const admins = await userRepository.model.queryBuilder({ client, tableName: "users u" })
 										.select([
 											"u.id         AS id",
 											"u.first_name AS first_name",
@@ -773,7 +770,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 								await setTimeout(100);
 
 								{
-									const heads = await User.model.queryBuilder({ client, tableName: "users u" })
+									const heads = await userRepository.model.queryBuilder({ client, tableName: "users u" })
 										.select([
 											"u.id         AS id",
 											"u.first_name AS first_name",
@@ -800,7 +797,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 								await setTimeout(100);
 
 								{
-									const users = await User
+									const users = await userRepository
 										.model
 										.queryBuilder({ client, tableName: "users u" })
 										.select([
@@ -832,14 +829,14 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 								await setTimeout(100);
 
 								{
-									const [userRole] = await UserRole.model.queryBuilder({ client })
+									const [userRole] = await userRoleRepository.model.queryBuilder({ client })
 										.select(["id"])
 										.where({ params: { title: "admin" } })
 										.execute<{ id: string; }>();
 
 									if (!userRole) throw new Error("User role not found");
 
-									const [userInitial] = await User.model.queryBuilder({ client })
+									const [userInitial] = await userRepository.model.queryBuilder({ client })
 										.select(["id", "first_name"])
 										.where({ params: { id_user_role: userRole.id } })
 										.execute<{ id: string; first_name: string; }>();
@@ -847,7 +844,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 									if (!userInitial) throw new Error("User not found");
 
 									{
-										const [userUpdated] = await User.model.queryBuilder({ client })
+										const [userUpdated] = await userRepository.model.queryBuilder({ client })
 											.update({
 												params: { last_name: "Brown" },
 												updateColumn: { title: "updated_at", type: "unix_timestamp" },
@@ -864,7 +861,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 									}
 
 									{
-										const [userUpdated] = await User.model.queryBuilder({ client })
+										const [userUpdated] = await userRepository.model.queryBuilder({ client })
 											.select(["id", "first_name", "last_name"])
 											.where({ params: { id_user_role: userRole.id } })
 											.execute<{ id: string; first_name: string; last_name: string; }>();
@@ -892,7 +889,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 					},
 				);
 
-				await User.deleteAll();
+				await userRepository.deleteAll();
 			},
 		);
 

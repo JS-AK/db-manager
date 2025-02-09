@@ -6,14 +6,18 @@ import { PG } from "../index.js";
 
 import * as Helpers from "../helpers.js";
 
-import * as FileSystemTable from "./file-system/index.js";
+import { RepositoryManager } from "./data-access-layer/repository-manager.js";
 
 const TEST_NAME = Helpers.getParentDirectoryName(fileURLToPath(import.meta.url));
 
-export const start = async (creds: PG.ModelTypes.TDBCreds) => {
-	const FileSystem = new FileSystemTable.Domain(creds);
+export const start = async (creds: PG.ModelTypes.TDBCreds): Promise<void> => {
+	await test("PG-" + TEST_NAME, async (testContext) => {
+		const repositoryManager = new RepositoryManager(creds);
 
-	return test("PG-" + TEST_NAME, async (testContext) => {
+		await repositoryManager.init();
+
+		const fileSystemRepository = repositoryManager.repository.fileSystem;
+
 		await testContext.test(
 			"Helpers.migrationsUp",
 			async () => { await Helpers.migrationsUp(creds, TEST_NAME); },
@@ -26,12 +30,12 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 					await testContext.test(
 						"create data",
 						async () => {
-							await FileSystem.createOne({ is_folder: true, name: "root", path: "root" });
-							await FileSystem.createOne({ is_folder: true, name: "etc", path: "root.etc" });
-							await FileSystem.createOne({ is_folder: true, name: "passwd", path: "root.etc.passwd" });
-							await FileSystem.createOne({ is_folder: true, name: "home", path: "root.home" });
-							await FileSystem.createOne({ is_folder: true, name: "user", path: "root.home.user" });
-							await FileSystem.createOne({ is_folder: true, name: "documents", path: "root.home.user.documents" });
+							await fileSystemRepository.createOne({ is_folder: true, name: "root", path: "root" });
+							await fileSystemRepository.createOne({ is_folder: true, name: "etc", path: "root.etc" });
+							await fileSystemRepository.createOne({ is_folder: true, name: "passwd", path: "root.etc.passwd" });
+							await fileSystemRepository.createOne({ is_folder: true, name: "home", path: "root.home" });
+							await fileSystemRepository.createOne({ is_folder: true, name: "user", path: "root.home.user" });
+							await fileSystemRepository.createOne({ is_folder: true, name: "documents", path: "root.home.user.documents" });
 						},
 					);
 
@@ -39,7 +43,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						await testContext.test(
 							"getAll",
 							async () => {
-								const fileSystem = await FileSystem.getAll();
+								const fileSystem = await fileSystemRepository.getAll();
 
 								assert.strictEqual(fileSystem.length, 6);
 							},
@@ -50,7 +54,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						await testContext.test(
 							"getAllWithLevel",
 							async () => {
-								const fileSystem = await FileSystem.getAllWithLevel();
+								const fileSystem = await fileSystemRepository.getAllWithLevel();
 
 								assert.strictEqual(fileSystem.length, 6);
 							},
@@ -61,7 +65,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						await testContext.test(
 							"getAllInsideHomePath",
 							async () => {
-								const fileSystem = await FileSystem.getAllInsideHomePath();
+								const fileSystem = await fileSystemRepository.getAllInsideHomePath();
 
 								assert.strictEqual(fileSystem.length, 3);
 							},
@@ -72,17 +76,19 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						await testContext.test(
 							"getAllOutsideHomePath",
 							async () => {
-								const fileSystem = await FileSystem.getAllOutsideHomePath();
+								const fileSystem = await fileSystemRepository.getAllOutsideHomePath();
 
 								assert.strictEqual(fileSystem.length, 2);
 							},
 						);
 					}
 
-					await FileSystem.deleteAll();
+					await fileSystemRepository.deleteAll();
 				}
 			},
 		);
+
+		await repositoryManager.shutdown();
 
 		await testContext.test(
 			"Helpers.migrationsDown",

@@ -1,7 +1,5 @@
-import pg from "pg";
-
 import * as Types from "./types.js";
-import { BaseSequence as Model } from "../model/index.js";
+import { BaseSequence as Model, TExecutor } from "../model/index.js";
 
 type BaseSequenceGeneric = string | number;
 
@@ -57,7 +55,7 @@ export class BaseSequence<
 	 *
 	 * @returns A new instance of the current class with the updated client.
 	 */
-	setClientInCurrentClass(client: pg.Pool | pg.PoolClient | pg.Client): this {
+	setClientInCurrentClass(client: TExecutor): this {
 		return new (this.constructor as new (data: Types.TDomain<M>) => this)({
 			model: this.model.setClientInCurrentClass(client),
 		});
@@ -72,7 +70,7 @@ export class BaseSequence<
 	 *
 	 * @returns A new instance of the BaseSequence class with the updated client.
 	 */
-	setClientInBaseClass(client: pg.Pool | pg.PoolClient | pg.Client): BaseSequence<Model, BSG> {
+	setClientInBaseClass(client: TExecutor): BaseSequence<Model, BSG> {
 		return new BaseSequence({ model: this.model.setClientInBaseClass(client) });
 	}
 

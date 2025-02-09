@@ -1,8 +1,8 @@
-import { PG } from "../../index.js";
+import { PG } from "../../../../index.js";
 
 export const model = (creds: PG.ModelTypes.TDBCreds) => new PG.Model.BaseTable(
 	{
-		createField: { title: "created_at", type: "unix_timestamp" },
+		createField: { title: "created_at", type: "timestamp" },
 		primaryKey: "id",
 		tableFields: [
 			"id",
@@ -10,14 +10,16 @@ export const model = (creds: PG.ModelTypes.TDBCreds) => new PG.Model.BaseTable(
 			"id_user_role",
 
 			"first_name",
-			"is_deleted",
 			"last_name",
+
+			"deleted_at",
+			"is_deleted",
 
 			"created_at",
 			"updated_at",
 		],
 		tableName: "users",
-		updateField: { title: "updated_at", type: "unix_timestamp" },
+		updateField: { title: "updated_at", type: "timestamp" },
 	},
 	creds,
 );

@@ -16,11 +16,12 @@ export type TDBCreds = pg.PoolConfig & { database: string; host: string; passwor
 export type TDBOptions = TMVOptions & {
 	insertOptions?: { onConflict: string; };
 };
+export type TExecutor = pg.Pool | pg.PoolClient | pg.Client;
 export type TField = { key: string; sign?: string; operator: TOperator; };
 export type TMVOptions = {
 	isLoggerEnabled?: boolean;
 	logger?: SharedTypes.TLogger;
-	client?: pg.Pool | pg.PoolClient | pg.Client;
+	client?: TExecutor;
 };
 export type TOperator =
 	| "="

@@ -10,10 +10,10 @@ import * as TestTable from "./test-table-01/index.js";
 
 const TEST_NAME = Helpers.getParentDirectoryName(fileURLToPath(import.meta.url));
 
-export const start = async (creds: PG.ModelTypes.TDBCreds) => {
+export const start = async (creds: PG.ModelTypes.TDBCreds): Promise<void> => {
 	const testTable = new TestTable.Domain(creds);
 
-	return test("PG-" + TEST_NAME, async (testContext) => {
+	await test("PG-" + TEST_NAME, async (testContext) => {
 		await testContext.test(
 			"Helpers.migrationsUp",
 			async () => { await Helpers.migrationsUp(creds, TEST_NAME); },

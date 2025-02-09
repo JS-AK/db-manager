@@ -1,17 +1,14 @@
-import { PG } from "../../index.js";
+import { PG } from "../../../../index.js";
 
-import { Model, Types } from "./model/index.js";
+import * as Types from "./types.js";
 
-export class Domain extends PG.Domain.BaseTable<Model, {
+import { model } from "./model.js";
+
+export class Domain extends PG.Domain.BaseTable<PG.Model.BaseTable, {
 	CreateFields: Types.CreateFields;
 	CoreFields: Types.TableFields;
 	UpdateFields: Types.UpdateFields;
 }> {
-
-	constructor(creds: PG.ModelTypes.TDBCreds) {
-		super({ model: new Model(creds) });
-	}
-
 	async getAll() {
 		return this.model.queryBuilder()
 			.select([
@@ -48,3 +45,6 @@ export class Domain extends PG.Domain.BaseTable<Model, {
 			.execute<Types.GetAllWithLevel>();
 	}
 }
+
+export const domain = (creds: PG.ModelTypes.TDBCreds) =>
+	new Domain({ model: model(creds) });

@@ -1,4 +1,4 @@
-import { Types as CoreTypes, PG } from "../../index.js";
+import { Types as CoreTypes, PG } from "../../../../index.js";
 
 import * as Types from "./types.js";
 
@@ -14,6 +14,19 @@ class Domain extends PG.Domain.BaseTable<ReturnType<typeof model>, {
 				? params["users.is_deleted"]
 				: false,
 		};
+	}
+
+	async create(
+		data: Types.CreateFields[] | Types.CreateFields,
+		executor?: PG.ModelTypes.TExecutor,
+	) {
+		return this.model.queryBuilder({ client: executor })
+			.insert<Types.CreateFields>({
+				isUseDefaultValues: true,
+				params: data,
+			})
+			.returning(["id"])
+			.execute<{ id: string; }>();
 	}
 
 	async getList(

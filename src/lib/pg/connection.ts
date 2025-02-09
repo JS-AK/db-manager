@@ -19,15 +19,15 @@ export const createClient = (config: string | pg.ClientConfig): pg.Client => {
  * Retrieves or creates a standard connection pool.
  *
  * @param config - The database credentials configuration object.
- * @param [poolName="00"] - The name suffix for the pool, default is "00".
+ * @param [poolName="shared"] - The name suffix for the pool, default is "shared".
  *
  * @returns The retrieved or newly created standard connection pool.
  */
 export const getStandardPool = (
 	config: PG.ModelTypes.TDBCreds,
-	poolName = "00",
+	poolName = "shared",
 ): pg.Pool => {
-	const poolNameResult = "st" + poolName;
+	const poolNameResult = "st-" + poolName;
 
 	return getPool(config, poolNameResult);
 };
@@ -36,15 +36,15 @@ export const getStandardPool = (
  * Retrieves or creates a transaction-specific connection pool.
  *
  * @param config - The database credentials configuration object.
- * @param [poolName="00"] - The name suffix for the pool, default is "00".
+ * @param [poolName="shared"] - The name suffix for the pool, default is "shared".
  *
  * @returns The retrieved or newly created transaction connection pool.
  */
 export const getTransactionPool = (
 	config: PG.ModelTypes.TDBCreds,
-	poolName: string = "00",
+	poolName: string = "shared",
 ): pg.Pool => {
-	const poolNameResult = "tr" + poolName;
+	const poolNameResult = "tr-" + poolName;
 
 	return getPool(config, poolNameResult);
 };
@@ -53,15 +53,15 @@ export const getTransactionPool = (
  * Removes and closes a standard connection pool.
  *
  * @param config - The database credentials configuration object.
- * @param [poolName="00"] - The name suffix for the pool, default is "00".
+ * @param [poolName="shared"] - The name suffix for the pool, default is "shared".
  *
  * @returns A promise that resolves when the pool is closed.
  */
 export const removeStandardPool = async (
 	config: PG.ModelTypes.TDBCreds,
-	poolName: string = "00",
+	poolName: string = "shared",
 ): Promise<void> => {
-	const poolNameResult = "st" + poolName;
+	const poolNameResult = "st-" + poolName;
 
 	return removePool(config, poolNameResult);
 };
@@ -70,15 +70,15 @@ export const removeStandardPool = async (
  * Removes and closes a transaction-specific connection pool.
  *
  * @param config - The database credentials configuration object.
- * @param [poolName="00"] - The name suffix for the pool, default is "00".
+ * @param [poolName="shared"] - The name suffix for the pool, default is "shared".
  *
  * @returns A promise that resolves when the pool is closed.
  */
 export const removeTransactionPool = async (
 	config: PG.ModelTypes.TDBCreds,
-	poolName: string = "00",
+	poolName: string = "shared",
 ): Promise<void> => {
-	const poolNameResult = "tr" + poolName;
+	const poolNameResult = "tr-" + poolName;
 
 	return removePool(config, poolNameResult);
 };
@@ -86,20 +86,45 @@ export const removeTransactionPool = async (
 /**
  * Gracefully shuts down all active connection pools.
  *
+ * @param options - The options object.
+ * @param options.poolName - The pool name to match.
+ *
  * @returns A promise that resolves when all pools are closed.
  */
-export const shutdown = async (): Promise<void> => {
+export const shutdown = async (options?: { poolName?: string; }): Promise<void> => {
 	const poolShutdowns: Promise<void>[] = [];
+	const poolNames: string[] = [];
 
-	for (const [_credsString, pool] of pools) {
-		poolShutdowns.push(pool.end());
+	const poolName = options?.poolName;
+
+	if (poolName) {
+		for (const [credsString, pool] of pools) {
+			if (
+				credsString !== `st-${poolName}`
+				&& credsString !== `tr-${poolName}`
+			) {
+				continue;
+			}
+
+			poolShutdowns.push(pool.end());
+			poolNames.push(credsString);
+		}
+	} else {
+		for (const [credsString, pool] of pools) {
+			poolShutdowns.push(pool.end());
+			poolNames.push(credsString);
+		}
 	}
 
-	try {
-		await Promise.all(poolShutdowns);
-	} finally {
-		pools.clear();
+	if (poolShutdowns.length === 0) {
+		return;
 	}
+
+	for (const poolName of poolNames) {
+		pools.delete(poolName);
+	}
+
+	await Promise.all(poolShutdowns);
 };
 
 /**

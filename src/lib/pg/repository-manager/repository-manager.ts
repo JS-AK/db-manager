@@ -1,3 +1,5 @@
+import crypto from "node:crypto";
+
 import * as Model from "../model/index.js";
 import * as connection from "../connection.js";
 import { QueryBuilderFactory } from "../query-builder/query-builder-factory.js";
@@ -19,7 +21,11 @@ type Model =
  *
  */
 export class RepositoryManager<const T extends Record<string, { model: Model; }>> {
+	#token;
+
 	#config;
+	#isDisableSharedPool;
+	#isUseSharedPool;
 	#logger;
 	#queryBuilderFactory;
 	#repository: T;
@@ -33,7 +39,9 @@ export class RepositoryManager<const T extends Record<string, { model: Model; }>
 	 * @param options - Additional configuration options.
 	 * @param options.config - Database connection configuration options.
 	 * @param options.logger - Logger to use for logging query execution details.
-	 * @param [options.isLoggerEnabled] - If true, enables query execution logging for all
+	 * @param [options.isDisableSharedPool] - If true, ends use of a shared db-manager PG pool (default: false).
+	 * @param [options.isLoggerEnabled] - If true, enables query execution logging (default: false).
+	 * @param [options.isUseSharedPool] - If true, uses a shared db-manager PG pool (default: true).
 	 */
 	constructor(
 		repository: T,
@@ -41,27 +49,49 @@ export class RepositoryManager<const T extends Record<string, { model: Model; }>
 			config: Types.TDBCreds;
 			logger: SharedTypes.TLogger;
 			isLoggerEnabled?: boolean;
+			isUseSharedPool?: boolean;
+			isDisableSharedPool?: boolean;
 		},
 	) {
+		const {
+			isDisableSharedPool = false,
+			isLoggerEnabled = false,
+			isUseSharedPool = true,
+		} = options;
+
+		if (isUseSharedPool && isDisableSharedPool) {
+			throw new Error("isUseSharedPool and isDisableSharedPool cannot both be true");
+		}
+
+		this.#token = isUseSharedPool ? "shared" : crypto.randomUUID();
+
 		this.#config = options.config;
+		this.#isDisableSharedPool = isDisableSharedPool;
+		this.#isUseSharedPool = isUseSharedPool;
 		this.#logger = options.logger;
-		this.#standardPool = connection.getStandardPool(this.#config);
-		this.#transactionPool = connection.getTransactionPool(this.#config);
+		this.#standardPool = connection.getStandardPool(this.#config, this.#token);
+		this.#transactionPool = connection.getTransactionPool(this.#config, this.#token);
 		this.#repository = repository;
 		this.#queryBuilderFactory = new QueryBuilderFactory(this.#standardPool, {
-			isLoggerEnabled: options.isLoggerEnabled,
+			isLoggerEnabled,
 			logger: this.#logger,
 		});
 
 		this.#setupErrorHandling();
 
-		if (options.isLoggerEnabled) {
+		if (isLoggerEnabled) {
 			for (const r of Object.values(repository)) {
 				if (r.model.isLoggerEnabled === false) {
 					continue;
 				}
 
 				r.model.setLogger(this.#logger);
+			}
+		}
+
+		if (!isUseSharedPool) {
+			for (const r of Object.values(repository)) {
+				r.model.setExecutor(this.#standardPool);
 			}
 		}
 	}
@@ -144,9 +174,15 @@ export class RepositoryManager<const T extends Record<string, { model: Model; }>
 	 * @returns A promise that resolves when the connection is successful.
 	 */
 	async init() {
+		if (this.#isDisableSharedPool) {
+			await connection.shutdown({ poolName: "shared" });
+		}
+
 		const connected = await this.#checkConnection();
 
-		if (!connected) throw new Error(`Failed to connect to PG database ${this.#config.database} at ${this.#config.host}:${this.#config.port}`);
+		if (!connected) {
+			throw new Error(`Failed to connect to PG database ${this.#config.database} at ${this.#config.host}:${this.#config.port}`);
+		}
 	}
 
 	/**
@@ -155,7 +191,11 @@ export class RepositoryManager<const T extends Record<string, { model: Model; }>
 	 * @returns A promise that resolves when the connection is closed.
 	 */
 	async shutdown() {
-		await connection.shutdown();
+		if (this.#isUseSharedPool) {
+			return;
+		}
+
+		await connection.shutdown({ poolName: this.#token });
 	}
 
 	/**

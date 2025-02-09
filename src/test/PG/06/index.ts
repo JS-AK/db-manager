@@ -10,16 +10,16 @@ import { RepositoryManager } from "./data-access-layer/repository-manager.js";
 
 const TEST_NAME = Helpers.getParentDirectoryName(fileURLToPath(import.meta.url));
 
-export const start = async (creds: PG.ModelTypes.TDBCreds) => {
-	const repositoryManager = new RepositoryManager(creds);
+export const start = async (creds: PG.ModelTypes.TDBCreds): Promise<void> => {
+	await test("PG-" + TEST_NAME, async (testContext) => {
+		const repositoryManager = new RepositoryManager(creds);
 
-	await repositoryManager.init();
+		await repositoryManager.init();
 
-	const adminRepository = repositoryManager.repository.admin;
-	const testUserRepository = repositoryManager.repository.testUser;
-	const userRepository = repositoryManager.repository.user;
+		const adminRepository = repositoryManager.repository.admin;
+		const testUserRepository = repositoryManager.repository.testUser;
+		const userRepository = repositoryManager.repository.user;
 
-	return test("PG-" + TEST_NAME, async (testContext) => {
 		await testContext.test(
 			"Helpers.migrationsUp",
 			async () => { await Helpers.migrationsUp(creds, TEST_NAME); },
@@ -255,6 +255,8 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 				);
 			},
 		);
+
+		await repositoryManager.shutdown();
 
 		await testContext.test(
 			"Helpers.migrationsDown",

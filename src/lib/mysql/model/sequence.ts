@@ -16,7 +16,14 @@ export class BaseSequence {
 
 	#initialArgs;
 
-	pool: mysql.Pool | mysql.PoolConnection | mysql.Connection;
+	/**
+	 * The MySQL executor.
+	 * - mysql.Pool
+	 * - mysql.PoolClient
+	 * - mysql.Client
+	 */
+	#executor: Types.TExecutor;
+
 	name;
 
 	constructor(
@@ -24,27 +31,67 @@ export class BaseSequence {
 		dbCreds: Types.TDBCreds,
 		options?: Types.TSOptions,
 	) {
-		this.pool = connection.getStandardPool(dbCreds);
+		this.#executor = connection.getStandardPool(dbCreds);
 		this.name = data.name;
 
 		this.#initialArgs = { data, dbCreds, options };
 
-		const { executeSql, isLoggerEnabled, logger } = setLoggerAndExecutor(this.pool, options);
+		const { executeSql, isLoggerEnabled, logger } = setLoggerAndExecutor(this.#executor, options);
 
 		this.#executeSql = executeSql;
 		this.#isLoggerEnabled = isLoggerEnabled;
 		this.#logger = logger;
 	}
 
+	/**
+	 * Gets the database client for the sequence.
+	 *
+	 * @returns The database client for the sequence.
+	 */
+	get pool() {
+		return this.#executor;
+	}
+
+	/**
+	 * Gets the MySQL executor for the sequence.
+	 *
+	 * @returns The MySQL executor for the sequence.
+	 */
+	get executor() {
+		return this.#executor;
+	}
+
+	/**
+	 * Sets the logger for the sequence.
+	 *
+	 * @param logger - The logger to use for the sequence.
+	 */
 	setLogger(logger: SharedTypes.TLogger) {
 		const preparedOptions = setLoggerAndExecutor(
-			this.pool,
+			this.#executor,
 			{ isLoggerEnabled: true, logger },
 		);
 
 		this.#executeSql = preparedOptions.executeSql;
 		this.#isLoggerEnabled = preparedOptions.isLoggerEnabled;
 		this.#logger = preparedOptions.logger;
+	}
+
+	/**
+	 * Sets the executor for the sequence.
+	 *
+	 * @param executor - The executor to use for the sequence.
+	 */
+	setExecutor(executor: Types.TExecutor) {
+		const preparedOptions = setLoggerAndExecutor(
+			executor,
+			{ isLoggerEnabled: this.#isLoggerEnabled, logger: this.#logger },
+		);
+
+		this.#executeSql = preparedOptions.executeSql;
+		this.#isLoggerEnabled = preparedOptions.isLoggerEnabled;
+		this.#logger = preparedOptions.logger;
+		this.#executor = executor;
 	}
 
 	get isLoggerEnabled(): boolean | undefined {
@@ -64,7 +111,7 @@ export class BaseSequence {
 	 *
 	 * @returns The current instance with the new connection client.
 	 */
-	setClientInCurrentClass(client: mysql.Pool | mysql.PoolConnection | mysql.Connection): this {
+	setClientInCurrentClass(client: Types.TExecutor): this {
 		return new (this.constructor as new (
 			data: { name: string; },
 			dbCreds: Types.TDBCreds,
@@ -85,7 +132,7 @@ export class BaseSequence {
 	 *
 	 * @returns A new instance of the base class with the new connection client.
 	 */
-	setClientInBaseClass(client: mysql.Pool | mysql.PoolConnection | mysql.Connection): BaseSequence {
+	setClientInBaseClass(client: Types.TExecutor): BaseSequence {
 		return new BaseSequence(
 			{ ...this.#initialArgs.data },
 			{ ...this.#initialArgs.dbCreds },
@@ -128,14 +175,14 @@ export class BaseSequence {
 	}
 
 	queryBuilder(options?: {
-		client?: mysql.Pool | mysql.PoolConnection | mysql.Connection;
+		client?: Types.TExecutor;
 		name?: string;
 	}) {
 		const { client, name } = options || {};
 
 		return new QueryBuilder(
 			name ?? this.name,
-			client ?? this.pool,
+			client ?? this.#executor,
 			{ isLoggerEnabled: this.#isLoggerEnabled, logger: this.#logger },
 		);
 	}

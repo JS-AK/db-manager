@@ -17,8 +17,15 @@ export class BaseModel<const T extends readonly string[] = readonly string[]> {
 	#logger?: SharedTypes.TLogger;
 	#executeSql;
 
+	/**
+	 * The PostgreSQL executor.
+	 * - pg.Pool
+	 * - pg.PoolClient
+	 * - pg.Client
+	 */
+	#executor: Types.TExecutor;
+
 	createField;
-	pool: pg.Pool;
 	primaryKey;
 	tableName;
 	tableFields: readonly string[];
@@ -30,7 +37,7 @@ export class BaseModel<const T extends readonly string[] = readonly string[]> {
 		options?: Types.TDBOptions,
 	) {
 		this.createField = data.createField;
-		this.pool = connection.getStandardPool(dbCreds);
+		this.#executor = connection.getStandardPool(dbCreds);
 		this.primaryKey = data.primaryKey;
 		this.tableName = data.tableName;
 		this.tableFields = [...data.tableFields];
@@ -44,7 +51,7 @@ export class BaseModel<const T extends readonly string[] = readonly string[]> {
 		const { insertOptions, isLoggerEnabled, logger } = options || {};
 
 		const preparedOptions = setLoggerAndExecutor(
-			this.pool,
+			this.#executor,
 			{ isLoggerEnabled, logger },
 		);
 
@@ -54,15 +61,55 @@ export class BaseModel<const T extends readonly string[] = readonly string[]> {
 		this.#logger = preparedOptions.logger;
 	}
 
+	/**
+	 * Gets the database client for the model.
+	 *
+	 * @returns The database client for the model.
+	 */
+	get pool() {
+		return this.#executor;
+	}
+
+	/**
+	 * Gets the PostgreSQL executor for the model.
+	 *
+	 * @returns The PostgreSQL executor for the model.
+	 */
+	get executor() {
+		return this.#executor;
+	}
+
+	/**
+	 * Sets the logger for the model.
+	 *
+	 * @param logger - The logger to use for the model.
+	 */
 	setLogger(logger: SharedTypes.TLogger) {
 		const preparedOptions = setLoggerAndExecutor(
-			this.pool,
+			this.#executor,
 			{ isLoggerEnabled: true, logger },
 		);
 
 		this.#executeSql = preparedOptions.executeSql;
 		this.#isLoggerEnabled = preparedOptions.isLoggerEnabled;
 		this.#logger = preparedOptions.logger;
+	}
+
+	/**
+	 * Sets the executor for the model.
+	 *
+	 * @param executor - The executor to use for the model.
+	 */
+	setExecutor(executor: Types.TExecutor) {
+		const preparedOptions = setLoggerAndExecutor(
+			executor,
+			{ isLoggerEnabled: this.#isLoggerEnabled, logger: this.#logger },
+		);
+
+		this.#executeSql = preparedOptions.executeSql;
+		this.#isLoggerEnabled = preparedOptions.isLoggerEnabled;
+		this.#logger = preparedOptions.logger;
+		this.#executor = executor;
 	}
 
 	get isLoggerEnabled(): boolean | undefined {
@@ -380,14 +427,14 @@ export class BaseModel<const T extends readonly string[] = readonly string[]> {
 	 * @experimental
 	 */
 	queryBuilder(options?: {
-		client?: pg.Pool | pg.PoolClient | pg.Client;
+		client?: Types.TExecutor;
 		tableName?: string;
 	}) {
 		const { client, tableName } = options || {};
 
 		return new QueryBuilder(
 			tableName ?? this.tableName,
-			client ?? this.pool,
+			client ?? this.#executor,
 			{ isLoggerEnabled: this.#isLoggerEnabled, logger: this.#logger },
 		);
 	}
