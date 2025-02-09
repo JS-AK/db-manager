@@ -1,3 +1,10 @@
+# [3.43.0](https://github.com/JS-AK/db-manager/compare/v3.42.2...v3.43.0) (2025-02-09)
+
+
+### Features
+
+* added isUseSharedPool option to repo-managers ([8c16fd1](https://github.com/JS-AK/db-manager/commit/8c16fd1dc7cde729997f5e0c714dd238ffbab3a4))
+
 ## [3.42.2](https://github.com/JS-AK/db-manager/compare/v3.42.1...v3.42.2) (2024-12-10)
 
 
