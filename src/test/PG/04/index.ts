@@ -6,16 +6,19 @@ import { PG } from "../index.js";
 
 import * as Helpers from "../helpers.js";
 
-import * as UserRoleTable from "./user-role/index.js";
-import * as UserTable from "./user/index.js";
+import { RepositoryManager } from "./data-access-layer/repository-manager.js";
 
 const TEST_NAME = Helpers.getParentDirectoryName(fileURLToPath(import.meta.url));
 
-export const start = async (creds: PG.ModelTypes.TDBCreds) => {
-	const User = new UserTable.Domain(creds);
-	const UserRole = new UserRoleTable.Domain(creds);
+export const start = async (creds: PG.ModelTypes.TDBCreds): Promise<void> => {
+	await test("PG-" + TEST_NAME, async (testContext) => {
+		const repositoryManager = new RepositoryManager(creds);
 
-	return test("PG-" + TEST_NAME, async (testContext) => {
+		await repositoryManager.init();
+
+		const userRepository = repositoryManager.repository.user;
+		const userRoleRepository = repositoryManager.repository.userRole;
+
 		await testContext.test(
 			"Helpers.migrationsUp",
 			async () => { await Helpers.migrationsUp(creds, TEST_NAME); },
@@ -28,7 +31,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 					await testContext.test(
 						"create admin user",
 						async () => {
-							const { one: userRole } = await UserRole.getOneByParams({
+							const { one: userRole } = await userRoleRepository.getOneByParams({
 								params: { title: "admin" },
 								selected: ["id"],
 							});
@@ -36,9 +39,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 							if (!userRole) throw new Error("User role not found");
 
 							await Promise.all(
-								["Robin"].map((e) =>
-									User.createOne({ first_name: e, id_user_role: userRole.id }),
-								),
+								["Robin"].map((e) => userRepository.createOne({ first_name: e, id_user_role: userRole.id })),
 							);
 						},
 					);
@@ -46,7 +47,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 					await testContext.test(
 						"create head user",
 						async () => {
-							const { one: userRole } = await UserRole.getOneByParams({
+							const { one: userRole } = await userRoleRepository.getOneByParams({
 								params: { title: "head" },
 								selected: ["id"],
 							});
@@ -55,7 +56,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 
 							await Promise.all(
 								["Bob"].map((e) =>
-									User.createOne({ first_name: e, id_user_role: userRole.id }),
+									userRepository.createOne({ first_name: e, id_user_role: userRole.id }),
 								),
 							);
 						},
@@ -64,7 +65,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 					await testContext.test(
 						"create users",
 						async () => {
-							const { one: userRole } = await UserRole.getOneByParams({
+							const { one: userRole } = await userRoleRepository.getOneByParams({
 								params: { title: "user" },
 								selected: ["id"],
 							});
@@ -73,18 +74,10 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 
 							const firstNames = ["John", "Mary", "Peter", "Max", "Ann"];
 
-							const users = await User.model.queryBuilder()
-								.insert<UserTable.Types.CreateFields>({
-									isUseDefaultValues: true,
-									params: firstNames.map((e) => ({
-										first_name: e,
-										id_user_role: userRole.id,
-										last_name: undefined,
-									})),
-									updateColumn: { title: "updated_at", type: "timestamp" },
-								})
-								.returning(["id"])
-								.execute<{ id: string; }>();
+							const users = await userRepository.create(firstNames.map((e) => ({
+								first_name: e,
+								id_user_role: userRole.id,
+							})));
 
 							assert.strictEqual(users.length, firstNames.length);
 						},
@@ -94,7 +87,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						await testContext.test(
 							"select",
 							async () => {
-								const users = await User.getAll();
+								const users = await userRepository.getAll();
 								const firstUser = users.at(0);
 
 								if (!firstUser) throw new Error("FirstUser not found");
@@ -115,7 +108,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						await testContext.test(
 							"select + where",
 							async () => {
-								const users = await User.getAllNotDeletedWithRole();
+								const users = await userRepository.getAllNotDeletedWithRole();
 								const firstUser = users.at(0);
 
 								if (!firstUser) throw new Error("FirstUser not found");
@@ -136,35 +129,23 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						await testContext.test(
 							"select + where + second",
 							async () => {
-								const users = await User.model.queryBuilder()
+								const users = await userRepository.model.queryBuilder()
 									.select(["id"])
 									.where({ params: {} })
 									.execute<{ id: string; }>();
 
 								{
-									await User.model.queryBuilder()
-										.select(["*"])
-										.where<UserTable.Types.TableFields>({
-											params: {
-												first_name: { $ilike: "Max" },
-												id: { $in: users.map((e) => e.id) },
-												is_deleted: false,
-											},
-										})
-										.execute();
+									await userRepository.getActualByParams({
+										first_name: { $ilike: "Max" },
+										ids: { $in: users.map((e) => e.id) },
+									});
 								}
 
 								{
-									await User.model.queryBuilder()
-										.select(["*"])
-										.where({
-											params: {
-												first_name: { $ilike: "Max" },
-												id: { $nin: users.map((e) => e.id) },
-												is_deleted: false,
-											},
-										})
-										.execute();
+									await userRepository.getActualByParams({
+										first_name: { $ilike: "Max" },
+										ids: { $nin: users.map((e) => e.id) },
+									});
 								}
 							},
 						);
@@ -174,7 +155,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						await testContext.test(
 							"User.getList",
 							async () => {
-								const users = await User.getList({
+								const users = await userRepository.getList({
 									order: [{ column: "u.created_at", sorting: "ASC" }],
 									pagination: { limit: 10, offset: 0 },
 									params: {},
@@ -189,7 +170,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						await testContext.test(
 							"User.getListAndCount",
 							async () => {
-								const [list, count] = await User.getListAndCount({
+								const [list, count] = await userRepository.getListAndCount({
 									order: [{ column: "u.created_at", sorting: "ASC" }],
 									pagination: { limit: 10, offset: 0 },
 									params: {},
@@ -205,7 +186,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						await testContext.test(
 							"select + rightJoin + where + orderBy",
 							async () => {
-								const users = await User.getAllWithTitleUser();
+								const users = await userRepository.getAllWithTitleUser();
 
 								assert.strictEqual(users.length, 5);
 
@@ -226,7 +207,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						await testContext.test(
 							"select + rightJoin + where + orderBy + pagination",
 							async () => {
-								const users = await User.getAllWithTitleUserWithPagination();
+								const users = await userRepository.getAllWithTitleUserWithPagination();
 
 								assert.strictEqual(users.length, 3);
 
@@ -247,7 +228,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						await testContext.test(
 							"select + rightJoin + where + orderBy + groupBy",
 							async () => {
-								const stat = await User.getCountByUserRolesTitle();
+								const stat = await userRepository.getCountByUserRolesTitle();
 
 								assert.strictEqual(stat.length, 3);
 
@@ -273,7 +254,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 						await testContext.test(
 							"select + rightJoin + where + orderBy + groupBy + having",
 							async () => {
-								const stat = await User.getCountByUserRolesTitleWithCountGte5();
+								const stat = await userRepository.getCountByUserRolesTitleWithCountGte5();
 
 								assert.strictEqual(stat.length, 1);
 
@@ -284,7 +265,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 							},
 						);
 					}
-					await User.deleteAll();
+					await userRepository.deleteAll();
 				}
 			},
 		);
@@ -293,6 +274,8 @@ export const start = async (creds: PG.ModelTypes.TDBCreds) => {
 			"Helpers.migrationsDown",
 			async () => { await Helpers.migrationsDown(creds, TEST_NAME); },
 		);
+
+		await repositoryManager.shutdown();
 
 		await testContext.test(
 			"Helpers.connectionShutdown",

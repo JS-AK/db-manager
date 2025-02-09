@@ -22,9 +22,16 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 
 	#initialArgs;
 
+	/**
+	 * The PostgreSQL executor.
+	 * - pg.Pool
+	 * - pg.PoolClient
+	 * - pg.Client
+	 */
+	#executor: Types.TExecutor;
+
 	createField;
 	isPKAutoIncremented;
-	pool: mysql.Pool | mysql.PoolConnection | mysql.Connection;
 	primaryKey;
 	tableName;
 	tableFields: readonly string[];
@@ -66,7 +73,7 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 		const { client, insertOptions, isLoggerEnabled, logger } = options || {};
 
 		this.createField = data.createField;
-		this.pool = client || connection.getStandardPool(dbCreds);
+		this.#executor = client || connection.getStandardPool(dbCreds);
 		this.primaryKey = data.primaryKey;
 		this.isPKAutoIncremented = typeof data.isPKAutoIncremented === "boolean"
 			? data.isPKAutoIncremented
@@ -83,7 +90,7 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 		this.#initialArgs = { data, dbCreds, options };
 
 		const preparedOptions = setLoggerAndExecutor(
-			this.pool,
+			this.#executor,
 			{ isLoggerEnabled, logger },
 		);
 
@@ -93,15 +100,55 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 		this.#logger = preparedOptions.logger;
 	}
 
+	/**
+	 * Gets the database client for the table.
+	 *
+	 * @returns The database client for the table.
+	 */
+	get pool() {
+		return this.#executor;
+	}
+
+	/**
+	 * Gets the MySQL executor for the table.
+	 *
+	 * @returns The MySQL executor for the table.
+	 */
+	get executor() {
+		return this.#executor;
+	}
+
+	/**
+	 * Sets the logger for the table.
+	 *
+	 * @param logger - The logger to use for the table.
+	 */
 	setLogger(logger: SharedTypes.TLogger) {
 		const preparedOptions = setLoggerAndExecutor(
-			this.pool,
+			this.#executor,
 			{ isLoggerEnabled: true, logger },
 		);
 
 		this.#executeSql = preparedOptions.executeSql;
 		this.#isLoggerEnabled = preparedOptions.isLoggerEnabled;
 		this.#logger = preparedOptions.logger;
+	}
+
+	/**
+	 * Sets the executor for the table.
+	 *
+	 * @param executor - The executor to use for the table.
+	 */
+	setExecutor(executor: Types.TExecutor) {
+		const preparedOptions = setLoggerAndExecutor(
+			executor,
+			{ isLoggerEnabled: this.#isLoggerEnabled, logger: this.#logger },
+		);
+
+		this.#executeSql = preparedOptions.executeSql;
+		this.#isLoggerEnabled = preparedOptions.isLoggerEnabled;
+		this.#logger = preparedOptions.logger;
+		this.#executor = executor;
 	}
 
 	get isLoggerEnabled(): boolean | undefined {
@@ -121,7 +168,7 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 	 *
 	 * @returns The current instance with the new connection client.
 	 */
-	setClientInCurrentClass(client: mysql.Pool | mysql.PoolConnection | mysql.Connection): this {
+	setClientInCurrentClass(client: Types.TExecutor): this {
 		return new (this.constructor as new (
 			data: Types.TTable<T>,
 			dbCreds: Types.TDBCreds,
@@ -142,7 +189,7 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 	 *
 	 * @returns A new instance of the base class with the new connection client.
 	 */
-	setClientInBaseClass(client: mysql.Pool | mysql.PoolConnection | mysql.Connection): BaseTable<T> {
+	setClientInBaseClass(client: Types.TExecutor): BaseTable<T> {
 		return new BaseTable(
 			{ ...this.#initialArgs.data },
 			{ ...this.#initialArgs.dbCreds },
@@ -718,14 +765,14 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 	 * @returns A new query builder instance.
 	 */
 	queryBuilder(options?: {
-		client?: mysql.Pool | mysql.PoolConnection | mysql.Connection;
+		client?: Types.TExecutor;
 		tableName?: string;
 	}): QueryBuilder {
 		const { client, tableName } = options || {};
 
 		return new QueryBuilder(
 			tableName ?? this.tableName,
-			client ?? this.pool,
+			client ?? this.#executor,
 			{ isLoggerEnabled: this.#isLoggerEnabled, logger: this.#logger },
 		);
 	}

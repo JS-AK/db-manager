@@ -1,17 +1,28 @@
-import { Types as CoreTypes, PG } from "../../index.js";
+import { PG, Types as PGTypes } from "../../../../index.js";
 
-import { Model, Types } from "./model/index.js";
+import * as Types from "./types.js";
 
-export class Domain extends PG.BaseDomain<{
-	Model: Model;
+import { model } from "./model.js";
+
+class Domain extends PG.Domain.BaseTable<PG.Model.BaseTable, {
 	CreateFields: Types.CreateFields;
 	SearchFields: Types.SearchFields;
-	TableFields: Types.TableFields;
+	CoreFields: Types.TableFields;
 	UpdateFields: Types.UpdateFields;
 }> {
-
-	constructor(creds: PG.ModelTypes.TDBCreds) {
-		super({ model: new Model(creds) });
+	async create(data: {
+		first_name: string;
+		id_user_role: string;
+		last_name?: string;
+	}[]) {
+		return this.model.queryBuilder()
+			.insert<Types.CreateFields>({
+				isUseDefaultValues: true,
+				params: data,
+				updateColumn: { title: "updated_at", type: "timestamp" },
+			})
+			.returning(["id"])
+			.execute<{ id: string; }>();
 	}
 
 	async getAll() {
@@ -103,8 +114,8 @@ export class Domain extends PG.BaseDomain<{
 	}
 
 	async getList(data: {
-		order: { column: Types.ListOrderBy; sorting: CoreTypes.TOrdering; }[];
-		pagination: CoreTypes.TPagination;
+		order: { column: Types.ListOrderBy; sorting: PGTypes.TOrdering; }[];
+		pagination: PGTypes.TPagination;
 		params: {
 			ids?: string[];
 			userRoleTitle?: string;
@@ -138,8 +149,8 @@ export class Domain extends PG.BaseDomain<{
 	}
 
 	async getListAndCount(data: {
-		order: { column: Types.ListOrderBy; sorting: CoreTypes.TOrdering; }[];
-		pagination: CoreTypes.TPagination;
+		order: { column: Types.ListOrderBy; sorting: PGTypes.TOrdering; }[];
+		pagination: PGTypes.TPagination;
 		params: { ids?: string[]; userRoleTitle?: string; };
 	}): Promise<[Types.ListedEntity[], number]> {
 		const params: Types.SearchFieldsList = {
@@ -180,4 +191,23 @@ export class Domain extends PG.BaseDomain<{
 
 		return [list, Number(total[0]?.count) || 0];
 	}
+
+	async getActualByParams(data: {
+		ids: { $in: string[]; } | { $nin: string[]; };
+		first_name: { $ilike: string; };
+	}) {
+		return this.model.queryBuilder()
+			.select(["*"])
+			.where<Types.TableFields>({
+				params: {
+					first_name: data.first_name,
+					id: data.ids,
+					is_deleted: false,
+				},
+			})
+			.execute();
+	}
 }
+
+export const domain = (creds: PG.ModelTypes.TDBCreds) =>
+	new Domain({ model: model(creds) });

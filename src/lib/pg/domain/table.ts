@@ -1,8 +1,6 @@
-import pg from "pg";
-
 import * as SharedTypes from "../../../shared-types/index.js";
 import * as Types from "./types.js";
-import { BaseTable as Model } from "../model/index.js";
+import { BaseTable as Model, TExecutor } from "../model/index.js";
 
 export type BaseTableGeneric = {
 	AdditionalSortingFields?: string;
@@ -294,7 +292,7 @@ export class BaseTable<
 	 *
 	 * @returns A new instance of the current class with the updated client.
 	 */
-	setClientInCurrentClass(client: pg.Pool | pg.PoolClient | pg.Client): this {
+	setClientInCurrentClass(client: TExecutor): this {
 		return new (this.constructor as new (data: Types.TDomain<M>) => this)({
 			model: this.model.setClientInCurrentClass(client),
 		});
@@ -309,7 +307,7 @@ export class BaseTable<
 	 *
 	 * @returns A new instance of the BaseTable class with the updated client.
 	 */
-	setClientInBaseClass(client: pg.Pool | pg.PoolClient | pg.Client): BaseTable<Model, BTG> {
+	setClientInBaseClass(client: TExecutor): BaseTable<Model, BTG> {
 		return new BaseTable({ model: this.model.setClientInBaseClass(client) });
 	}
 

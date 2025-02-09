@@ -23,9 +23,12 @@ export class BaseView {
 	#initialArgs;
 
 	/**
-	 * The PostgreSQL connection pool.
+	 * The PostgreSQL executor.
+	 * - pg.Pool
+	 * - pg.PoolClient
+	 * - pg.Client
 	 */
-	pool: pg.Pool;
+	#executor: Types.TExecutor;
 
 	/**
 	 * The name of the view.
@@ -52,7 +55,7 @@ export class BaseView {
 		dbCreds: Types.TDBCreds,
 		options?: Types.TVOptions,
 	) {
-		this.pool = connection.getStandardPool(dbCreds);
+		this.#executor = connection.getStandardPool(dbCreds);
 		this.name = data.name;
 		this.coreFields = data.coreFields;
 
@@ -66,7 +69,7 @@ export class BaseView {
 		const { isLoggerEnabled, logger } = options || {};
 
 		const preparedOptions = setLoggerAndExecutor(
-			this.pool,
+			this.#executor,
 			{ isLoggerEnabled, logger },
 		);
 
@@ -75,6 +78,29 @@ export class BaseView {
 		this.#logger = preparedOptions.logger;
 	}
 
+	/**
+	 * Gets the database client for the view.
+	 *
+	 * @returns The database client for the view.
+	 */
+	get pool() {
+		return this.#executor;
+	}
+
+	/**
+	 * Gets the PostgreSQL executor for the view.
+	 *
+	 * @returns The PostgreSQL executor for the view.
+	 */
+	get executor() {
+		return this.#executor;
+	}
+
+	/**
+	 * Sets the logger for the view.
+	 *
+	 * @param logger - The logger to use for the view.
+	 */
 	setLogger(logger: SharedTypes.TLogger) {
 		const preparedOptions = setLoggerAndExecutor(
 			this.pool,
@@ -84,6 +110,23 @@ export class BaseView {
 		this.#executeSql = preparedOptions.executeSql;
 		this.#isLoggerEnabled = preparedOptions.isLoggerEnabled;
 		this.#logger = preparedOptions.logger;
+	}
+
+	/**
+	 * Sets the executor for the view.
+	 *
+	 * @param executor - The executor to use for the view.
+	 */
+	setExecutor(executor: Types.TExecutor) {
+		const preparedOptions = setLoggerAndExecutor(
+			executor,
+			{ isLoggerEnabled: this.#isLoggerEnabled, logger: this.#logger },
+		);
+
+		this.#executeSql = preparedOptions.executeSql;
+		this.#isLoggerEnabled = preparedOptions.isLoggerEnabled;
+		this.#logger = preparedOptions.logger;
+		this.#executor = executor;
 	}
 
 	get isLoggerEnabled(): boolean | undefined {
@@ -103,7 +146,7 @@ export class BaseView {
 	 *
 	 * @returns The current instance with the new connection client.
 	 */
-	setClientInCurrentClass(client: pg.Pool | pg.PoolClient | pg.Client): this {
+	setClientInCurrentClass(client: Types.TExecutor): this {
 		return new (this.constructor as new (
 			data: { additionalSortingFields?: string[]; coreFields: string[]; name: string; },
 			dbCreds: Types.TDBCreds,
@@ -124,7 +167,7 @@ export class BaseView {
 	 *
 	 * @returns A new instance of the base class with the new connection client.
 	 */
-	setClientInBaseClass(client: pg.Pool | pg.PoolClient | pg.Client): BaseView {
+	setClientInBaseClass(client: Types.TExecutor): BaseView {
 		return new BaseView(
 			{ ...this.#initialArgs.data },
 			{ ...this.#initialArgs.dbCreds },
@@ -277,7 +320,7 @@ export class BaseView {
 	 */
 	async getCountByParams(params: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; }): Promise<number> {
 		const sql = this.compareQuery.getCountByParams(params);
-		const { rows: [entity] } = await this.pool.query<{ count: string; }>(sql.query, sql.values);
+		const { rows: [entity] } = await this.#executeSql<{ count: string; }>(sql);
 
 		return Number(entity?.count) || 0;
 	}
@@ -313,13 +356,13 @@ export class BaseView {
 	 */
 	queryBuilder(options?: {
 		name?: string;
-		client?: pg.Pool | pg.PoolClient | pg.Client;
+		client?: Types.TExecutor;
 	}): QueryBuilder {
 		const { client, name } = options || {};
 
 		return new QueryBuilder(
 			name ?? this.name,
-			client ?? this.pool,
+			client ?? this.#executor,
 			{ isLoggerEnabled: this.#isLoggerEnabled, logger: this.#logger },
 		);
 	}

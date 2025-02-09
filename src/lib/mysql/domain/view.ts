@@ -1,9 +1,7 @@
-import mysql from "mysql2/promise";
-
 import * as SharedTypes from "../../../shared-types/index.js";
 import * as Types from "./types.js";
 
-import { BaseView as Model } from "../model/index.js";
+import { BaseView as Model, TExecutor } from "../model/index.js";
 
 type BaseViewGeneric = {
 	AdditionalSortingFields?: string;
@@ -132,7 +130,7 @@ export class BaseView<
 	 *
 	 * @returns A new instance of the current class with the updated client.
 	 */
-	setClientInCurrentClass(client: mysql.Pool | mysql.PoolConnection | mysql.Connection): this {
+	setClientInCurrentClass(client: TExecutor): this {
 		return new (this.constructor as new (data: Types.TDomain<M>) => this)({
 			model: this.model.setClientInCurrentClass(client),
 		});
@@ -147,7 +145,7 @@ export class BaseView<
 	 *
 	 * @returns A new instance of the BaseView class with the updated client.
 	 */
-	setClientInBaseClass(client: mysql.Pool | mysql.PoolConnection | mysql.Connection): BaseView<Model, BVG> {
+	setClientInBaseClass(client: TExecutor): BaseView<Model, BVG> {
 		return new BaseView({ model: this.model.setClientInBaseClass(client) });
 	}
 

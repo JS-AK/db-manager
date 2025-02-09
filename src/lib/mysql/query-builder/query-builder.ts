@@ -41,7 +41,7 @@ export class QueryBuilder {
 	 */
 	constructor(
 		dataSource: string,
-		client: mysql.Pool | mysql.PoolConnection | mysql.Connection,
+		client: ModelTypes.TExecutor,
 		options?: {
 			isLoggerEnabled?: boolean;
 			logger?: SharedTypes.TLogger;

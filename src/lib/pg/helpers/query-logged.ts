@@ -1,10 +1,11 @@
 import pg from "pg";
 
 import * as SharedTypes from "../../../shared-types/index.js";
+import { TExecutor } from "../model/types.js";
 
 async function queryLogged<T extends pg.QueryResultRow>(
 	this: {
-		client: pg.Pool | pg.PoolClient | pg.Client;
+		client: TExecutor;
 		logger: SharedTypes.TLogger;
 	},
 	query: string,
@@ -29,7 +30,7 @@ async function queryLogged<T extends pg.QueryResultRow>(
 }
 
 export function setLoggerAndExecutor(
-	pool: pg.Pool | pg.PoolClient | pg.Client,
+	pool: TExecutor,
 	options?: {
 		isLoggerEnabled?: boolean;
 		logger?: SharedTypes.TLogger;

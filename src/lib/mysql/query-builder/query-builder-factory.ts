@@ -1,5 +1,4 @@
-import mysql from "mysql2/promise";
-
+import * as ModelTypes from "../model/types.js";
 import * as SharedTypes from "../../../shared-types/index.js";
 import { QueryBuilder } from "./query-builder.js";
 
@@ -7,7 +6,7 @@ import { QueryBuilder } from "./query-builder.js";
  * Factory class to create instances of QueryBuilder.
  */
 export class QueryBuilderFactory {
-	#client: mysql.Pool | mysql.PoolConnection | mysql.Connection;
+	#client: ModelTypes.TExecutor;
 	#isLoggerEnabled;
 	#logger?: SharedTypes.TLogger;
 
@@ -17,7 +16,7 @@ export class QueryBuilderFactory {
 	 * @param client - The MySQL client or pool.
 	 */
 	constructor(
-		client: mysql.Pool | mysql.PoolConnection | mysql.Connection,
+		client: ModelTypes.TExecutor,
 		options?: {
 			isLoggerEnabled?: boolean;
 			logger?: SharedTypes.TLogger;
@@ -49,7 +48,7 @@ export class QueryBuilderFactory {
 	 * @returns A new instance of QueryBuilder.
 	 */
 	createQueryBuilder(options?: {
-		client?: mysql.Pool | mysql.PoolConnection | mysql.Connection;
+		client?: ModelTypes.TExecutor;
 		dataSource?: string;
 	}): QueryBuilder {
 		const { client, dataSource } = options || {};

@@ -1,10 +1,11 @@
 import mysql from "mysql2/promise";
 
 import * as SharedTypes from "../../../shared-types/index.js";
+import { TExecutor } from "../model/types.js";
 
 async function queryLogged<T extends (mysql.RowDataPacket | mysql.ResultSetHeader)>(
 	this: {
-		client: mysql.Pool | mysql.PoolConnection | mysql.Connection;
+		client: TExecutor;
 		logger: SharedTypes.TLogger;
 	},
 	query: string,
@@ -29,7 +30,7 @@ async function queryLogged<T extends (mysql.RowDataPacket | mysql.ResultSetHeade
 }
 
 export function setLoggerAndExecutor(
-	pool: mysql.Pool | mysql.PoolConnection | mysql.Connection,
+	pool: TExecutor,
 	options?: {
 		isLoggerEnabled?: boolean;
 		logger?: SharedTypes.TLogger;

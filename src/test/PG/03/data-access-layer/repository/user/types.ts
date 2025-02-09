@@ -1,4 +1,4 @@
-import { PG } from "../../index.js";
+import { PG } from "../../../../index.js";
 
 export type CreateFields = Pick<TableFields,
 	| "first_name"
