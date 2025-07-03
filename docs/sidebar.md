@@ -1,5 +1,3 @@
-# Sidebar
-
 - MySQL
   - [Migration System](mysql-migration-system)
   - [Domain model (JS)](mysql-domain-model-js)
