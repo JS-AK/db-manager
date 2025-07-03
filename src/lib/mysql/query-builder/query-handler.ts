@@ -484,7 +484,10 @@ export class QueryHandler {
 
 		this.#dataSourceRaw = dataPrepared;
 
-		const [firstClause, fromClause] = this.#mainQuery.split(" FROM ");
+		const clauses = this.#mainQuery.split(" FROM ");
+
+		const firstClause = clauses[0];
+		const fromClause = clauses[1];
 
 		if (fromClause) {
 			this.#mainQuery = `${firstClause} FROM ${this.#dataSourceRaw}`;

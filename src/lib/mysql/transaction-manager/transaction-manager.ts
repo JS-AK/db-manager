@@ -34,7 +34,8 @@ export class TransactionManager {
 		this.#client = client;
 		this.#isolationLevel = isolationLevel;
 
-		if (isolationLevel
+		if (
+			isolationLevel
 			&& !TransactionIsolationLevel[isolationLevel]
 		) {
 			throw new Error("Invalid transaction isolation level provided.");

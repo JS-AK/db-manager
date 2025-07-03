@@ -147,18 +147,18 @@ export class BaseSequence {
 
 	async getCurrentValue<T extends string | number>(): Promise<T | null> {
 		const query = `SELECT last_value FROM ${this.name}`;
-		const { rows: [entity] } = await this.#executeSql<{ last_value: T; }>({ query });
+		const { rows } = await this.#executeSql<{ last_value: T; }>({ query });
 
-		return entity ? entity.last_value : null;
+		return rows[0] ? rows[0].last_value : null;
 	}
 
 	async getNextValue<T extends string | number>(): Promise<T> {
 		const query = `SELECT nextval('${this.name}')`;
-		const { rows: [entity] } = await this.#executeSql<{ nextval: T; }>({ query });
+		const { rows } = await this.#executeSql<{ nextval: T; }>({ query });
 
-		if (!entity) throw new Error("Could not get next value");
+		if (!rows[0]) throw new Error("Could not get next value");
 
-		return entity.nextval;
+		return rows[0].nextval;
 	}
 
 	async setValue<T extends string | number>(value: T): Promise<void> {

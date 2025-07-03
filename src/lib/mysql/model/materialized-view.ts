@@ -299,9 +299,9 @@ export class BaseMaterializedView {
 		order?: { orderBy: string; ordering: SharedTypes.TOrdering; }[],
 	): Promise<T[]> {
 		const sql = this.compareQuery.getArrByParams(params, selected, pagination, order);
-		const [rows] = await this.#executeSql<T & mysql.RowDataPacket>(sql);
+		const result = await this.#executeSql<T & mysql.RowDataPacket>(sql);
 
-		return rows as T[];
+		return result[0] as T[];
 	}
 
 	/**
@@ -315,9 +315,9 @@ export class BaseMaterializedView {
 	 */
 	async getCountByParams(params: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; }): Promise<number> {
 		const sql = this.compareQuery.getCountByParams(params);
-		const [[entity]] = await this.#executeSql<(mysql.RowDataPacket & { count: number; })>(sql);
+		const result = await this.#executeSql<(mysql.RowDataPacket & { count: number; })>(sql);
 
-		return Number(entity?.count) || 0;
+		return Number(result[0][0]?.count) || 0;
 	}
 
 	/**
@@ -335,9 +335,9 @@ export class BaseMaterializedView {
 		selected: string[] = ["*"],
 	): Promise<T | undefined> {
 		const sql = this.compareQuery.getOneByParams(params, selected);
-		const [[entity]] = await this.#executeSql<T & mysql.RowDataPacket>(sql);
+		const result = await this.#executeSql<T & mysql.RowDataPacket>(sql);
 
-		return entity as T;
+		return result[0][0] as T;
 	}
 
 	/**

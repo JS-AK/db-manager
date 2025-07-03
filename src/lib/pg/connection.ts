@@ -98,7 +98,10 @@ export const shutdown = async (options?: { poolName?: string; }): Promise<void> 
 	const poolName = options?.poolName;
 
 	if (poolName) {
-		for (const [credsString, pool] of pools) {
+		for (const entry of pools) {
+			const credsString = entry[0];
+			const pool = entry[1];
+
 			if (
 				credsString !== `st-${poolName}`
 				&& credsString !== `tr-${poolName}`
@@ -110,7 +113,10 @@ export const shutdown = async (options?: { poolName?: string; }): Promise<void> 
 			poolNames.push(credsString);
 		}
 	} else {
-		for (const [credsString, pool] of pools) {
+		for (const entry of pools) {
+			const credsString = entry[0];
+			const pool = entry[1];
+
 			poolShutdowns.push(pool.end());
 			poolNames.push(credsString);
 		}

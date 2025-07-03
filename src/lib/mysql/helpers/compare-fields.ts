@@ -23,7 +23,10 @@ export const compareFields = (
 	const queryArray: Types.TField[] = [];
 	const values: unknown[] = [];
 
-	for (const [key, value] of Object.entries(params)) {
+	for (const entry of Object.entries(params)) {
+		const key = entry[0];
+		const value = entry[1];
+
 		if (value === null) {
 			queryArray.push({ key: `${key} IS NULL`, operator: "$withoutParameters" });
 		} else if (typeof value === "object") {
@@ -66,7 +69,10 @@ export const compareFields = (
 		for (const params of paramsOr) {
 			const queryOrArrayLocal: Types.TField[] = [];
 
-			for (const [key, value] of Object.entries(params)) {
+			for (const entry of Object.entries(params)) {
+				const key = entry[0];
+				const value = entry[1];
+
 				if (value === null) {
 					queryOrArrayLocal.push({ key: `${key} IS NULL`, operator: "$withoutParameters" });
 				} else if (typeof value === "object") {

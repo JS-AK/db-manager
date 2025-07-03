@@ -534,7 +534,10 @@ export class QueryHandler {
 
 		this.#dataSourceRaw = dataPrepared;
 
-		const [firstClause, fromClause] = this.#mainQuery.split(" FROM ");
+		const clauses = this.#mainQuery.split(" FROM ");
+
+		const firstClause = clauses[0];
+		const fromClause = clauses[1];
 
 		if (fromClause) {
 			this.#mainQuery = `${firstClause} FROM ${this.#dataSourceRaw}`;
@@ -740,7 +743,9 @@ export class QueryHandler {
 				const operatorFunction = Helpers.operatorMappings.get(e.operator);
 
 				if (operatorFunction) {
-					const [text, orderNumber] = operatorFunction(e, this.#valuesOrder);
+					const operatorFunctionResult = operatorFunction(e, this.#valuesOrder);
+					const text = operatorFunctionResult[0];
+					const orderNumber = operatorFunctionResult[1];
 
 					this.#valuesOrder = orderNumber;
 
@@ -770,7 +775,9 @@ export class QueryHandler {
 					const operatorFunction = Helpers.operatorMappings.get(e.operator);
 
 					if (operatorFunction) {
-						const [text, orderNumber] = operatorFunction(e, this.#valuesOrder);
+						const operatorFunctionResult = operatorFunction(e, this.#valuesOrder);
+						const text = operatorFunctionResult[0];
+						const orderNumber = operatorFunctionResult[1];
 
 						this.#valuesOrder = orderNumber;
 
@@ -948,7 +955,9 @@ export class QueryHandler {
 				const operatorFunction = Helpers.operatorMappings.get(e.operator);
 
 				if (operatorFunction) {
-					const [text, orderNumber] = operatorFunction(e, this.#valuesOrder);
+					const operatorFunctionResult = operatorFunction(e, this.#valuesOrder);
+					const text = operatorFunctionResult[0];
+					const orderNumber = operatorFunctionResult[1];
 
 					this.#valuesOrder = orderNumber;
 
@@ -978,7 +987,9 @@ export class QueryHandler {
 					const operatorFunction = Helpers.operatorMappings.get(e.operator);
 
 					if (operatorFunction) {
-						const [text, orderNumber] = operatorFunction(e, this.#valuesOrder);
+						const operatorFunctionResult = operatorFunction(e, this.#valuesOrder);
+						const text = operatorFunctionResult[0];
+						const orderNumber = operatorFunctionResult[1];
 
 						this.#valuesOrder = orderNumber;
 
