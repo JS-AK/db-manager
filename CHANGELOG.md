@@ -1,3 +1,11 @@
+## [3.43.1](https://github.com/JS-AK/db-manager/compare/v3.43.0...v3.43.1) (2025-07-03)
+
+
+### Bug Fixes
+
+* removed array destructuring at lib core ([7050009](https://github.com/JS-AK/db-manager/commit/7050009acd2fbb7d10017561233dea1969dd7e07))
+* updated jekyll-gh-pages.yml ([67b48da](https://github.com/JS-AK/db-manager/commit/67b48da15fa3d5767c1313bc334c74f90c13ad3a))
+
 # [3.43.0](https://github.com/JS-AK/db-manager/compare/v3.42.2...v3.43.0) (2025-02-09)
 
 
