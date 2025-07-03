@@ -318,7 +318,8 @@ export class BaseModel<const T extends readonly string[] = readonly string[]> {
 	async deleteOneByPk<T>(primaryKey: T): Promise<T | null> {
 		const sql = this.compareQuery.deleteOneByPk(primaryKey);
 
-		const { rows: [entity] } = await this.#executeSql(sql);
+		const { rows } = await this.#executeSql(sql);
+		const entity = rows[0];
 
 		if (!entity) return null;
 
@@ -353,9 +354,9 @@ export class BaseModel<const T extends readonly string[] = readonly string[]> {
 
 	async getCountByPks<T>(pks: T[]): Promise<number> {
 		const sql = this.compareQuery.getCountByPks(pks);
-		const { rows: [entity] } = await this.#executeSql(sql);
+		const { rows } = await this.#executeSql(sql);
 
-		return Number(entity?.count) || 0;
+		return Number(rows[0]?.count) || 0;
 	}
 
 	async getCountByPksAndParams<T>(
@@ -363,16 +364,16 @@ export class BaseModel<const T extends readonly string[] = readonly string[]> {
 		params: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
 	) {
 		const sql = this.compareQuery.getCountByPksAndParams(pks, params);
-		const { rows: [entity] } = await this.#executeSql(sql);
+		const { rows } = await this.#executeSql(sql);
 
-		return Number(entity?.count) || 0;
+		return Number(rows[0]?.count) || 0;
 	}
 
 	async getCountByParams(params: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; }) {
 		const sql = this.compareQuery.getCountByParams(params);
-		const { rows: [entity] } = await this.#executeSql(sql);
+		const { rows } = await this.#executeSql(sql);
 
-		return Number(entity?.count) || 0;
+		return Number(rows[0]?.count) || 0;
 	}
 
 	async getOneByParams<T extends pg.QueryResultRow>(
@@ -380,16 +381,16 @@ export class BaseModel<const T extends readonly string[] = readonly string[]> {
 		selected = ["*"],
 	) {
 		const sql = this.compareQuery.getOneByParams(params, selected);
-		const { rows: [entity] } = await this.#executeSql<T>(sql);
+		const { rows } = await this.#executeSql<T>(sql);
 
-		return entity;
+		return rows[0];
 	}
 
 	async getOneByPk<T>(pk: T) {
 		const sql = this.compareQuery.getOneByPk(pk);
-		const { rows: [entity] } = await this.#executeSql(sql);
+		const { rows } = await this.#executeSql(sql);
 
-		return entity;
+		return rows[0];
 	}
 
 	async save<T extends pg.QueryResultRow>(
@@ -397,9 +398,9 @@ export class BaseModel<const T extends readonly string[] = readonly string[]> {
 		saveOptions?: { returningFields?: string[]; },
 	) {
 		const sql = this.compareQuery.save(recordParams, saveOptions);
-		const { rows: [entity] } = await this.#executeSql<T>(sql);
+		const { rows } = await this.#executeSql<T>(sql);
 
-		return entity;
+		return rows[0];
 	}
 
 	async updateByParams(
@@ -418,9 +419,9 @@ export class BaseModel<const T extends readonly string[] = readonly string[]> {
 		updateOptions?: { returningFields?: string[]; },
 	) {
 		const sql = this.compareQuery.updateOneByPk(primaryKeyValue, updateFields, updateOptions);
-		const { rows: [entity] } = await this.#executeSql<Q>(sql);
+		const { rows } = await this.#executeSql<Q>(sql);
 
-		return entity;
+		return rows[0];
 	}
 
 	/**
@@ -475,7 +476,7 @@ export class BaseModel<const T extends readonly string[] = readonly string[]> {
 			const k = [];
 			const headers = new Set();
 
-			const [example] = paramsRaw;
+			const example = paramsRaw[0];
 
 			if (!example) throw new Error("Invalid parameters");
 

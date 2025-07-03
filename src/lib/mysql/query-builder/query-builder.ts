@@ -607,9 +607,9 @@ export class QueryBuilder {
 	async execute<T>(): Promise<T extends mysql.ResultSetHeader ? T : T[]> {
 		const sql = this.compareQuery();
 
-		const [rows] = await this.#executeSql<T extends mysql.ResultSetHeader ? T : T & mysql.RowDataPacket>(sql);
+		const result = await this.#executeSql<T extends mysql.ResultSetHeader ? T : T & mysql.RowDataPacket>(sql);
 
-		return rows as T extends mysql.ResultSetHeader ? T : T[];
+		return result[0] as T extends mysql.ResultSetHeader ? T : T[];
 	}
 
 	/**
@@ -628,9 +628,9 @@ export class QueryBuilder {
 		data: string,
 		values?: unknown[],
 	): Promise<T extends mysql.ResultSetHeader ? T : T[]> {
-		const [rows] = await this.#executeSql<T extends mysql.ResultSetHeader ? T : T & mysql.RowDataPacket>({ query: data, values });
+		const result = await this.#executeSql<T extends mysql.ResultSetHeader ? T : T & mysql.RowDataPacket>({ query: data, values });
 
-		return rows as T extends mysql.ResultSetHeader ? T : T[];
+		return result[0] as T extends mysql.ResultSetHeader ? T : T[];
 	}
 
 	/**

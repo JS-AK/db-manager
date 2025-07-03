@@ -1,16 +1,18 @@
+# Sidebar
+
 - MySQL
-    - [Migration System](mysql-migration-system)
-    - [Domain model (JS)](mysql-domain-model-js)
-    - [Domain model (TS)](mysql-domain-model-ts)
+  - [Migration System](mysql-migration-system)
+  - [Domain model (JS)](mysql-domain-model-js)
+  - [Domain model (TS)](mysql-domain-model-ts)
 - PostgreSQL
-    - [Domain model (JS)](postgresql-domain-model-js)
-    - [Domain model (TS)](postgresql-domain-model-ts)
-    - [Query builder (JS)](postgresql-query-builder-js)
-    - [Query builder (TS)](postgresql-query-builder-ts)
-    - [Transactions (JS)](postgresql-transactions-js)
-    - [Transactions (TS)](postgresql-transactions-ts)
-    - [Migration System](postgresql-migration-system)
-    - [Conditional clause](postgresql-conditional-clause)
+  - [Domain model (JS)](postgresql-domain-model-js)
+  - [Domain model (TS)](postgresql-domain-model-ts)
+  - [Query builder (JS)](postgresql-query-builder-js)
+  - [Query builder (TS)](postgresql-query-builder-ts)
+  - [Transactions (JS)](postgresql-transactions-js)
+  - [Transactions (TS)](postgresql-transactions-ts)
+  - [Migration System](postgresql-migration-system)
+  - [Conditional clause](postgresql-conditional-clause)
 - [Changelog](changelog.md)
 - **Links**
 - [![Github](assets/img/github.svg)Github](https://github.com/JS-AK/db-manager)

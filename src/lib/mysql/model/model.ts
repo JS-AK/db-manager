@@ -342,16 +342,16 @@ export class BaseModel<const T extends readonly string[] = readonly string[]> {
 		order?: { orderBy: string; ordering: SharedTypes.TOrdering; }[],
 	): Promise<T[]> {
 		const sql = this.compareQuery.getArrByParams(params, selected, pagination, order);
-		const [rows] = await this.#executeSql <T & mysql.RowDataPacket>(sql);
+		const result = await this.#executeSql <T & mysql.RowDataPacket>(sql);
 
-		return rows as T[];
+		return result[0] as T[];
 	}
 
 	async getCountByPks<T>(pks: T[]): Promise<number> {
 		const sql = this.compareQuery.getCountByPks(pks);
-		const [[entity]] = await this.#executeSql<{ count: number; } & mysql.RowDataPacket>(sql);
+		const result = await this.#executeSql<{ count: number; } & mysql.RowDataPacket>(sql);
 
-		return Number(entity?.count) || 0;
+		return Number(result[0][0]?.count) || 0;
 	}
 
 	async getCountByPksAndParams<T>(
@@ -359,16 +359,16 @@ export class BaseModel<const T extends readonly string[] = readonly string[]> {
 		params: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
 	): Promise<number> {
 		const sql = this.compareQuery.getCountByPksAndParams(pks, params);
-		const [[entity]] = await this.#executeSql<{ count: number; } & mysql.RowDataPacket>(sql);
+		const result = await this.#executeSql<{ count: number; } & mysql.RowDataPacket>(sql);
 
-		return Number(entity?.count) || 0;
+		return Number(result[0][0]?.count) || 0;
 	}
 
 	async getCountByParams(params: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; }): Promise<number> {
 		const sql = this.compareQuery.getCountByParams(params);
-		const [[entity]] = await this.#executeSql<{ count: number; } & mysql.RowDataPacket>(sql);
+		const result = await this.#executeSql<{ count: number; } & mysql.RowDataPacket>(sql);
 
-		return Number(entity?.count) || 0;
+		return Number(result[0][0]?.count) || 0;
 	}
 
 	async getOneByParams<T>(
@@ -376,16 +376,16 @@ export class BaseModel<const T extends readonly string[] = readonly string[]> {
 		selected = ["*"],
 	): Promise<T | undefined> {
 		const sql = this.compareQuery.getOneByParams(params, selected);
-		const [[entity]] = await this.#executeSql <T & mysql.RowDataPacket>(sql);
+		const result = await this.#executeSql <T & mysql.RowDataPacket>(sql);
 
-		return entity as T;
+		return result[0][0] as T;
 	}
 
 	async getOneByPk<T, R>(pk: T): Promise<R | undefined> {
 		const sql = this.compareQuery.getOneByPk(pk);
-		const [[entity]] = await this.#executeSql<R & mysql.RowDataPacket>(sql);
+		const result = await this.#executeSql<R & mysql.RowDataPacket>(sql);
 
-		return entity as R | undefined;
+		return result[0][0] as R | undefined;
 	}
 
 	async save(
@@ -393,13 +393,13 @@ export class BaseModel<const T extends readonly string[] = readonly string[]> {
 	): Promise<number> {
 		const sql = this.compareQuery.save(recordParams);
 
-		const [rows] = await this.#executeSql<mysql.ResultSetHeader>(sql);
+		const result = await this.#executeSql<mysql.ResultSetHeader>(sql);
 
 		if (!this.isPKAutoIncremented) {
 			return -1;
 		}
 
-		return rows.insertId;
+		return result[0]?.insertId || -1;
 	}
 
 	async updateByParams(
@@ -473,7 +473,7 @@ export class BaseModel<const T extends readonly string[] = readonly string[]> {
 			const k = [];
 			const headers = new Set();
 
-			const [example] = paramsRaw;
+			const example = paramsRaw[0];
 
 			if (!example) throw new Error("Invalid parameters");
 

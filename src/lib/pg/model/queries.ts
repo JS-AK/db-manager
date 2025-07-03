@@ -61,7 +61,10 @@ export default {
 		const intoFields = [];
 		const valuesFields = [];
 
-		for (const [idx, field] of fields.entries()) {
+		for (const entry of fields.entries()) {
+			const idx = entry[0];
+			const field = entry[1];
+
 			intoFields.push(field);
 			valuesFields.push(`$${idx + 1}`);
 		}

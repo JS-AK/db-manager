@@ -54,7 +54,9 @@ export const getFieldsToSearch = (
 			const operatorFunction = operatorMappings.get(e.operator);
 
 			if (operatorFunction) {
-				const [text, orderNumber] = operatorFunction(e, res.orderNumber);
+				const operatorFunctionResult = operatorFunction(e, res.orderNumber);
+				const text = operatorFunctionResult[0];
+				const orderNumber = operatorFunctionResult[1];
 
 				res.orderNumber = orderNumber;
 
@@ -82,7 +84,9 @@ export const getFieldsToSearch = (
 				const operatorFunction = operatorMappings.get(e.operator);
 
 				if (operatorFunction) {
-					const [text, orderNumber] = operatorFunction(e, res.orderNumber);
+					const operatorFunctionResult = operatorFunction(e, res.orderNumber);
+					const text = operatorFunctionResult[0];
+					const orderNumber = operatorFunctionResult[1];
 
 					res.orderNumber = orderNumber;
 

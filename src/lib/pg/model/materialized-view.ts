@@ -319,9 +319,9 @@ export class BaseMaterializedView {
 	 */
 	async getCountByParams(params: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; }): Promise<number> {
 		const sql = this.compareQuery.getCountByParams(params);
-		const { rows: [entity] } = await this.executeSql<{ count: string; }>(sql);
+		const { rows } = await this.executeSql<{ count: string; }>(sql);
 
-		return Number(entity?.count) || 0;
+		return Number(rows[0]?.count) || 0;
 	}
 
 	/**
@@ -339,9 +339,9 @@ export class BaseMaterializedView {
 		selected: string[] = ["*"],
 	): Promise<T | undefined> {
 		const sql = this.compareQuery.getOneByParams(params, selected);
-		const { rows: [entity] } = await this.#executeSql<T>(sql);
+		const { rows } = await this.#executeSql<T>(sql);
 
-		return entity;
+		return rows[0];
 	}
 
 	/**
