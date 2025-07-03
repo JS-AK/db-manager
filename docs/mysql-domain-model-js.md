@@ -1,4 +1,4 @@
-# MySQL core
+# MySQL Domain model
 
 ## Overview
 
@@ -12,7 +12,7 @@ Before using the MySQL Core module, ensure the following steps are completed:
 
 2. **Apply Migrations**: [(MySQL Migration System)](mysql-migration-system) Execute necessary database migrations to prepare the database schema for the application. This includes creating tables, defining indexes, and setting up any initial data.
 
-## Usage Example
+## Usage
 
 To effectively use the data-access-layer, it's recommended to maintain the following file structure:
 
@@ -28,9 +28,9 @@ data-access-layer
 ```
 
 ### data-access-layer/index.js
+
 ```javascript
 import { MYSQL } from "@js-ak/db-manager";
-
 import * as Models from "./models/index.js";
 
 export const init = (config) => {
@@ -48,12 +48,14 @@ export const shutdown = async (config) => {
 ```
 
 ### data-access-layer/models/index.js
+
 ```javascript
 export * as Entity from "./entity/index.js";
 
 ```
 
 ### data-access-layer/models/entity/index.js
+
 ```javascript
 export * from "./domain.js";
 export * from "./model.js";
@@ -61,9 +63,9 @@ export * from "./model.js";
 ```
 
 ### data-access-layer/models/entity/domain.js
+
 ```javascript
 import { MYSQL } from "@js-ak/db-manager";
-
 import { Model } from "./model.js";
 
 export class Domain extends MYSQL.BaseDomain {
@@ -75,6 +77,7 @@ export class Domain extends MYSQL.BaseDomain {
 ```
 
 ### data-access-layer/models/entity/model.js
+
 ```javascript
 import { MYSQL } from "@js-ak/db-manager";
 
@@ -96,6 +99,7 @@ export class Model extends MYSQL.BaseModel {
 ```
 
 ### External use of data access layer
+
 ```javascript
 import { init, shutdown } from "./data-access-layer/index.js";
 

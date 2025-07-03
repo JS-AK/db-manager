@@ -28,9 +28,9 @@ data-access-layer
 ```
 
 ### data-access-layer/index.js
+
 ```javascript
 import { PG } from "@js-ak/db-manager";
-
 import * as Models from "./models/index.js";
 
 export const init = (config) => {
@@ -56,12 +56,14 @@ export const shutdown = async (config) => {
 ```
 
 ### data-access-layer/models/index.js
+
 ```javascript
 export * as Entity from "./entity/index.js";
 
 ```
 
 ### data-access-layer/models/entity/index.js
+
 ```javascript
 export * from "./domain.js";
 export * from "./model.js";
@@ -69,9 +71,9 @@ export * from "./model.js";
 ```
 
 ### data-access-layer/models/entity/domain.js
+
 ```javascript
 import { PG } from "@js-ak/db-manager";
-
 import { Model } from "./model.js";
 
 export class Domain extends PG.BaseDomain {
@@ -83,6 +85,7 @@ export class Domain extends PG.BaseDomain {
 ```
 
 ### data-access-layer/models/entity/model.js
+
 ```javascript
 import { PG } from "@js-ak/db-manager";
 
@@ -104,6 +107,7 @@ export class Model extends PG.BaseModel {
 ```
 
 ### External use of data access layer
+
 ```javascript
 import { init, shutdown } from "./data-access-layer/index.js";
 
@@ -158,34 +162,43 @@ The `BaseDomain` class encapsulates core methods for performing database operati
 - **createOne(create)**: Creates a new record with the provided data.
 
   Example Usage:
+
 ```javascript
 const entity = await repository.entity.createOne({
     first_name: "Foo",
     last_name: "Bar",
 });
 ```
+
 Equivalent in SQL
+
 ```sql
 INSERT INTO entities (first_name, last_name)
 VALUES ($1, $2)
 RETURNING *;
 ```
+
 - **deleteAll()**: Deletes all records from the `BaseDomain` assigned table.
 
   Example Usage:
+
 ```javascript
 await repository.entity.deleteAll();
 ```
+
 Equivalent in SQL
+
 ```sql
 DELETE
 FROM entities;
 ```
+
 - **deleteByParams(options)**: Deletes records based on the specified parameters.
 
 Options see at [conditional clause](postgresql-conditional-clause)
 
   Example Usage:
+
 ```javascript
 await repository.entity.deleteByParams({
     params: { first_name: "Foo" },
@@ -195,30 +208,38 @@ await repository.entity.deleteByParams({
     ],
 });
 ```
+
 Equivalent in SQL
+
 ```sql
 DELETE
 FROM entities
 WHERE first_name = $1 AND (last_name = $2 OR last_name = $3);
 ```
+
 - **deleteOneByPk(pk)**: Deletes a record by its primary key.
 
   Example Usage:
+
 ```javascript
 await repository.entity.deleteOneByPk("0c383fcc-d6af-4be3-a906-d956e9dc10e8");
 ```
+
 Equivalent in SQL
+
 ```sql
 DELETE
 FROM entities
 WHERE id = $1
 RETURNING id;
 ```
+
 - **getArrByParams(options)**: Retrieves an array of records based on the specified parameters.
 
 Options see at [conditional clause](postgresql-conditional-clause)
 
   Example Usage:
+
 ```javascript
 await repository.entity.getArrByParams({
     params: { first_name: "Foo" },
@@ -229,29 +250,37 @@ await repository.entity.getArrByParams({
     selected: ["id"],
 });
 ```
+
 Equivalent in SQL
+
 ```sql
 SELECT id
 FROM entities
 WHERE first_name = $1 AND (last_name = $2 OR last_name = $3);
 ```
+
 - **getCountByPks(pks)**: Gets the count of records with the specified primary keys.
 
   Example Usage:
+
 ```javascript
 await repository.entity.getCountByPks(["0c383fcc-d6af-4be3-a906-d956e9dc10e8"]);
 ```
+
 Equivalent in SQL
+
 ```sql
 SELECT COUNT(*)
 FROM entities
 WHERE id = ANY ($1);
 ```
+
 - **getCountByPksAndParams(pks, options)**: Gets the count of records based on both specified primary keys and parameters.
 
 Options see at [conditional clause](postgresql-conditional-clause)
 
   Example Usage:
+
 ```javascript
 await repository.entity.getCountByPksAndParams(["0c383fcc-d6af-4be3-a906-d956e9dc10e8"],{
     params: { first_name: "Foo" },
@@ -261,17 +290,21 @@ await repository.entity.getCountByPksAndParams(["0c383fcc-d6af-4be3-a906-d956e9d
     ],
 });
 ```
+
 Equivalent in SQL
+
 ```sql
 SELECT COUNT(*)
 FROM entities
 WHERE id = ANY ($1) AND first_name = $2 AND (last_name = $3 OR last_name = $4);
 ```
+
 - **getCountByParams(options)**: Gets the count of records based on the specified parameters.
 
 Options see at [conditional clause](postgresql-conditional-clause)
 
   Example Usage:
+
 ```javascript
 await repository.entity.getCountByParams({
     params: { first_name: "Foo" },
@@ -281,17 +314,21 @@ await repository.entity.getCountByParams({
     ],
 });
 ```
+
 Equivalent in SQL
+
 ```sql
 SELECT COUNT(*)
 FROM entities
 WHERE first_name = $1 AND (last_name = $2 OR last_name = $3);
 ```
+
 - **getOneByParams(options)**: Retrieves a single record based on the specified parameters.
 
 Options see at [conditional clause](postgresql-conditional-clause)
 
   Example Usage:
+
 ```javascript
 await repository.entity.getOneByParams({
     params: { first_name: "Foo" },
@@ -302,29 +339,37 @@ await repository.entity.getOneByParams({
     selected: ["id"],
 });
 ```
+
 Equivalent in SQL
+
 ```sql
 SELECT id
 FROM entities
 WHERE first_name = $1 AND (last_name = $2 OR last_name = $3);
 ```
+
 - **getOneByPk(pk)**: Retrieves a single record by its primary key.
 
   Example Usage:
+
 ```javascript
 await repository.entity.getOneByPk("0c383fcc-d6af-4be3-a906-d956e9dc10e8");
 ```
+
 Equivalent in SQL
+
 ```sql
 SELECT *
 FROM entities
 WHERE id = $1;
 ```
+
 - **updateByParams(options, update)**: Updates records based on the specified parameters.
 
 Options see at [conditional clause](postgresql-conditional-clause)
 
   Example Usage:
+
 ```javascript
 await repository.entity.updateOneByPk(
     {
@@ -340,23 +385,29 @@ await repository.entity.updateOneByPk(
     }
 );
 ```
+
 Equivalent in SQL
+
 ```sql
 UPDATE entities
 SET first_name = $1, last_name = $2
 WHERE first_name = $3 AND (last_name = $4 OR last_name = $5)
 RETURNING *;
 ```
+
 - **updateOneByPk(pk, update)**: Updates a record by its primary key.
 
   Example Usage:
+
 ```javascript
 await repository.entity.updateOneByPk("0c383fcc-d6af-4be3-a906-d956e9dc10e8", {
     first_name: "Foo",
     last_name: "Bar",
 });
 ```
+
 Equivalent in SQL
+
 ```sql
 UPDATE entities
 SET first_name = $2, last_name = $3
