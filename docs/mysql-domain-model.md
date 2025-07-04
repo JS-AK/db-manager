@@ -16,7 +16,7 @@ Before using the MySQL Core module, ensure the following steps are completed:
 
 To effectively use the data-access-layer, it's recommended to maintain the following file structure:
 
-```
+```text
 data-access-layer
     ├──────── models     # Directory for storing database models
     │  ├───── entity     # Directory for the entity model
@@ -27,9 +27,8 @@ data-access-layer
     └──────── index.js   # Entry point for the data access layer
 ```
 
-### data-access-layer/index.js
-
 ```javascript
+// data-access-layer/index.js
 import { MYSQL } from "@js-ak/db-manager";
 import * as Models from "./models/index.js";
 
@@ -47,24 +46,19 @@ export const shutdown = async (config) => {
 
 ```
 
-### data-access-layer/models/index.js
-
 ```javascript
+// data-access-layer/models/index.js
 export * as Entity from "./entity/index.js";
-
 ```
 
-### data-access-layer/models/entity/index.js
-
 ```javascript
+// data-access-layer/models/entity/index.js
 export * from "./domain.js";
 export * from "./model.js";
-
 ```
 
-### data-access-layer/models/entity/domain.js
-
 ```javascript
+// data-access-layer/models/entity/domain.js
 import { MYSQL } from "@js-ak/db-manager";
 import { Model } from "./model.js";
 
@@ -76,9 +70,8 @@ export class Domain extends MYSQL.BaseDomain {
 
 ```
 
-### data-access-layer/models/entity/model.js
-
 ```javascript
+// data-access-layer/models/entity/model.js
 import { MYSQL } from "@js-ak/db-manager";
 
 export class Model extends MYSQL.BaseModel {
@@ -141,5 +134,4 @@ if (one) {
 }
 
 await shutdown(creds);
-
 ```

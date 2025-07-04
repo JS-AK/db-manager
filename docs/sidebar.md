@@ -1,16 +1,13 @@
 - MySQL
   - [Migration System](mysql-migration-system)
-  - [Domain model (JS)](mysql-domain-model-js)
-  - [Domain model (TS)](mysql-domain-model-ts)
+  - [Domain model](mysql-domain-model)
 - PostgreSQL
-  - [Domain model (JS)](postgresql-domain-model-js)
-  - [Domain model (TS)](postgresql-domain-model-ts)
-  - [Query builder (JS)](postgresql-query-builder-js)
-  - [Query builder (TS)](postgresql-query-builder-ts)
-  - [Transactions (JS)](postgresql-transactions-js)
-  - [Transactions (TS)](postgresql-transactions-ts)
+  - [Domain model](postgresql-domain-model)
+  - [Query builder](postgresql-query-builder)
+  - [Transactions](postgresql-transactions)
   - [Migration System](postgresql-migration-system)
   - [Conditional clause](postgresql-conditional-clause)
+- [RepositoryManager](repository-manager)
 - [Changelog](changelog.md)
 - **Links**
 - [![Github](assets/img/github.svg)Github](https://github.com/JS-AK/db-manager)

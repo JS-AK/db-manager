@@ -3,6 +3,7 @@
 Transactions in databases are vital for ensuring data integrity and consistency, especially when dealing with multiple operations that need to be executed as a single unit. Here's an examples of using transactions in JavaScript with a PostgreSQL database:
 
 ## Pure SQL example
+
 ```javascript
 import { PG } from "@js-ak/db-manager";
 
@@ -58,6 +59,7 @@ await PG.BaseModel.removeTransactionPool(creds);
 ```
 
 ## Query builder example
+
 ```javascript
 import { PG } from "@js-ak/db-manager";
 
