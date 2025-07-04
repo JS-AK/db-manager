@@ -14,79 +14,75 @@ Before using the PostgreSQL Core module, ensure the following steps are complete
 
 ## Usage Example
 
-To effectively use the data-access-layer, it's recommended to maintain the following file structure:
+To effectively use the data-access-layer, it"s recommended to maintain the following file structure:
 
 ```text
 data-access-layer
     ├──────── models     # Directory for storing database models
     │  ├───── entity     # Directory for the entity model
-    │  │  ├── domain.ts  # Contains the domain logic for the entity model
-    │  │  ├── model.ts   # Contains the database model definition for the entity
-    │  │  └── index.ts   # Aggregates exports from domain.ts and model.ts for entity
-    │  └───── index.ts   # Aggregates exports for all models
-    └──────── index.ts   # Entry point for the data access layer
+    │  │  ├── domain.js  # Contains the domain logic for the entity model
+    │  │  ├── model.js   # Contains the database model definition for the entity
+    │  │  └── index.js   # Aggregates exports from domain.js and model.js for entity
+    │  └───── index.js   # Aggregates exports for all models
+    └──────── index.js   # Entry point for the data access layer
 ```
 
-### data-access-layer/index.ts
-
-```typescript
+```javascript
+// data-access-layer/index.js
 import { PG } from "@js-ak/db-manager";
-import * as Models from "./models/index";
+import * as Models from "./models/index.js";
 
-export const init = (config: PG.ModelTypes.TDBCreds) => {
+export const init = (config) => {
     const repository = {
         entity: new Models.Entity.Domain(config),
     };
 
-    PG.BaseModel.getStandardPool(config).on("error", (error: Error) => {
+    PG.BaseModel.getStandardPool(config).on("error", (error) => {
         console.error(error.message)
     });
 
     PG.BaseModel.getStandardPool(config).on("connect", (client) => {
-        client.on("error", (error: Error) => { console.error(error.message) });
+        client.on("error", (error) => { console.error(error.message) });
     });
 
     return { repository };
 };
 
-export const shutdown = async (config: PG.ModelTypes.TDBCreds) => {
+export const shutdown = async (config) => {
   await PG.BaseModel.removeStandardPool(config);
 }
 ```
 
-### data-access-layer/models/index.ts
-
-```typescript
-export * as Entity from "./entity/index";
+```javascript
+// data-access-layer/models/index.js
+export * as Entity from "./entity/index.js";
 ```
 
-### data-access-layer/models/entity/index.ts
-
-```typescript
-export * from "./domain";
-export * from "./model";
+```javascript
+// data-access-layer/models/entity/index.js
+export * from "./domain.js";
+export * from "./model.js";
 ```
 
-### data-access-layer/models/entity/domain.ts
-
-```typescript
+```javascript
+// data-access-layer/models/entity/domain.js
 import { PG } from "@js-ak/db-manager";
-import { Model } from "./model";
+import { Model } from "./model.js";
 
 export class Domain extends PG.BaseDomain {
-    constructor(creds: PG.ModelTypes.TDBCreds) {
+    constructor(creds) {
         super({ model: new Model(creds) });
     }
 }
+
 ```
 
-### data-access-layer/models/entity/model.ts
-
-```typescript
+```javascript
+// data-access-layer/models/entity/model.js
 import { PG } from "@js-ak/db-manager";
 
 export class Model extends PG.BaseModel {
-    constructor(creds: PG.ModelTypes.TDBCreds) {
+    constructor(creds) {
         super(
             {
                 createField: { title: "created_at", type: "timestamp" },
@@ -99,15 +95,15 @@ export class Model extends PG.BaseModel {
         );
     }
 }
+
 ```
 
 ### External use of data access layer
 
-```typescript
-import { PG } from "@js-ak/db-manager";
-import { init, shutdown } from "./data-access-layer/index";
+```javascript
+import { init, shutdown } from "./data-access-layer/index.js";
 
-const creds: PG.ModelTypes.TDBCreds = {
+const creds = {
     database: "database",
     host: "localhost",
     password: "password",
@@ -157,35 +153,46 @@ The `BaseDomain` class encapsulates core methods for performing database operati
 - **createOne(create)**: Creates a new record with the provided data.
 
   Example Usage:
-```typescript
+
+```javascript
 const entity = await repository.entity.createOne({
     first_name: "Foo",
     last_name: "Bar",
 });
 ```
+
 Equivalent in SQL
+
 ```sql
 INSERT INTO entities (first_name, last_name)
 VALUES ($1, $2)
 RETURNING *;
+[1] "Foo"
+[2] "Bar"
 ```
+
 - **deleteAll()**: Deletes all records from the `BaseDomain` assigned table.
 
   Example Usage:
-```typescript
+
+```javascript
 await repository.entity.deleteAll();
 ```
+
 Equivalent in SQL
+
 ```sql
 DELETE
 FROM entities;
 ```
+
 - **deleteByParams(options)**: Deletes records based on the specified parameters.
 
 Options see at [conditional clause](postgresql-conditional-clause)
 
   Example Usage:
-```typescript
+
+```javascript
 await repository.entity.deleteByParams({
     params: { first_name: "Foo" },
     paramsOr: [
@@ -194,32 +201,43 @@ await repository.entity.deleteByParams({
     ],
 });
 ```
+
 Equivalent in SQL
+
 ```sql
 DELETE
 FROM entities
-WHERE first_name = $1
-  AND (last_name = $2 OR last_name = $3);
+WHERE first_name = $1 AND (last_name = $2 OR last_name = $3);
+[1] "Foo"
+[2] "Bar"
+[3] "Baz"
 ```
+
 - **deleteOneByPk(pk)**: Deletes a record by its primary key.
 
   Example Usage:
-```typescript
-await repository.entity.deleteOneByPk("0c383fcc-d6af-4be3-a906-d956e9dc10e8");
+
+```javascript
+await repository.entity.deleteOneByPk("1");
 ```
+
 Equivalent in SQL
+
 ```sql
 DELETE
 FROM entities
 WHERE id = $1
 RETURNING id;
+[1] "1"
 ```
+
 - **getArrByParams(options)**: Retrieves an array of records based on the specified parameters.
 
 Options see at [conditional clause](postgresql-conditional-clause)
 
   Example Usage:
-```typescript
+
+```javascript
 await repository.entity.getArrByParams({
     params: { first_name: "Foo" },
     paramsOr: [
@@ -229,33 +247,43 @@ await repository.entity.getArrByParams({
     selected: ["id"],
 });
 ```
+
 Equivalent in SQL
+
 ```sql
 SELECT id
 FROM entities
 WHERE first_name = $1 AND (last_name = $2 OR last_name = $3);
+[1] "Foo"
+[2] "Bar"
+[3] "Baz"
 ```
+
 - **getCountByPks(pks)**: Gets the count of records with the specified primary keys.
 
   Example Usage:
-```typescript
-await repository.entity.getCountByPks(["0c383fcc-d6af-4be3-a906-d956e9dc10e8"]);
+
+```javascript
+await repository.entity.getCountByPks(["1"]);
 ```
+
 Equivalent in SQL
+
 ```sql
 SELECT COUNT(*)
 FROM entities
 WHERE id = ANY ($1);
+[1] ["1"]
 ```
+
 - **getCountByPksAndParams(pks, options)**: Gets the count of records based on both specified primary keys and parameters.
 
 Options see at [conditional clause](postgresql-conditional-clause)
 
   Example Usage:
-```typescript
-await repository.entity.getCountByPksAndParams([
-    "0c383fcc-d6af-4be3-a906-d956e9dc10e8"
-], {
+
+```javascript
+await repository.entity.getCountByPksAndParams(["1"],{
     params: { first_name: "Foo" },
     paramsOr: [
         { last_name: "Bar" },
@@ -263,18 +291,26 @@ await repository.entity.getCountByPksAndParams([
     ],
 });
 ```
+
 Equivalent in SQL
+
 ```sql
 SELECT COUNT(*)
 FROM entities
 WHERE id = ANY ($1) AND first_name = $2 AND (last_name = $3 OR last_name = $4);
+[1] ["1"]
+[2] "Foo"
+[3] "Bar"
+[4] "Baz"
 ```
+
 - **getCountByParams(options)**: Gets the count of records based on the specified parameters.
 
 Options see at [conditional clause](postgresql-conditional-clause)
 
   Example Usage:
-```typescript
+
+```javascript
 await repository.entity.getCountByParams({
     params: { first_name: "Foo" },
     paramsOr: [
@@ -283,18 +319,25 @@ await repository.entity.getCountByParams({
     ],
 });
 ```
+
 Equivalent in SQL
+
 ```sql
 SELECT COUNT(*)
 FROM entities
 WHERE first_name = $1 AND (last_name = $2 OR last_name = $3);
+[1] "Foo"
+[2] "Bar"
+[3] "Baz"
 ```
+
 - **getOneByParams(options)**: Retrieves a single record based on the specified parameters.
 
 Options see at [conditional clause](postgresql-conditional-clause)
 
   Example Usage:
-```typescript
+
+```javascript
 await repository.entity.getOneByParams({
     params: { first_name: "Foo" },
     paramsOr: [
@@ -304,31 +347,43 @@ await repository.entity.getOneByParams({
     selected: ["id"],
 });
 ```
+
 Equivalent in SQL
+
 ```sql
 SELECT id
 FROM entities
 WHERE first_name = $1 AND (last_name = $2 OR last_name = $3);
+[1] "Foo"
+[2] "Bar"
+[3] "Baz"
 ```
+
 - **getOneByPk(pk)**: Retrieves a single record by its primary key.
 
   Example Usage:
-```typescript
-await repository.entity.getOneByPk("0c383fcc-d6af-4be3-a906-d956e9dc10e8");
+
+```javascript
+await repository.entity.getOneByPk("1");
 ```
+
 Equivalent in SQL
+
 ```sql
 SELECT *
 FROM entities
 WHERE id = $1;
+[1] "1"
 ```
+
 - **updateByParams(options, update)**: Updates records based on the specified parameters.
 
 Options see at [conditional clause](postgresql-conditional-clause)
 
   Example Usage:
-```typescript
-await repository.entity.updateByParams(
+
+```javascript
+await repository.entity.updateOneByPk(
     {
         params: { first_name: "Foo" },
         paramsOr: [
@@ -342,28 +397,42 @@ await repository.entity.updateByParams(
     }
 );
 ```
+
 Equivalent in SQL
+
 ```sql
 UPDATE entities
 SET first_name = $1, last_name = $2
 WHERE first_name = $3 AND (last_name = $4 OR last_name = $5)
 RETURNING *;
+[1] "Foo"
+[2] "Bar"
+[3] "Foo"
+[4] "Bar"
+[5] "Baz"
 ```
+
 - **updateOneByPk(pk, update)**: Updates a record by its primary key.
 
   Example Usage:
-```typescript
-await repository.entity.updateOneByPk("0c383fcc-d6af-4be3-a906-d956e9dc10e8", {
+
+```javascript
+await repository.entity.updateOneByPk("1", {
     first_name: "Foo",
     last_name: "Bar",
 });
 ```
+
 Equivalent in SQL
+
 ```sql
 UPDATE entities
 SET first_name = $2, last_name = $3
 WHERE id = $1
 RETURNING *;
+[1] "1"
+[2] "Foo"
+[3] "Bar"
 ```
 
 ### Compare Query

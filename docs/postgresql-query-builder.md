@@ -16,7 +16,7 @@ Also you can pass optional arguments
 
 ```javascript
 const qb = repository.entity.model.queryBuilder({
-    client, // pg.PoolClient for use query builder in transaction
+    client,    // pg.PoolClient for use query builder in transaction
     tableName, // custom table name for executing queries
 });
 ```
@@ -204,7 +204,7 @@ Construct JOIN query.
 
 ```javascript
 const qb = repository.entity.model.queryBuilder()
-    .innerJoin("INNER JOIN entity_roles er ON er.id = entities.entity_role_id");
+    .rawJoin("INNER JOIN entity_roles er ON er.id = entities.entity_role_id");
 ```
 
 Equivalent in SQL

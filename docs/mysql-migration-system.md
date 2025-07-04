@@ -8,7 +8,7 @@ The migration system manages MySQL database migrations, providing commands for c
 
 To effectively use the migration system, it's recommended to maintain the following file structure:
 
-```
+```text
 migrations
     └── sql # Directory for SQL migration files
 ```
