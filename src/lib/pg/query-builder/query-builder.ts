@@ -1,3 +1,5 @@
+import { Readable } from "node:stream";
+
 import pg from "pg";
 
 import * as DomainTypes from "../domain/types.js";
@@ -5,7 +7,6 @@ import * as Helpers from "../helpers/index.js";
 import * as ModelTypes from "../model/types.js";
 import * as SharedTypes from "../../../shared-types/index.js";
 import { QueryHandler } from "./query-handler.js";
-import { setLoggerAndExecutor } from "../helpers/index.js";
 
 /**
  * A class to build and execute SQL queries using a fluent API.
@@ -20,6 +21,7 @@ export class QueryBuilder {
 	#queryHandler;
 	#logger?: SharedTypes.TLogger;
 	#executeSql;
+	#executeSqlStream: (sql: { query: string; values?: unknown[]; }) => Promise<Readable>;
 
 	#joinTypes: Record<ModelTypes.Join, string> = {
 		CROSS: "CROSS",
@@ -67,12 +69,18 @@ export class QueryBuilder {
 			dataSourceRaw: this.#dataSourceRaw,
 		});
 
-		const preparedOptions = setLoggerAndExecutor(
+		const preparedOptions = Helpers.setLoggerAndExecutor(
+			this.#client,
+			{ isLoggerEnabled, logger },
+		);
+
+		const { executeSqlStream } = Helpers.setStreamExecutor(
 			this.#client,
 			{ isLoggerEnabled, logger },
 		);
 
 		this.#executeSql = preparedOptions.executeSql;
+		this.#executeSqlStream = executeSqlStream;
 		this.#logger = preparedOptions.logger;
 	}
 
@@ -632,6 +640,18 @@ export class QueryBuilder {
 	}
 
 	/**
+	 * Executes the SQL query and returns a readable stream of typed rows.
+	 *
+	 * @typeParam T - The expected shape of each streamed row.
+	 * @returns A readable stream that emits rows of type `T` on the `"data"` event.
+	 */
+	executeQueryStream<T extends pg.QueryResultRow>(): Promise<SharedTypes.ITypedPgStream<T>> {
+		const sql = this.compareQuery();
+
+		return this.#executeSqlStream(sql);
+	}
+
+	/**
 	 * Executes a SQL custom query with specified data and values, and returns the result.
 	 *
 	 * This method executes a SQL query provided as a string with optional parameter values, and returns the result rows.
@@ -648,6 +668,24 @@ export class QueryBuilder {
 		values?: unknown[],
 	): Promise<T[]> {
 		return (await this.#executeSql<T>({ query: data, values: values || [] })).rows;
+	}
+
+	/**
+	 * Executes a raw SQL query with the specified values and returns a readable stream of rows.
+	 *
+	 * @note All previously passed options are ignored.
+	 * @note Use this method for large datasets to avoid loading all data into memory.
+	 *
+	 * @param data - The SQL query string to execute.
+	 * @param [values=[]] - Optional array of values to be used in the query.
+	 *
+	 * @returns A readable stream of result rows.
+	 */
+	executeRawQueryStream<T extends pg.QueryResultRow>(
+		data: string,
+		values?: unknown[],
+	): Promise<SharedTypes.ITypedPgStream<T>> {
+		return this.#executeSqlStream({ query: data, values: values || [] });
 	}
 
 	/**

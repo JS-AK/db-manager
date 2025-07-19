@@ -247,6 +247,30 @@ export class BaseTable<
 		getOneByPk: <T>(pk: T): Types.TCompareQueryResult => this.model.compareQuery.getOneByPk(pk),
 
 		/**
+		 * Constructs a SQL stream query for selecting records based on the provided search parameters.
+		 * This version is optimized for large datasets where streaming is preferred over loading everything into memory.
+		 *
+		 * @param options - The options for retrieving records.
+		 * @param options.params - The search parameters to match records.
+		 * @param [options.paramsOr] - An optional array of search parameters, where at least one must be matched.
+		 * @param [options.selected] - The fields to return for each matched record.
+		 * @param [options.pagination] - The pagination options.
+		 * @param [options.order] - The sorting options.
+		 *
+		 * @returns The SQL query and its parameter values for use with a streaming interface.
+		 */
+		streamArrByParams: <T extends keyof BTG["CoreFields"]>(options: {
+			params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
+			paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>[];
+			selected?: [T, ...T[]];
+			pagination?: SharedTypes.TPagination;
+			order?: {
+				orderBy: Extract<keyof BTG["CoreFields"], string> | (BTG["AdditionalSortingFields"] extends string ? BTG["AdditionalSortingFields"] : never);
+				ordering: SharedTypes.TOrdering;
+			}[];
+		}): Types.TCompareQueryResult => this.model.compareQuery.streamArrByParams({ $and: options.params, $or: options.paramsOr }, options.selected as string[], options.pagination, options.order),
+
+		/**
 		 * Compare query of `Updates records based on the specified search parameters`.
 		 *
 		 * @param queryConditions - The conditions for selecting records to update.
@@ -556,6 +580,41 @@ export class BaseTable<
 		if (!one) return { message: `Not found from ${this.model.tableName}` };
 
 		return { one };
+	}
+
+	/**
+	 * Streams records from the database based on the specified search parameters.
+	 *
+	 * This method returns a readable stream of records that match the given filter conditions.
+	 * Useful for efficiently processing large datasets without loading them entirely into memory.
+	 *
+	 * @param options - The options for retrieving records.
+	 * @param options.params - The search parameters to match records.
+	 * @param [options.paramsOr] - An optional array of search parameters, where at least one must be matched.
+	 * @param [options.selected] - The fields to return for each matched record.
+	 * @param [options.pagination] - The pagination options.
+	 * @param [options.order] - The sorting options.
+	 * @param options.order.orderBy - The field by which to sort the results.
+	 * @param options.order.ordering - The ordering direction (e.g., ASC, DESC).
+	 *
+	 * @returns A promise that resolves to an array of records with the selected fields.
+	 */
+	streamArrByParams<T extends keyof BTG["CoreFields"]>(this: BaseTable<M, BTG>, options: {
+		params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
+		paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>[];
+		selected?: [T, ...T[]];
+		pagination?: SharedTypes.TPagination;
+		order?: {
+			orderBy: Extract<keyof BTG["CoreFields"], string> | (BTG["AdditionalSortingFields"] extends string ? BTG["AdditionalSortingFields"] : never);
+			ordering: SharedTypes.TOrdering;
+		}[];
+	}): Promise<SharedTypes.ITypedPgStream<Pick<BTG["CoreFields"], T>>> {
+		return this.model.streamArrByParams<Pick<BTG["CoreFields"], T>>(
+			{ $and: options.params, $or: options.paramsOr },
+			options.selected as string[],
+			options.pagination,
+			options.order,
+		);
 	}
 
 	/**

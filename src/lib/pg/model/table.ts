@@ -1,3 +1,5 @@
+import { Readable } from "node:stream";
+
 import pg from "pg";
 
 import * as Helpers from "../helpers/index.js";
@@ -7,7 +9,6 @@ import * as Types from "./types.js";
 import * as connection from "../connection.js";
 import { QueryBuilder } from "../query-builder/index.js";
 import queries from "./queries.js";
-import { setLoggerAndExecutor } from "../helpers/index.js";
 
 /**
  * Represents a base table with common database operations.
@@ -19,6 +20,7 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 	#isLoggerEnabled: boolean | undefined;
 	#logger?: SharedTypes.TLogger;
 	#executeSql;
+	#executeSqlStream: (sql: { query: string; values?: unknown[]; }) => Promise<Readable>;
 
 	#initialArgs;
 
@@ -85,13 +87,19 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 
 		this.#initialArgs = { data, dbCreds, options };
 
-		const preparedOptions = setLoggerAndExecutor(
+		const preparedOptions = Helpers.setLoggerAndExecutor(
+			this.#executor,
+			{ isLoggerEnabled, logger },
+		);
+
+		const { executeSqlStream } = Helpers.setStreamExecutor(
 			this.#executor,
 			{ isLoggerEnabled, logger },
 		);
 
 		this.#insertOptions = insertOptions;
 		this.#executeSql = preparedOptions.executeSql;
+		this.#executeSqlStream = executeSqlStream;
 		this.#isLoggerEnabled = preparedOptions.isLoggerEnabled;
 		this.#logger = preparedOptions.logger;
 	}
@@ -120,12 +128,18 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 	 * @param logger - The logger to use for the table.
 	 */
 	setLogger(logger: SharedTypes.TLogger) {
-		const preparedOptions = setLoggerAndExecutor(
+		const preparedOptions = Helpers.setLoggerAndExecutor(
+			this.#executor,
+			{ isLoggerEnabled: true, logger },
+		);
+
+		const { executeSqlStream } = Helpers.setStreamExecutor(
 			this.#executor,
 			{ isLoggerEnabled: true, logger },
 		);
 
 		this.#executeSql = preparedOptions.executeSql;
+		this.#executeSqlStream = executeSqlStream;
 		this.#isLoggerEnabled = preparedOptions.isLoggerEnabled;
 		this.#logger = preparedOptions.logger;
 	}
@@ -136,12 +150,18 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 	 * @param executor - The executor to use for the table.
 	 */
 	setExecutor(executor: Types.TExecutor) {
-		const preparedOptions = setLoggerAndExecutor(
+		const preparedOptions = Helpers.setLoggerAndExecutor(
+			executor,
+			{ isLoggerEnabled: this.#isLoggerEnabled, logger: this.#logger },
+		);
+
+		const { executeSqlStream } = Helpers.setStreamExecutor(
 			executor,
 			{ isLoggerEnabled: this.#isLoggerEnabled, logger: this.#logger },
 		);
 
 		this.#executeSql = preparedOptions.executeSql;
+		this.#executeSqlStream = executeSqlStream;
 		this.#isLoggerEnabled = preparedOptions.isLoggerEnabled;
 		this.#logger = preparedOptions.logger;
 		this.#executor = executor;
@@ -153,6 +173,10 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 
 	get executeSql() {
 		return this.#executeSql;
+	}
+
+	get executeSqlStream() {
+		return this.#executeSqlStream;
 	}
 
 	/**
@@ -414,6 +438,34 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 			return {
 				query: queries.getOneByPk(this.tableName, this.primaryKey),
 				values: Array.isArray(primaryKey) ? [...primaryKey] : [primaryKey],
+			};
+		},
+		streamArrByParams: (
+			{ $and = {}, $or }: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
+			selected = ["*"],
+			pagination?: SharedTypes.TPagination,
+			order?: { orderBy: string; ordering: SharedTypes.TOrdering; }[],
+		): { query: string; values: unknown[]; } => {
+			if (order?.length) {
+				for (const o of order) {
+					if (!this.#tableFieldsSet.has(o.orderBy)) {
+						const allowedFields = Array.from(this.#tableFieldsSet).join(", ");
+
+						throw new Error(`Invalid orderBy: ${o.orderBy}. Allowed fields are: ${allowedFields}`);
+					}
+
+					if (!this.#sortingOrders.has(o.ordering)) { throw new Error("Invalid ordering"); }
+				}
+			}
+
+			if (!selected.length) selected.push("*");
+
+			const { queryArray, queryOrArray, values } = this.compareFields($and, $or);
+			const { orderByFields, paginationFields, searchFields, selectedFields } = this.getFieldsToSearch({ queryArray, queryOrArray }, selected, pagination, order);
+
+			return {
+				query: queries.getByParams(this.tableName, selectedFields, searchFields, orderByFields, paginationFields),
+				values,
 			};
 		},
 		updateByParams: (
@@ -716,6 +768,32 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 		const { rows } = await this.#executeSql<T>(sql);
 
 		return rows;
+	}
+
+	/**
+	 * Returns a stream of records from the database based on the provided search parameters.
+	 * Useful for handling large result sets efficiently.
+	 *
+	 * @param params - The search parameters used to filter records.
+	 * @param params.$and - The conditions that must be met for a record to be included in the results.
+	 * @param [params.$or] - Optional array of conditions where at least one must be met for a record to be included in the results.
+	 * @param [selected=["*"]] - Optional array of fields to select from the records. If not specified, all fields are selected.
+	 * @param [pagination] - Optional pagination options to limit and offset the results.
+	 * @param [order] - Optional array of order options for sorting the results.
+	 * @param order[].orderBy - The field by which to sort the results.
+	 * @param order[].ordering - The sorting direction ("ASC" for ascending or "DESC" for descending).
+	 *
+	 * @returns A stream of matching records.
+	 */
+	streamArrByParams<T extends pg.QueryResultRow>(
+		params: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
+		selected: string[] = ["*"],
+		pagination?: SharedTypes.TPagination,
+		order?: { orderBy: string; ordering: SharedTypes.TOrdering; }[],
+	): Promise<SharedTypes.ITypedPgStream<T>> {
+		const sql = this.compareQuery.streamArrByParams(params, selected, pagination, order);
+
+		return this.#executeSqlStream(sql);
 	}
 
 	/**
