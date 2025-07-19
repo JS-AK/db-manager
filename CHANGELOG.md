@@ -1,3 +1,11 @@
+# [3.44.0](https://github.com/JS-AK/db-manager/compare/v3.43.1...v3.44.0) (2025-07-19)
+
+
+### Features
+
+* added pg domains streaming ([e303050](https://github.com/JS-AK/db-manager/commit/e303050446395483a24b20e66339da13737c850b))
+* added pg qb streaming ([dc092b3](https://github.com/JS-AK/db-manager/commit/dc092b35ca0d19c63fdfa4e8b7259f8fa45d4082))
+
 ## [3.43.1](https://github.com/JS-AK/db-manager/compare/v3.43.0...v3.43.1) (2025-07-03)
 
 
