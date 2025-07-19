@@ -1,22 +1,39 @@
 import { Readable } from "node:stream";
 
 import PgQueryStream from "pg-query-stream";
+import pg from "pg";
 
 import * as SharedTypes from "../../../shared-types/index.js";
 import { TExecutor } from "../model/types.js";
 
-function streamQueryLogged(
+async function runStreamQuery(executor: TExecutor, streamQuery: PgQueryStream): Promise<Readable> {
+	if (executor instanceof pg.Pool) {
+		const client = await executor.connect();
+
+		const stream = client.query(streamQuery);
+
+		stream.once("end", () => client.release());
+		stream.once("error", () => client.release());
+
+		return stream;
+	} else {
+		return executor.query(streamQuery);
+	}
+}
+
+async function streamQueryLogged(
 	this: {
 		client: TExecutor;
 		logger: SharedTypes.TLogger;
 	},
 	query: string,
 	values?: unknown[],
-): Readable {
+): Promise<Readable> {
 	const start = performance.now();
 
 	const streamQuery = new PgQueryStream(query, values);
-	const stream = this.client.query(streamQuery);
+
+	const stream = await runStreamQuery(this.client, streamQuery);
 
 	let ended = false;
 
@@ -47,7 +64,7 @@ function streamQueryLogged(
 }
 
 export function setStreamExecutor(
-	pool: TExecutor,
+	executor: TExecutor,
 	options?: {
 		isLoggerEnabled?: boolean;
 		logger?: SharedTypes.TLogger;
@@ -60,22 +77,22 @@ export function setStreamExecutor(
 		const resultLogger = logger || { error: console.error, info: console.log };
 
 		return {
-			executeSqlStream: (sql: {
+			executeSqlStream: async (sql: {
 				query: string;
 				values?: unknown[];
-			}): Readable => {
-				return streamQueryLogged.bind({ client: pool, logger: resultLogger })(sql.query, sql.values);
+			}): Promise<Readable> => {
+				return streamQueryLogged.bind({ client: executor, logger: resultLogger })(sql.query, sql.values);
 			},
 		};
 	} else {
 		return {
-			executeSqlStream: (sql: {
+			executeSqlStream: async (sql: {
 				query: string;
 				values?: unknown[];
-			}): Readable => {
+			}): Promise<Readable> => {
 				const streamQuery = new PgQueryStream(sql.query, sql.values);
 
-				return pool.query(streamQuery);
+				return runStreamQuery(executor, streamQuery);
 			},
 		};
 	}

@@ -227,6 +227,41 @@ export const start = async (creds: PG.ModelTypes.TDBCreds): Promise<void> => {
 
 					{
 						await testContext.test(
+							"read admins streamArrByParams",
+							async () => {
+								const stream = await userRepository.streamArrByParams({
+									params: { first_name: "Robin" },
+									selected: ["id", "first_name"],
+								});
+
+								const streamedRows: { id: string; first_name: string; }[] = [];
+
+								await new Promise<void>((resolve, reject) => {
+									stream.on("data", (row) => {
+										streamedRows.push(row);
+									});
+									stream.on("end", () => {
+										try {
+											assert.strictEqual(streamedRows.length, 1);
+											const [head] = streamedRows;
+
+											if (!head) throw new Error("Streamed head user not found");
+											assert.strictEqual(head.first_name, "Robin");
+											resolve();
+										} catch (err) {
+											reject(err);
+										}
+									});
+									stream.on("error", (err) => {
+										reject(err);
+									});
+								});
+							},
+						);
+					}
+
+					{
+						await testContext.test(
 							"update",
 							async () => {
 								const { one: userRole } = await userRoleRepository.getOneByParams({ params: { title: "admin" }, selected: ["id"] });
@@ -388,8 +423,10 @@ export const start = async (creds: PG.ModelTypes.TDBCreds): Promise<void> => {
 						assert.strictEqual(heads.length, 1);
 						assert.strictEqual(head?.first_name, "Bob head");
 						assert.strictEqual(head?.ur_title, "head");
+					}
 
-						const stream = userRepository.model.queryBuilder({ client, tableName: "users u" })
+					{
+						const stream = await userRepository.model.queryBuilder({ client, tableName: "users u" })
 							.select([
 								"u.id         AS id",
 								"u.first_name AS first_name",

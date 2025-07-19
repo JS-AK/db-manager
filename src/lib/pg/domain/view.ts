@@ -118,6 +118,30 @@ export class BaseView<
 			paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>[];
 			selected?: [T, ...T[]];
 		}): Types.TCompareQueryResult => this.model.compareQuery.getOneByParams({ $and: options.params, $or: options.paramsOr }, options.selected as string[]),
+
+		/**
+		 * Constructs a SQL stream query for selecting records based on the provided search parameters.
+		 * This version is optimized for large datasets where streaming is preferred over loading everything into memory.
+		 *
+		 * @param options - The options for retrieving records.
+		 * @param options.params - The search parameters to match records.
+		 * @param [options.paramsOr] - An optional array of search parameters, where at least one must be matched.
+		 * @param [options.selected] - The fields to return for each matched record.
+		 * @param [options.pagination] - The pagination options.
+		 * @param [options.order] - The sorting options.
+		 *
+		 * @returns The SQL query and its parameter values for use with a streaming interface.
+		 */
+		streamArrByParams: <T extends keyof BVG["CoreFields"]>(options: {
+			params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>;
+			paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>[];
+			selected?: [T, ...T[]];
+			pagination?: SharedTypes.TPagination;
+			order?: {
+				orderBy: Extract<keyof BVG["CoreFields"], string> | (BVG["AdditionalSortingFields"] extends string ? BVG["AdditionalSortingFields"] : never);
+				ordering: SharedTypes.TOrdering;
+			}[];
+		}): Types.TCompareQueryResult => this.model.compareQuery.streamArrByParams({ $and: options.params, $or: options.paramsOr }, options.selected as string[], options.pagination, options.order),
 	};
 
 	/**
@@ -218,5 +242,40 @@ export class BaseView<
 		if (!one) return { message: `Not found from ${this.model.name}` };
 
 		return { one };
+	}
+
+	/**
+	 * Streams records from the database based on the specified search parameters.
+	 *
+	 * This method returns a readable stream of records that match the given filter conditions.
+	 * Useful for efficiently processing large datasets without loading them entirely into memory.
+	 *
+	 * @param options - The options for retrieving records.
+	 * @param options.params - The search parameters to match records.
+	 * @param [options.paramsOr] - An optional array of search parameters, where at least one must be matched.
+	 * @param [options.selected] - The fields to return for each matched record.
+	 * @param [options.pagination] - The pagination options.
+	 * @param [options.order] - The sorting options.
+	 * @param options.order.orderBy - The field by which to sort the results.
+	 * @param options.order.ordering - The ordering direction (e.g., ASC, DESC).
+	 *
+	 * @returns A promise that resolves to an array of records with the selected fields.
+	 */
+	async streamArrByParams<T extends keyof BVG["CoreFields"]>(options: {
+		params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>;
+		paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>[];
+		selected?: [T, ...T[]];
+		pagination?: SharedTypes.TPagination;
+		order?: {
+			orderBy: Extract<keyof BVG["CoreFields"], string> | (BVG["AdditionalSortingFields"] extends string ? BVG["AdditionalSortingFields"] : never);
+			ordering: SharedTypes.TOrdering;
+		}[];
+	}): Promise<SharedTypes.ITypedPgStream<Pick<BVG["CoreFields"], T>>> {
+		return this.model.streamArrByParams<Pick<BVG["CoreFields"], T>>(
+			{ $and: options.params, $or: options.paramsOr },
+			options.selected as string[],
+			options.pagination,
+			options.order,
+		);
 	}
 }

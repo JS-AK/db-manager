@@ -8,12 +8,6 @@ import * as ModelTypes from "../model/types.js";
 import * as SharedTypes from "../../../shared-types/index.js";
 import { QueryHandler } from "./query-handler.js";
 
-interface TypedPgStream<T> extends Readable {
-	on(event: "data", listener: (row: T) => void): this;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	on(event: string, listener: (...args: any[]) => void): this;
-}
-
 /**
  * A class to build and execute SQL queries using a fluent API.
  * The `QueryBuilder` handles various SQL operations like SELECT, INSERT, UPDATE, DELETE, and JOINs,
@@ -27,7 +21,7 @@ export class QueryBuilder {
 	#queryHandler;
 	#logger?: SharedTypes.TLogger;
 	#executeSql;
-	#executeSqlStream;
+	#executeSqlStream: (sql: { query: string; values?: unknown[]; }) => Promise<Readable>;
 
 	#joinTypes: Record<ModelTypes.Join, string> = {
 		CROSS: "CROSS",
@@ -651,7 +645,7 @@ export class QueryBuilder {
 	 * @typeParam T - The expected shape of each streamed row.
 	 * @returns A readable stream that emits rows of type `T` on the `"data"` event.
 	 */
-	executeQueryStream<T extends pg.QueryResultRow>(): TypedPgStream<T> {
+	executeQueryStream<T extends pg.QueryResultRow>(): Promise<SharedTypes.ITypedPgStream<T>> {
 		const sql = this.compareQuery();
 
 		return this.#executeSqlStream(sql);
@@ -674,6 +668,24 @@ export class QueryBuilder {
 		values?: unknown[],
 	): Promise<T[]> {
 		return (await this.#executeSql<T>({ query: data, values: values || [] })).rows;
+	}
+
+	/**
+	 * Executes a raw SQL query with the specified values and returns a readable stream of rows.
+	 *
+	 * @note All previously passed options are ignored.
+	 * @note Use this method for large datasets to avoid loading all data into memory.
+	 *
+	 * @param data - The SQL query string to execute.
+	 * @param [values=[]] - Optional array of values to be used in the query.
+	 *
+	 * @returns A readable stream of result rows.
+	 */
+	executeRawQueryStream<T extends pg.QueryResultRow>(
+		data: string,
+		values?: unknown[],
+	): Promise<SharedTypes.ITypedPgStream<T>> {
+		return this.#executeSqlStream({ query: data, values: values || [] });
 	}
 
 	/**
