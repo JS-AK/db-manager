@@ -1,3 +1,5 @@
+import { Readable } from "node:stream";
+
 import pg from "pg";
 
 import * as DomainTypes from "../domain/types.js";
@@ -5,7 +7,12 @@ import * as Helpers from "../helpers/index.js";
 import * as ModelTypes from "../model/types.js";
 import * as SharedTypes from "../../../shared-types/index.js";
 import { QueryHandler } from "./query-handler.js";
-import { setLoggerAndExecutor } from "../helpers/index.js";
+
+interface TypedPgStream<T> extends Readable {
+	on(event: "data", listener: (row: T) => void): this;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	on(event: string, listener: (...args: any[]) => void): this;
+}
 
 /**
  * A class to build and execute SQL queries using a fluent API.
@@ -20,6 +27,7 @@ export class QueryBuilder {
 	#queryHandler;
 	#logger?: SharedTypes.TLogger;
 	#executeSql;
+	#executeSqlStream;
 
 	#joinTypes: Record<ModelTypes.Join, string> = {
 		CROSS: "CROSS",
@@ -67,12 +75,18 @@ export class QueryBuilder {
 			dataSourceRaw: this.#dataSourceRaw,
 		});
 
-		const preparedOptions = setLoggerAndExecutor(
+		const preparedOptions = Helpers.setLoggerAndExecutor(
+			this.#client,
+			{ isLoggerEnabled, logger },
+		);
+
+		const { executeSqlStream } = Helpers.setStreamExecutor(
 			this.#client,
 			{ isLoggerEnabled, logger },
 		);
 
 		this.#executeSql = preparedOptions.executeSql;
+		this.#executeSqlStream = executeSqlStream;
 		this.#logger = preparedOptions.logger;
 	}
 
@@ -629,6 +643,18 @@ export class QueryBuilder {
 		const sql = this.compareQuery();
 
 		return (await this.#executeSql<T>(sql)).rows;
+	}
+
+	/**
+	 * Executes the SQL query and returns a readable stream of typed rows.
+	 *
+	 * @typeParam T - The expected shape of each streamed row.
+	 * @returns A readable stream that emits rows of type `T` on the `"data"` event.
+	 */
+	executeQueryStream<T extends pg.QueryResultRow>(): TypedPgStream<T> {
+		const sql = this.compareQuery();
+
+		return this.#executeSqlStream(sql);
 	}
 
 	/**
