@@ -1,3 +1,10 @@
+## [3.44.1](https://github.com/JS-AK/db-manager/compare/v3.44.0...v3.44.1) (2025-07-20)
+
+
+### Bug Fixes
+
+* added async to previous methods ([6ce2635](https://github.com/JS-AK/db-manager/commit/6ce2635dc7d5838ff87c99f180436186e162eb91))
+
 # [3.44.0](https://github.com/JS-AK/db-manager/compare/v3.43.1...v3.44.0) (2025-07-19)
 
 
