@@ -785,7 +785,7 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 	 *
 	 * @returns A stream of matching records.
 	 */
-	streamArrByParams<T extends pg.QueryResultRow>(
+	async streamArrByParams<T extends pg.QueryResultRow>(
 		params: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
 		selected: string[] = ["*"],
 		pagination?: SharedTypes.TPagination,

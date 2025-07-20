@@ -645,7 +645,7 @@ export class QueryBuilder {
 	 * @typeParam T - The expected shape of each streamed row.
 	 * @returns A readable stream that emits rows of type `T` on the `"data"` event.
 	 */
-	executeQueryStream<T extends pg.QueryResultRow>(): Promise<SharedTypes.ITypedPgStream<T>> {
+	async executeQueryStream<T extends pg.QueryResultRow>(): Promise<SharedTypes.ITypedPgStream<T>> {
 		const sql = this.compareQuery();
 
 		return this.#executeSqlStream(sql);
@@ -681,7 +681,7 @@ export class QueryBuilder {
 	 *
 	 * @returns A readable stream of result rows.
 	 */
-	executeRawQueryStream<T extends pg.QueryResultRow>(
+	async executeRawQueryStream<T extends pg.QueryResultRow>(
 		data: string,
 		values?: unknown[],
 	): Promise<SharedTypes.ITypedPgStream<T>> {
