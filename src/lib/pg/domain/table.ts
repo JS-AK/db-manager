@@ -599,7 +599,7 @@ export class BaseTable<
 	 *
 	 * @returns A promise that resolves to an array of records with the selected fields.
 	 */
-	streamArrByParams<T extends keyof BTG["CoreFields"]>(this: BaseTable<M, BTG>, options: {
+	async streamArrByParams<T extends keyof BTG["CoreFields"]>(this: BaseTable<M, BTG>, options: {
 		params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
 		paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>[];
 		selected?: [T, ...T[]];
