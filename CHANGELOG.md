@@ -1,3 +1,10 @@
+# [3.45.0](https://github.com/JS-AK/db-manager/compare/v3.44.1...v3.45.0) (2025-07-30)
+
+
+### Features
+
+* added mysql streaming ([efea095](https://github.com/JS-AK/db-manager/commit/efea095ef3c0b1ec305874798595213820cc8c27))
+
 ## [3.44.1](https://github.com/JS-AK/db-manager/compare/v3.44.0...v3.44.1) (2025-07-20)
 
 
