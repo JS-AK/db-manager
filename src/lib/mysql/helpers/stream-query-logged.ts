@@ -1,27 +1,52 @@
 import { Readable } from "node:stream";
 import { randomUUID } from "node:crypto";
 
-import PgQueryStream from "pg-query-stream";
-import pg from "pg";
+import { PoolConnection as RawPoolConnection } from "mysql2";
+import mysql from "mysql2/promise";
 
 import * as SharedTypes from "../../../shared-types/index.js";
 import { TExecutor } from "../model/types.js";
 
+function isPool(conn: unknown): conn is mysql.Pool {
+	return typeof conn === "object" && conn !== null && "getConnection" in conn;
+}
+
+function isPoolConnection(conn: unknown): conn is mysql.PoolConnection {
+	return typeof conn === "object" && conn !== null && "release" in conn && "connection" in conn;
+}
+
+function isRawConnection(conn: unknown): conn is RawPoolConnection {
+	return typeof conn === "object" && conn !== null && "query" in conn;
+}
+
 async function runStreamQuery(
 	executor: TExecutor,
-	streamQuery: PgQueryStream,
+	query: string,
+	values?: unknown[],
 ): Promise<Readable> {
-	if (executor instanceof pg.Pool) {
-		const client = await executor.connect();
+	if (isPool(executor)) {
+		const promiseConn = await executor.getConnection();
 
-		const stream = client.query(streamQuery);
+		try {
+			const rawConn = promiseConn.connection as unknown as RawPoolConnection;
+			const stream = rawConn.query(query, values).stream();
 
-		stream.once("end", () => client.release());
-		stream.once("error", () => client.release());
+			stream.once("end", () => promiseConn.release());
+			stream.once("error", () => promiseConn.release());
 
-		return stream;
+			return stream;
+		} catch (err) {
+			promiseConn.release();
+			throw err;
+		}
+	} else if (isPoolConnection(executor)) {
+		const rawConn = executor.connection as unknown as RawPoolConnection;
+
+		return rawConn.query(query, values).stream();
+	} else if (isRawConnection(executor)) {
+		return (executor as RawPoolConnection).query(query, values).stream();
 	} else {
-		return executor.query(streamQuery);
+		throw new Error("Invalid mysql executor");
 	}
 }
 
@@ -35,14 +60,13 @@ async function streamQueryLogged(
 ): Promise<Readable> {
 	const queryId = randomUUID();
 	const start = performance.now();
-	const streamQuery = new PgQueryStream(query, values);
 
 	let stream: Readable;
 
 	this.logger.info(`[${queryId}] Stream query started. QUERY: ${query} VALUES: ${JSON.stringify(values)}`);
 
 	try {
-		stream = await runStreamQuery(this.client, streamQuery);
+		stream = await runStreamQuery(this.client, query, values);
 	} catch (error) {
 		const execTime = Math.round(performance.now() - start);
 
@@ -101,9 +125,7 @@ export function setStreamExecutor(
 				query: string;
 				values?: unknown[];
 			}): Promise<Readable> => {
-				const streamQuery = new PgQueryStream(sql.query, sql.values);
-
-				return runStreamQuery(executor, streamQuery);
+				return runStreamQuery(executor, sql.query, sql.values);
 			},
 		};
 	}

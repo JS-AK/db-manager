@@ -1,3 +1,5 @@
+import { Readable } from "node:stream";
+
 import mysql from "mysql2/promise";
 
 import * as Helpers from "../helpers/index.js";
@@ -19,6 +21,7 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 	#isLoggerEnabled: boolean | undefined;
 	#logger?: SharedTypes.TLogger;
 	#executeSql;
+	#executeSqlStream: (sql: { query: string; values?: unknown[]; }) => Promise<Readable>;
 
 	#initialArgs;
 
@@ -94,8 +97,14 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 			{ isLoggerEnabled, logger },
 		);
 
+		const { executeSqlStream } = Helpers.setStreamExecutor(
+			this.#executor,
+			{ isLoggerEnabled, logger },
+		);
+
 		this.#insertOptions = insertOptions;
 		this.#executeSql = preparedOptions.executeSql;
+		this.#executeSqlStream = executeSqlStream;
 		this.#isLoggerEnabled = preparedOptions.isLoggerEnabled;
 		this.#logger = preparedOptions.logger;
 	}
@@ -423,6 +432,34 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 				values: Array.isArray(primaryKey) ? [...primaryKey] : [primaryKey],
 			};
 		},
+		streamArrByParams: (
+			{ $and = {}, $or }: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
+			selected = ["*"],
+			pagination?: SharedTypes.TPagination,
+			order?: { orderBy: string; ordering: SharedTypes.TOrdering; }[],
+		): { query: string; values: unknown[]; } => {
+			if (order?.length) {
+				for (const o of order) {
+					if (!this.#tableFieldsSet.has(o.orderBy)) {
+						const allowedFields = Array.from(this.#tableFieldsSet).join(", ");
+
+						throw new Error(`Invalid orderBy: ${o.orderBy}. Allowed fields are: ${allowedFields}`);
+					}
+
+					if (!this.#sortingOrders.has(o.ordering)) { throw new Error("Invalid ordering"); }
+				}
+			}
+
+			if (!selected.length) selected.push("*");
+
+			const { queryArray, queryOrArray, values } = this.compareFields($and, $or);
+			const { orderByFields, paginationFields, searchFields, selectedFields } = this.getFieldsToSearch({ queryArray, queryOrArray }, selected, pagination, order);
+
+			return {
+				query: queries.getByParams(this.tableName, selectedFields, searchFields, orderByFields, paginationFields),
+				values,
+			};
+		},
 		updateByParams: (
 			queryConditions: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
 			updateFields: SharedTypes.TRawParams = {},
@@ -716,6 +753,32 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 	}
 
 	/**
+	 * Returns a stream of records from the database based on the provided search parameters.
+	 * Useful for handling large result sets efficiently.
+	 *
+	 * @param params - The search parameters used to filter records.
+	 * @param params.$and - The conditions that must be met for a record to be included in the results.
+	 * @param [params.$or] - Optional array of conditions where at least one must be met for a record to be included in the results.
+	 * @param [selected=["*"]] - Optional array of fields to select from the records. If not specified, all fields are selected.
+	 * @param [pagination] - Optional pagination options to limit and offset the results.
+	 * @param [order] - Optional array of order options for sorting the results.
+	 * @param order[].orderBy - The field by which to sort the results.
+	 * @param order[].ordering - The sorting direction ("ASC" for ascending or "DESC" for descending).
+	 *
+	 * @returns A stream of matching records.
+	 */
+	async streamArrByParams<T>(
+		params: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
+		selected: string[] = ["*"],
+		pagination?: SharedTypes.TPagination,
+		order?: { orderBy: string; ordering: SharedTypes.TOrdering; }[],
+	): Promise<SharedTypes.ITypedPgStream<T>> {
+		const sql = this.compareQuery.streamArrByParams(params, selected, pagination, order);
+
+		return this.#executeSqlStream(sql);
+	}
+
+	/**
 	 * Updates records based on search parameters.
 	 *
 	 * @param queryConditions - The query conditions for identifying records to update.
@@ -756,24 +819,31 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 	}
 
 	/**
-	 * Creates a query builder instance.
+	 * Returns a new QueryBuilder instance for building SQL queries.
 	 *
-	 * @param [options] - The options for the query builder.
-	 * @param [options.client] - The database client.
-	 * @param [options.tableName] - The table name.
+	 * @param [options] - Optional settings for the query builder.
+	 * @param [options.client] - Optional database client or pool to use for query execution.
+	 * @param [options.isLoggerEnabled] - Whether to enable logging for this query builder.
+	 * @param [options.logger] - Optional custom logger instance.
+	 * @param [options.tableName] - Optional table name to use (defaults to this.tableName).
 	 *
-	 * @returns A new query builder instance.
+	 * @returns A configured QueryBuilder instance.
 	 */
 	queryBuilder(options?: {
 		client?: Types.TExecutor;
+		isLoggerEnabled?: boolean;
+		logger?: SharedTypes.TLogger;
 		tableName?: string;
 	}): QueryBuilder {
-		const { client, tableName } = options || {};
+		const { client, isLoggerEnabled, logger, tableName } = options || {};
 
 		return new QueryBuilder(
 			tableName ?? this.tableName,
 			client ?? this.#executor,
-			{ isLoggerEnabled: this.#isLoggerEnabled, logger: this.#logger },
+			{
+				isLoggerEnabled: isLoggerEnabled ?? this.#isLoggerEnabled,
+				logger: logger ?? this.#logger,
+			},
 		);
 	}
 

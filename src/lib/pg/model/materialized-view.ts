@@ -451,24 +451,31 @@ export class BaseMaterializedView {
 	}
 
 	/**
-	 * Creates a new query builder instance for the materialized view.
+	 * Returns a new QueryBuilder instance for building SQL queries.
 	 *
-	 * @param [options] - Options for the query builder.
-	 * @param [options.client] - The PostgreSQL client or pool to use.
-	 * @param [options.name] - The name of the materialized view.
+	 * @param [options] - Optional settings for the query builder.
+	 * @param [options.client] - Optional database client or pool to use for query execution.
+	 * @param [options.isLoggerEnabled] - Whether to enable logging for this query builder.
+	 * @param [options.logger] - Optional custom logger instance.
+	 * @param [options.name] - Optional materialized name to use (defaults to this.name).
 	 *
-	 * @returns A new `QueryBuilder` instance.
+	 * @returns A configured QueryBuilder instance.
 	 */
 	queryBuilder(options?: {
 		client?: Types.TExecutor;
+		isLoggerEnabled?: boolean;
+		logger?: SharedTypes.TLogger;
 		name?: string;
 	}): QueryBuilder {
-		const { client, name } = options || {};
+		const { client, isLoggerEnabled, logger, name } = options || {};
 
 		return new QueryBuilder(
 			name ?? this.name,
 			client ?? this.#executor,
-			{ isLoggerEnabled: this.#isLoggerEnabled, logger: this.#logger },
+			{
+				isLoggerEnabled: isLoggerEnabled ?? this.#isLoggerEnabled,
+				logger: logger ?? this.#logger,
+			},
 		);
 	}
 

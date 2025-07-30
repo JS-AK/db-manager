@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import pg from "pg";
 
 import * as SharedTypes from "../../../shared-types/index.js";
@@ -10,20 +12,23 @@ async function queryLogged<T extends pg.QueryResultRow>(
 	},
 	query: string,
 	values?: unknown[],
-) {
+): Promise<pg.QueryResult<T>> {
+	const queryId = randomUUID();
 	const start = performance.now();
+
+	this.logger.info(`[${queryId}] Query started. QUERY: ${query} VALUES: ${JSON.stringify(values)}`);
 
 	try {
 		const data = await this.client.query<T>(query, values);
 		const execTime = Math.round(performance.now() - start);
 
-		this.logger.info(`Query executed successfully in ${execTime} ms. QUERY: ${query} VALUES: ${JSON.stringify(values)}`);
+		this.logger.info(`[${queryId}] Query executed successfully in ${execTime} ms.`);
 
 		return data;
 	} catch (error) {
 		const execTime = Math.round(performance.now() - start);
 
-		this.logger.error(`Query failed in ${execTime} ms. QUERY: ${query} VALUES: ${JSON.stringify(values)}`);
+		this.logger.error(`[${queryId}] Query failed in ${execTime} ms. ERROR: ${(error as Error).message}`);
 
 		throw error;
 	}

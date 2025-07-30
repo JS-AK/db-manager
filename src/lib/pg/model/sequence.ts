@@ -181,14 +181,19 @@ export class BaseSequence {
 
 	queryBuilder(options?: {
 		client?: Types.TExecutor;
+		isLoggerEnabled?: boolean;
+		logger?: SharedTypes.TLogger;
 		name?: string;
 	}) {
-		const { client, name } = options || {};
+		const { client, isLoggerEnabled, logger, name } = options || {};
 
 		return new QueryBuilder(
 			name ?? this.name,
 			client ?? this.#executor,
-			{ isLoggerEnabled: this.#isLoggerEnabled, logger: this.#logger },
+			{
+				isLoggerEnabled: isLoggerEnabled ?? this.#isLoggerEnabled,
+				logger: logger ?? this.#logger,
+			},
 		);
 	}
 

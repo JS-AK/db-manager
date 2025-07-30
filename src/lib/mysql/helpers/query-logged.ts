@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import mysql from "mysql2/promise";
 
 import * as SharedTypes from "../../../shared-types/index.js";
@@ -10,20 +12,23 @@ async function queryLogged<T extends (mysql.RowDataPacket | mysql.ResultSetHeade
 	},
 	query: string,
 	values?: unknown[],
-) {
+): Promise<[T extends mysql.RowDataPacket ? T[] : T, mysql.FieldPacket[]]> {
+	const queryId = randomUUID();
 	const start = performance.now();
+
+	this.logger.info(`[${queryId}] Query started. QUERY: ${query} VALUES: ${JSON.stringify(values)}`);
 
 	try {
 		const data = await this.client.query<T extends mysql.RowDataPacket ? T[] : T>(query, values);
 		const execTime = Math.round(performance.now() - start);
 
-		this.logger.info(`Query executed successfully in ${execTime} ms. QUERY: ${query} VALUES: ${JSON.stringify(values)}`);
+		this.logger.info(`[${queryId}] Query executed successfully in ${execTime} ms.`);
 
 		return data;
 	} catch (error) {
 		const execTime = Math.round(performance.now() - start);
 
-		this.logger.error(`Query failed in ${execTime} ms. QUERY: ${query} VALUES: ${JSON.stringify(values)}`);
+		this.logger.error(`[${queryId}] Query failed in ${execTime} ms. ERROR: ${(error as Error).message}`);
 
 		throw error;
 	}
