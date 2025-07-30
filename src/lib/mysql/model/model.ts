@@ -429,14 +429,19 @@ export class BaseModel<const T extends readonly string[] = readonly string[]> {
 	 */
 	queryBuilder(options?: {
 		client?: Types.TExecutor;
+		isLoggerEnabled?: boolean;
+		logger?: SharedTypes.TLogger;
 		tableName?: string;
 	}) {
-		const { client, tableName } = options || {};
+		const { client, isLoggerEnabled, logger, tableName } = options || {};
 
 		return new QueryBuilder(
 			tableName ?? this.tableName,
 			client ?? this.#executor,
-			{ isLoggerEnabled: this.#isLoggerEnabled, logger: this.#logger },
+			{
+				isLoggerEnabled: isLoggerEnabled ?? this.#isLoggerEnabled,
+				logger: logger ?? this.#logger,
+			},
 		);
 	}
 

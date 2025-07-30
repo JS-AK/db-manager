@@ -1,3 +1,5 @@
+import { Readable } from "node:stream";
+
 import mysql from "mysql2/promise";
 
 import * as DomainTypes from "../domain/types.js";
@@ -5,7 +7,6 @@ import * as Helpers from "../helpers/index.js";
 import * as ModelTypes from "../model/types.js";
 import * as SharedTypes from "../../../shared-types/index.js";
 import { QueryHandler } from "./query-handler.js";
-import { setLoggerAndExecutor } from "../helpers/index.js";
 
 /**
  * A class to build and execute SQL queries using a fluent API.
@@ -20,6 +21,7 @@ export class QueryBuilder {
 	#queryHandler;
 	#logger?: SharedTypes.TLogger;
 	#executeSql;
+	#executeSqlStream: (sql: { query: string; values?: unknown[]; }) => Promise<Readable>;
 
 	#joinTypes: Record<ModelTypes.Join, string> = {
 		CROSS: "CROSS",
@@ -67,12 +69,18 @@ export class QueryBuilder {
 			dataSourceRaw: this.#dataSourceRaw,
 		});
 
-		const preparedOptions = setLoggerAndExecutor(
+		const preparedOptions = Helpers.setLoggerAndExecutor(
+			this.#client,
+			{ isLoggerEnabled, logger },
+		);
+
+		const { executeSqlStream } = Helpers.setStreamExecutor(
 			this.#client,
 			{ isLoggerEnabled, logger },
 		);
 
 		this.#executeSql = preparedOptions.executeSql;
+		this.#executeSqlStream = executeSqlStream;
 		this.#logger = preparedOptions.logger;
 	}
 
@@ -610,6 +618,18 @@ export class QueryBuilder {
 		const result = await this.#executeSql<T extends mysql.ResultSetHeader ? T : T & mysql.RowDataPacket>(sql);
 
 		return result[0] as T extends mysql.ResultSetHeader ? T : T[];
+	}
+
+	/**
+	 * Executes the SQL query and returns a readable stream of typed rows.
+	 *
+	 * @typeParam T - The expected shape of each streamed row.
+	 * @returns A readable stream that emits rows of type `T` on the `"data"` event.
+	 */
+	async executeQueryStream<T>(): Promise<SharedTypes.ITypedPgStream<T>> {
+		const sql = this.compareQuery();
+
+		return this.#executeSqlStream(sql);
 	}
 
 	/**

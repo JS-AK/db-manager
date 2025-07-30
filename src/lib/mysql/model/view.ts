@@ -1,3 +1,5 @@
+import { Readable } from "node:stream";
+
 import mysql from "mysql2/promise";
 
 import * as Helpers from "../helpers/index.js";
@@ -19,6 +21,7 @@ export class BaseView {
 	#isLoggerEnabled: boolean | undefined;
 	#logger?: SharedTypes.TLogger;
 	#executeSql;
+	#executeSqlStream: (sql: { query: string; values?: unknown[]; }) => Promise<Readable>;
 
 	#initialArgs;
 
@@ -66,11 +69,22 @@ export class BaseView {
 
 		this.#initialArgs = { data, dbCreds, options };
 
-		const { executeSql, isLoggerEnabled, logger } = setLoggerAndExecutor(this.#executor, options);
+		const { isLoggerEnabled, logger } = options || {};
 
-		this.#executeSql = executeSql;
-		this.#isLoggerEnabled = isLoggerEnabled;
-		this.#logger = logger;
+		const preparedOptions = setLoggerAndExecutor(
+			this.#executor,
+			{ isLoggerEnabled, logger },
+		);
+
+		const { executeSqlStream } = Helpers.setStreamExecutor(
+			this.#executor,
+			{ isLoggerEnabled, logger },
+		);
+
+		this.#executeSql = preparedOptions.executeSql;
+		this.#executeSqlStream = executeSqlStream;
+		this.#isLoggerEnabled = preparedOptions.isLoggerEnabled;
+		this.#logger = preparedOptions.logger;
 	}
 
 	/**
@@ -276,6 +290,48 @@ export class BaseView {
 				values,
 			};
 		},
+		/**
+		 * Generates a SQL query and values for selecting an array of records based on search parameters.
+		 *
+		 * @param params - Search parameters.
+		 * @param params.$and - AND conditions for the search.
+		 * @param [params.$or] - OR conditions for the search.
+		 * @param [selected=["*"]] - Fields to be selected.
+		 * @param [pagination] - Pagination details.
+		 * @param [order] - Order by details.
+		 * @param order.orderBy - Field to order by.
+		 * @param order.ordering - Ordering direction ("ASC" or "DESC").
+		 *
+		 * @returns An object containing the query string and values array.
+		 */
+		streamArrByParams: (
+			{ $and = {}, $or }: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
+			selected: string[] = ["*"],
+			pagination?: SharedTypes.TPagination,
+			order?: { orderBy: string; ordering: SharedTypes.TOrdering; }[],
+		): { query: string; values: unknown[]; } => {
+			if (order?.length) {
+				for (const o of order) {
+					if (!this.#coreFieldsSet.has(o.orderBy)) {
+						const allowedFields = Array.from(this.#coreFieldsSet).join(", ");
+
+						throw new Error(`Invalid orderBy: ${o.orderBy}. Allowed fields are: ${allowedFields}`);
+					}
+
+					if (!this.#sortingOrders.has(o.ordering)) { throw new Error("Invalid ordering"); }
+				}
+			}
+
+			if (!selected.length) selected.push("*");
+
+			const { queryArray, queryOrArray, values } = this.compareFields($and, $or);
+			const { orderByFields, paginationFields, searchFields, selectedFields } = this.getFieldsToSearch({ queryArray, queryOrArray }, selected, pagination, order);
+
+			return {
+				query: queries.getByParams(this.name, selectedFields, searchFields, orderByFields, paginationFields),
+				values,
+			};
+		},
 	};
 
 	/**
@@ -341,24 +397,57 @@ export class BaseView {
 	}
 
 	/**
-	 * Creates a new query builder instance for the view.
+	 * Returns a stream of records from the database based on the provided search parameters.
+	 * Useful for handling large result sets efficiently.
 	 *
-	 * @param [options] - Options for the query builder.
-	 * @param [options.client] - The MySQL client or pool to use.
-	 * @param [options.name] - The name of the view.
+	 * @param params - Search parameters.
+	 * @param params.$and - AND conditions for the search.
+	 * @param [params.$or] - OR conditions for the search.
+	 * @param [selected=["*"]] - Fields to be selected.
+	 * @param [pagination] - Pagination details.
+	 * @param [order] - Order by details.
+	 * @param order.orderBy - Field to order by.
+	 * @param order.ordering - Ordering direction ("ASC" or "DESC").
 	 *
-	 * @returns A new `QueryBuilder` instance.
+	 * @returns A promise that resolves to an array of records.
+	 */
+	async streamArrByParams<T>(
+		params: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
+		selected: string[] = ["*"],
+		pagination?: SharedTypes.TPagination,
+		order?: { orderBy: string; ordering: SharedTypes.TOrdering; }[],
+	): Promise<SharedTypes.ITypedPgStream<T>> {
+		const sql = this.compareQuery.streamArrByParams(params, selected, pagination, order);
+
+		return this.#executeSqlStream(sql);
+	}
+
+	/**
+	 * Returns a new QueryBuilder instance for building SQL queries.
+	 *
+	 * @param [options] - Optional settings for the query builder.
+	 * @param [options.client] - Optional database client or pool to use for query execution.
+	 * @param [options.isLoggerEnabled] - Whether to enable logging for this query builder.
+	 * @param [options.logger] - Optional custom logger instance.
+	 * @param [options.name] - Optional view name to use (defaults to this.name).
+	 *
+	 * @returns A configured QueryBuilder instance.
 	 */
 	queryBuilder(options?: {
 		client?: Types.TExecutor;
+		isLoggerEnabled?: boolean;
+		logger?: SharedTypes.TLogger;
 		name?: string;
 	}): QueryBuilder {
-		const { client, name } = options || {};
+		const { client, isLoggerEnabled, logger, name } = options || {};
 
 		return new QueryBuilder(
 			name ?? this.name,
 			client ?? this.#executor,
-			{ isLoggerEnabled: this.#isLoggerEnabled, logger: this.#logger },
+			{
+				isLoggerEnabled: isLoggerEnabled ?? this.#isLoggerEnabled,
+				logger: logger ?? this.#logger,
+			},
 		);
 	}
 
