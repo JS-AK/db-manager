@@ -5,6 +5,7 @@ export * as Model from "./model/index.js";
 export * as ModelTypes from "./model/types.js";
 export * from "./query-builder/index.js";
 export * from "./repository-manager/index.js";
+export * as Repository from "./repository/index.js";
 export * from "./transaction-manager/index.js";
 
 export * as MigrationSystem from "@js-ak/pg-migration-system";
