@@ -55,7 +55,7 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 	 *   - `updateField`: An optional object specifying a field to update with a timestamp when a record is updated.
 	 *     - `title`: The field name.
 	 *     - `type`: The type of timestamp (`"unix_timestamp"` or `"timestamp"`).
-	 * @param dbCreds - The credentials for connecting to the database, including:
+	 * @param [dbCreds] - The credentials for connecting to the database, including:
 	 *   - `database`: The name of the database.
 	 *   - `host`: The database host.
 	 *   - `password`: The password for connecting to the database.
@@ -68,13 +68,20 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 	 */
 	constructor(
 		data: Types.TTable<T>,
-		dbCreds: Types.TDBCreds,
+		dbCreds?: Types.TDBCreds,
 		options?: Types.TDBOptions,
 	) {
 		const { client, insertOptions, isLoggerEnabled, logger } = options || {};
 
+		if (client) {
+			this.#executor = client;
+		} else if (dbCreds) {
+			this.#executor = connection.getStandardPool(dbCreds);
+		} else {
+			throw new Error("No client or dbCreds provided");
+		}
+
 		this.createField = data.createField;
-		this.#executor = client || connection.getStandardPool(dbCreds);
 		this.primaryKey = data.primaryKey;
 		this.tableName = data.tableName;
 		this.tableFields = [...data.tableFields];
@@ -191,11 +198,11 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 	setClientInCurrentClass(client: Types.TExecutor): this {
 		return new (this.constructor as new (
 			data: Types.TTable<T>,
-			dbCreds: Types.TDBCreds,
+			dbCreds?: Types.TDBCreds,
 			options?: Types.TDBOptions,
 		) => this)(
 			{ ...this.#initialArgs.data },
-			{ ...this.#initialArgs.dbCreds },
+			this.#initialArgs.dbCreds ? { ...this.#initialArgs.dbCreds } : undefined,
 			{ ...this.#initialArgs.options, client },
 		);
 	}
@@ -212,7 +219,7 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 	setClientInBaseClass(client: Types.TExecutor): BaseTable<T> {
 		return new BaseTable(
 			{ ...this.#initialArgs.data },
-			{ ...this.#initialArgs.dbCreds },
+			this.#initialArgs.dbCreds ? { ...this.#initialArgs.dbCreds } : undefined,
 			{ ...this.#initialArgs.options, client },
 		);
 	}

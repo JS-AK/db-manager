@@ -125,7 +125,10 @@ module.exports = {
 			ignoreMemberSort: false,
 			memberSyntaxSortOrder: ["none", "all", "multiple", "single"],
 		}],
-		"sort-keys": ["error", "asc", { minKeys: 2 }],
+		"sort-keys": ["error", "asc", {
+			allowLineSeparatedGroups: true,
+			minKeys: 2,
+		}],
 		"space-before-blocks": ["error", {
 			classes: "always",
 			functions: "always",

@@ -2,7 +2,7 @@ import * as SharedTypes from "../../../shared-types/index.js";
 import * as Types from "./types.js";
 import { BaseView as Model, TExecutor } from "../model/index.js";
 
-type BaseViewGeneric = {
+export type BaseViewGeneric = {
 	AdditionalSortingFields?: string;
 	CoreFields: SharedTypes.TRawParams;
 	SearchFields?: Types.TDomainFields;

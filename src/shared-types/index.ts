@@ -16,3 +16,4 @@ export type TRawParams = {
 export type TRawParamsPrepared = {
 	[key: string]: object | string | number | boolean | null;
 };
+export type TStringKeys<T> = Extract<keyof T, string>;
