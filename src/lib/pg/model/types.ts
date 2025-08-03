@@ -8,33 +8,36 @@ export type ClearNumber = Omit<number, Extract<keyof number, string>>;
 export type ClearString = Omit<string, Extract<keyof string, string>>;
 
 export type Join = "CROSS" | "FULL OUTER" | "INNER" | "LEFT" | "RIGHT";
+
 export type SND = ClearString | ClearNumber | ClearDate;
 export type SNDArray = ClearString[] | ClearNumber[] | ClearDate[];
 export type SNDB = SND | ClearBoolean;
 export type SNDBArray = SNDArray | ClearBoolean[];
+
 export type TDBCreds = pg.PoolConfig & { database: string; host: string; password: string; port: number; user: string; };
-export type TDBOptions = TMVOptions & {
-	insertOptions?: { onConflict: string; };
-};
-export type TDBOptionsWithoutClient = TMVOptionsWithoutClient & {
-	insertOptions?: { onConflict: string; };
-};
+export type TDBOptions = TMVOptions & { insertOptions?: { onConflict: string; }; };
+export type TDBOptionsWithoutClient = TMVOptionsWithoutClient & { insertOptions?: { onConflict: string; }; };
+
 export type TExecutor = pg.Pool | pg.PoolClient | pg.Client;
 export type TField = { key: string; sign?: string; operator: TOperator; };
+
 export type TMVOptions = {
 	isLoggerEnabled?: boolean;
 	logger?: SharedTypes.TLogger;
 	client?: TExecutor;
 };
+
 export type TMVOptionsWithoutClient = {
 	isLoggerEnabled?: boolean;
 	logger?: SharedTypes.TLogger;
 };
+
 export type TMaterializedView<T extends readonly string[] | string[] = readonly string[]> = {
 	additionalSortingFields?: string[];
 	coreFields: T;
 	name: string;
 };
+
 export type TOperator =
 	| "="
 	| "<>"
@@ -61,6 +64,7 @@ export type TOperator =
 	| "$withoutParameters";
 export type TSOptions = TMVOptions;
 export type TSOptionsWithoutClient = TMVOptionsWithoutClient;
+
 export type TSearchParams = {
 	[key: string]:
 	| TSearchParamsWithOperator
@@ -94,9 +98,8 @@ export type TSearchParamsWithOperator = {
 	"$~"?: string | string[];
 	"$?"?: string | string[];
 };
-export type TSequence = {
-	name: string;
-};
+
+export type TSequence = { name: string; };
 export type TTable<T extends readonly string[] | string[] = readonly string[]> = {
 	additionalSortingFields?: string[];
 	createField: { title: T[number]; type: "unix_timestamp" | "timestamp"; } | null;
