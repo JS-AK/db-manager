@@ -1,3 +1,12 @@
+# [3.46.0](https://github.com/JS-AK/db-manager/compare/v3.45.0...v3.46.0) (2025-08-03)
+
+
+### Features
+
+* added mysql repo domains ([03e511d](https://github.com/JS-AK/db-manager/commit/03e511d27212c7d18d145fa874164efa99394b48))
+* added pg repo domains ([5a61cab](https://github.com/JS-AK/db-manager/commit/5a61cab1651a4ebba0fa6abb3bafb04b3e610efc))
+* updated pg models ([9c50e3e](https://github.com/JS-AK/db-manager/commit/9c50e3ec151c6c399cd362130ea2118d85185926))
+
 # [3.45.0](https://github.com/JS-AK/db-manager/compare/v3.44.1...v3.45.0) (2025-07-30)
 
 
