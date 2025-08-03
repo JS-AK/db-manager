@@ -27,11 +27,20 @@ export class BaseSequence {
 	name;
 
 	constructor(
-		data: { name: string; },
-		dbCreds: Types.TDBCreds,
+		data: Types.TSequence,
+		dbCreds?: Types.TDBCreds,
 		options?: Types.TSOptions,
 	) {
-		this.#executor = connection.getStandardPool(dbCreds);
+		const { client } = options || {};
+
+		if (client) {
+			this.#executor = client;
+		} else if (dbCreds) {
+			this.#executor = connection.getStandardPool(dbCreds);
+		} else {
+			throw new Error("No client or dbCreds provided");
+		}
+
 		this.name = data.name;
 
 		this.#initialArgs = { data, dbCreds, options };
@@ -113,12 +122,12 @@ export class BaseSequence {
 	 */
 	setClientInCurrentClass(client: Types.TExecutor): this {
 		return new (this.constructor as new (
-			data: { name: string; },
-			dbCreds: Types.TDBCreds,
+			data: Types.TSequence,
+			dbCreds?: Types.TDBCreds,
 			options?: Types.TSOptions,
 		) => this)(
 			{ ...this.#initialArgs.data },
-			{ ...this.#initialArgs.dbCreds },
+			this.#initialArgs.dbCreds ? { ...this.#initialArgs.dbCreds } : undefined,
 			{ ...this.#initialArgs.options, client },
 		);
 	}
@@ -135,7 +144,7 @@ export class BaseSequence {
 	setClientInBaseClass(client: Types.TExecutor): BaseSequence {
 		return new BaseSequence(
 			{ ...this.#initialArgs.data },
-			{ ...this.#initialArgs.dbCreds },
+			this.#initialArgs.dbCreds ? { ...this.#initialArgs.dbCreds } : undefined,
 			{ ...this.#initialArgs.options, client },
 		);
 	}

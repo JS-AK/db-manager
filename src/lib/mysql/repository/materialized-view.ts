@@ -1,68 +1,91 @@
+import * as ModelTypes from "../model/types.js";
 import * as SharedTypes from "../../../shared-types/index.js";
-import * as Types from "./types.js";
-import { BaseView as Model, TExecutor } from "../model/index.js";
+import * as Types from "../domain/types.js";
+import { BaseMaterializedView as Model, TExecutor } from "../model/index.js";
+import { QueryBuilder } from "../query-builder/query-builder.js";
 
-export type BaseViewGeneric = {
-	AdditionalSortingFields?: string;
-	CoreFields: SharedTypes.TRawParams;
-	SearchFields?: Types.TDomainFields;
-};
+import { BaseMaterializedViewGeneric as MaterializedViewGeneric } from "../domain/materialized-view.js";
 
 /**
- * A class representing a base view with generic type parameters for handling database operations.
+ * A class representing a base materialized view with generic type parameters for handling database operations.
  *
  * @experimental
  */
-export class BaseView<
-	M extends Model = Model,
-	BVG extends BaseViewGeneric = BaseViewGeneric
-> {
+export class MaterializedView<MVG extends MaterializedViewGeneric = MaterializedViewGeneric> {
 	#name;
 	#coreFields;
+
+	#initialArgs;
 
 	/**
 	 * The model associated with this domain.
 	 */
-	model;
+	#model;
 
 	/**
-	 * Initializes a new instance of the `BaseView` class.
+	 * Initializes a new instance of the `MaterializedView` class.
 	 *
-	 * @param data - The domain data object containing the model.
+	 * Wraps a {@link Model} instance based on the provided materialized view schema definition,
+	 * allowing structured access to materialized view metadata and behavior.
 	 *
-	 * @throws {Error} If `data.model` is not an instance of `Model`.
+	 * @param config - Configuration object for initializing the materialized view.
+	 * @param config.schema - Definition of the materialized view structure, including:
+	 *   - `name`: The name of the materialized view.
+	 *   - `coreFields`: Array of field names in the materialized view.
+	 *   - `additionalSortingFields`: (optional) Fields used for secondary sorting.
+	 * @param [config.client] - Optional custom executor (e.g., `pg.PoolClient`) to handle queries manually.
+	 * @param [config.dbCreds] - Database connection credentials, used if `client` is not provided:
+	 *   - `host`, `port`, `user`, `password`, `database`.
+	 * @param [config.options] - Additional model options:
+	 *   - Any other supported `Model`-level configuration excluding direct `client`.
+	 *
+	 * @throws {Error} If neither `client` nor `dbCreds` are provided, or if schema is invalid.
 	 */
-	constructor(data: Types.TDomain<M>) {
-		if (!(data.model instanceof Model)) {
-			throw new Error("You need pass data.model extended of PG.Model.BaseView");
-		}
+	constructor(config: {
+		client?: TExecutor;
+		dbCreds?: ModelTypes.TDBCreds;
+		options?: ModelTypes.TMVOptionsWithoutClient;
+		schema: ModelTypes.TMaterializedView<SharedTypes.TStringKeys<MVG["CoreFields"]>[]>;
+	}) {
+		this.#initialArgs = structuredClone(config);
 
-		this.model = data.model;
+		this.#model = new Model(config.schema, config.dbCreds, config.options);
 
-		this.#name = this.model.name;
-		this.#coreFields = this.model.coreFields;
+		this.#name = this.#model.name;
+		this.#coreFields = this.#model.coreFields;
 	}
 
 	/**
-	 * Gets the name of the database view.
+	 * Gets the name of the database materialized view.
 	 *
-	 * @returns The name of the view.
+	 * @returns The name of the materialized view.
 	 */
 	get name() {
 		return this.#name;
 	}
 
 	/**
-	 * Gets the fields of the database view.
+	 * Gets the fields of the database materialized view.
 	 *
-	 * @returns An array of field names in the view.
+	 * @returns An array of field names in the materialized view.
 	 */
 	get coreFields() {
 		return this.#coreFields;
 	}
 
 	/**
-	 * Compare query operations for the view.
+	 * Gets the internal model object associated with this materialized view.
+	 *
+	 * This provides access to the underlying model methods and fields.
+	 *
+	 * @returns The internal model object.
+	 */
+	get model() {
+		return this.#model;
+	}
+
+	/**
+	 * Compare query operations for the materialized view.
 	 */
 	compareQuery = {
 
@@ -78,13 +101,13 @@ export class BaseView<
 		 *
 		 * @returns An object containing the SQL query string and the values for the parameters.
 		 */
-		getArrByParams: <T extends keyof BVG["CoreFields"]>(options: {
-			params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>;
-			paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>[];
+		getArrByParams: <T extends keyof MVG["CoreFields"]>(options: {
+			params: Types.TSearchParams<Types.TConditionalDomainFieldsType<MVG["SearchFields"], MVG["CoreFields"]>>;
+			paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<MVG["SearchFields"], MVG["CoreFields"]>>[];
 			selected?: [T, ...T[]];
 			pagination?: SharedTypes.TPagination;
 			order?: {
-				orderBy: Extract<keyof BVG["CoreFields"], string> | (BVG["AdditionalSortingFields"] extends string ? BVG["AdditionalSortingFields"] : never);
+				orderBy: Extract<keyof MVG["CoreFields"], string> | (MVG["AdditionalSortingFields"] extends string ? MVG["AdditionalSortingFields"] : never);
 				ordering: SharedTypes.TOrdering;
 			}[];
 		}): Types.TCompareQueryResult => this.model.compareQuery.getArrByParams({ $and: options.params, $or: options.paramsOr }, options.selected as string[], options.pagination, options.order),
@@ -99,8 +122,8 @@ export class BaseView<
 		 * @returns An object containing the SQL query string and the values for the parameters.
 		 */
 		getCountByParams: (options: {
-			params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>;
-			paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>[];
+			params: Types.TSearchParams<Types.TConditionalDomainFieldsType<MVG["SearchFields"], MVG["CoreFields"]>>;
+			paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<MVG["SearchFields"], MVG["CoreFields"]>>[];
 		}): Types.TCompareQueryResult => this.model.compareQuery.getCountByParams({ $and: options.params, $or: options.paramsOr }),
 
 		/**
@@ -113,9 +136,9 @@ export class BaseView<
 		 *
 		 * @returns An object containing the SQL query string and the values for the parameters.
 		 */
-		getOneByParams: <T extends keyof BVG["CoreFields"]>(options: {
-			params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>;
-			paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>[];
+		getOneByParams: <T extends keyof MVG["CoreFields"]>(options: {
+			params: Types.TSearchParams<Types.TConditionalDomainFieldsType<MVG["SearchFields"], MVG["CoreFields"]>>;
+			paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<MVG["SearchFields"], MVG["CoreFields"]>>[];
 			selected?: [T, ...T[]];
 		}): Types.TCompareQueryResult => this.model.compareQuery.getOneByParams({ $and: options.params, $or: options.paramsOr }, options.selected as string[]),
 
@@ -132,20 +155,21 @@ export class BaseView<
 		 *
 		 * @returns The SQL query and its parameter values for use with a streaming interface.
 		 */
-		streamArrByParams: <T extends keyof BVG["CoreFields"]>(options: {
-			params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>;
-			paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>[];
+		streamArrByParams: <T extends keyof MVG["CoreFields"]>(options: {
+			params: Types.TSearchParams<Types.TConditionalDomainFieldsType<MVG["SearchFields"], MVG["CoreFields"]>>;
+			paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<MVG["SearchFields"], MVG["CoreFields"]>>[];
 			selected?: [T, ...T[]];
 			pagination?: SharedTypes.TPagination;
 			order?: {
-				orderBy: Extract<keyof BVG["CoreFields"], string> | (BVG["AdditionalSortingFields"] extends string ? BVG["AdditionalSortingFields"] : never);
+				orderBy: Extract<keyof MVG["CoreFields"], string> | (MVG["AdditionalSortingFields"] extends string ? MVG["AdditionalSortingFields"] : never);
 				ordering: SharedTypes.TOrdering;
 			}[];
 		}): Types.TCompareQueryResult => this.model.compareQuery.streamArrByParams({ $and: options.params, $or: options.paramsOr }, options.selected as string[], options.pagination, options.order),
+
 	};
 
 	/**
-	 * Sets the pool client in the current class.
+	 * Sets the client in the current class.
 	 *
 	 * @experimental
 	 *
@@ -153,23 +177,18 @@ export class BaseView<
 	 *
 	 * @returns A new instance of the current class with the updated client.
 	 */
-	setClientInCurrentClass(client: TExecutor): this {
-		return new (this.constructor as new (data: Types.TDomain<M>) => this)({
-			model: this.model.setClientInCurrentClass(client),
+	setupClient(client: TExecutor): this {
+		return new (this.constructor as new (config: {
+			client?: TExecutor;
+			dbCreds?: ModelTypes.TDBCreds;
+			options?: ModelTypes.TMVOptionsWithoutClient;
+			schema: ModelTypes.TMaterializedView<SharedTypes.TStringKeys<MVG["CoreFields"]>[]>;
+		}) => this)({
+			client,
+			dbCreds: this.#initialArgs.dbCreds,
+			options: this.#initialArgs.options,
+			schema: this.#initialArgs.schema,
 		});
-	}
-
-	/**
-	 * Sets the pool client in the base class.
-	 *
-	 * @experimental
-	 *
-	 * @param client - The client connection to set.
-	 *
-	 * @returns A new instance of the BaseView class with the updated client.
-	 */
-	setClientInBaseClass(client: TExecutor): BaseView<Model, BVG> {
-		return new BaseView({ model: this.model.setClientInBaseClass(client) });
 	}
 
 	/**
@@ -186,16 +205,17 @@ export class BaseView<
 	 *
 	 * @returns A promise that resolves to an array of records with the selected fields.
 	 */
-	async getArrByParams<T extends keyof BVG["CoreFields"]>(options: {
-		params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>;
-		paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>[];
+	async getArrByParams<T extends keyof MVG["CoreFields"]>(options: {
+		params: Types.TSearchParams<Types.TConditionalDomainFieldsType<MVG["SearchFields"], MVG["CoreFields"]>>;
+		paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<MVG["SearchFields"], MVG["CoreFields"]>>[];
 		selected?: [T, ...T[]];
-		pagination?: SharedTypes.TPagination; order?: {
-			orderBy: Extract<keyof BVG["CoreFields"], string> | (BVG["AdditionalSortingFields"] extends string ? BVG["AdditionalSortingFields"] : never);
+		pagination?: SharedTypes.TPagination;
+		order?: {
+			orderBy: Extract<keyof MVG["CoreFields"], string> | (MVG["AdditionalSortingFields"] extends string ? MVG["AdditionalSortingFields"] : never);
 			ordering: SharedTypes.TOrdering;
 		}[];
-	}): Promise<Array<Pick<BVG["CoreFields"], T>>> {
-		return this.model.getArrByParams<Pick<BVG["CoreFields"], T>>(
+	}): Promise<Array<Pick<MVG["CoreFields"], T>>> {
+		return this.model.getArrByParams<Pick<MVG["CoreFields"], T>>(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 			options.pagination,
@@ -213,8 +233,8 @@ export class BaseView<
 	 * @returns A promise that resolves to the number of matching records.
 	 */
 	async getCountByParams(options: {
-		params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>;
-		paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>[];
+		params: Types.TSearchParams<Types.TConditionalDomainFieldsType<MVG["SearchFields"], MVG["CoreFields"]>>;
+		paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<MVG["SearchFields"], MVG["CoreFields"]>>[];
 	}): Promise<number> {
 		return this.model.getCountByParams({ $and: options.params, $or: options.paramsOr });
 	}
@@ -229,12 +249,12 @@ export class BaseView<
 	 *
 	 * @returns A promise that resolves to an object containing either a message (if not found) or the matched record.
 	 */
-	async getOneByParams<T extends keyof BVG["CoreFields"]>(options: {
-		params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>;
-		paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>[];
+	async getOneByParams<T extends keyof MVG["CoreFields"]>(options: {
+		params: Types.TSearchParams<Types.TConditionalDomainFieldsType<MVG["SearchFields"], MVG["CoreFields"]>>;
+		paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<MVG["SearchFields"], MVG["CoreFields"]>>[];
 		selected?: [T, ...T[]];
-	}): Promise<{ message?: string; one?: Pick<BVG["CoreFields"], T>; }> {
-		const one = await this.model.getOneByParams<Pick<BVG["CoreFields"], T>>(
+	}): Promise<{ message?: string; one?: Pick<MVG["CoreFields"], T>; }> {
+		const one = await this.model.getOneByParams<Pick<MVG["CoreFields"], T>>(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 		);
@@ -242,6 +262,17 @@ export class BaseView<
 		if (!one) return { message: `Not found from ${this.model.name}` };
 
 		return { one };
+	}
+
+	/**
+	 * Refreshes the materialized view.
+	 *
+	 * @param [concurrently=false] - Whether to refresh the view concurrently.
+	 *
+	 * @returns A promise that resolves when the view is refreshed.
+	 */
+	async refresh(concurrently: boolean = false): Promise<void> {
+		return this.model.refresh(concurrently);
 	}
 
 	/**
@@ -261,21 +292,30 @@ export class BaseView<
 	 *
 	 * @returns A promise that resolves to an array of records with the selected fields.
 	 */
-	async streamArrByParams<T extends keyof BVG["CoreFields"]>(options: {
-		params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>;
-		paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BVG["SearchFields"], BVG["CoreFields"]>>[];
+	async streamArrByParams<T extends keyof MVG["CoreFields"]>(options: {
+		params: Types.TSearchParams<Types.TConditionalDomainFieldsType<MVG["SearchFields"], MVG["CoreFields"]>>;
+		paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<MVG["SearchFields"], MVG["CoreFields"]>>[];
 		selected?: [T, ...T[]];
 		pagination?: SharedTypes.TPagination;
 		order?: {
-			orderBy: Extract<keyof BVG["CoreFields"], string> | (BVG["AdditionalSortingFields"] extends string ? BVG["AdditionalSortingFields"] : never);
+			orderBy: Extract<keyof MVG["CoreFields"], string> | (MVG["AdditionalSortingFields"] extends string ? MVG["AdditionalSortingFields"] : never);
 			ordering: SharedTypes.TOrdering;
 		}[];
-	}): Promise<SharedTypes.ITypedPgStream<Pick<BVG["CoreFields"], T>>> {
-		return this.model.streamArrByParams<Pick<BVG["CoreFields"], T>>(
+	}): Promise<SharedTypes.ITypedPgStream<Pick<MVG["CoreFields"], T>>> {
+		return this.model.streamArrByParams<Pick<MVG["CoreFields"], T>>(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 			options.pagination,
 			options.order,
 		);
+	}
+
+	queryBuilder(options?: {
+		client?: TExecutor;
+		isLoggerEnabled?: boolean;
+		logger?: SharedTypes.TLogger;
+		tableName?: string;
+	}): QueryBuilder {
+		return this.#model.queryBuilder(options);
 	}
 }

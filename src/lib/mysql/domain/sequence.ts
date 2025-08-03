@@ -2,7 +2,7 @@ import * as Types from "./types.js";
 
 import { BaseSequence as Model, TExecutor } from "../model/index.js";
 
-type BaseSequenceGeneric = string | number;
+export type BaseSequenceGeneric = string | number;
 
 /**
  * @experimental

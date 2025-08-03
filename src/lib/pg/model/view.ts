@@ -15,7 +15,7 @@ import { setLoggerAndExecutor } from "../helpers/index.js";
  * The `BaseView` class provides methods to interact with and manage views
  * in a PostgreSQL database. It includes functionality for querying and counting data of views.
  */
-export class BaseView {
+export class BaseView<const T extends readonly string[] = readonly string[]> {
 	#sortingOrders = new Set(["ASC", "DESC"]);
 	#coreFieldsSet;
 	#isLoggerEnabled: boolean | undefined;
@@ -41,7 +41,7 @@ export class BaseView {
 	/**
 	 * The core fields of the view.
 	 */
-	coreFields: string[];
+	coreFields: readonly string[];
 
 	/**
 	 * Creates an instance of `BaseMaterializedView`.
@@ -50,15 +50,24 @@ export class BaseView {
 	 * @param data.coreFields - The core fields of the view.
 	 * @param data.name - The name of the view.
 	 * @param [data.additionalSortingFields] - Additional fields allowed for sorting.
-	 * @param dbCreds - Database credentials.
+	 * @param [dbCreds] - Database credentials.
 	 * @param [options] - Additional options.
 	 */
 	constructor(
-		data: { additionalSortingFields?: string[]; coreFields: string[]; name: string; },
-		dbCreds: Types.TDBCreds,
+		data: Types.TView<T>,
+		dbCreds?: Types.TDBCreds,
 		options?: Types.TVOptions,
 	) {
-		this.#executor = connection.getStandardPool(dbCreds);
+		const { client } = options || {};
+
+		if (client) {
+			this.#executor = client;
+		} else if (dbCreds) {
+			this.#executor = connection.getStandardPool(dbCreds);
+		} else {
+			throw new Error("No client or dbCreds provided");
+		}
+
 		this.name = data.name;
 		this.coreFields = data.coreFields;
 
@@ -173,12 +182,12 @@ export class BaseView {
 	 */
 	setClientInCurrentClass(client: Types.TExecutor): this {
 		return new (this.constructor as new (
-			data: { additionalSortingFields?: string[]; coreFields: string[]; name: string; },
-			dbCreds: Types.TDBCreds,
+			data: Types.TView<T>,
+			dbCreds?: Types.TDBCreds,
 			options?: Types.TVOptions,
 		) => this)(
 			{ ...this.#initialArgs.data },
-			{ ...this.#initialArgs.dbCreds },
+			this.#initialArgs.dbCreds ? { ...this.#initialArgs.dbCreds } : undefined,
 			{ ...this.#initialArgs.options, client },
 		);
 	}
@@ -195,7 +204,7 @@ export class BaseView {
 	setClientInBaseClass(client: Types.TExecutor): BaseView {
 		return new BaseView(
 			{ ...this.#initialArgs.data },
-			{ ...this.#initialArgs.dbCreds },
+			this.#initialArgs.dbCreds ? { ...this.#initialArgs.dbCreds } : undefined,
 			{ ...this.#initialArgs.options, client },
 		);
 	}

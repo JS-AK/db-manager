@@ -15,15 +15,31 @@ export type SND = ClearString | ClearNumber | ClearDate;
 export type SNDArray = ClearString[] | ClearNumber[] | ClearDate[];
 export type SNDB = SND | ClearBoolean;
 export type SNDBArray = SNDArray | ClearBoolean[];
+
 export type TDBCreds = mysql.PoolOptions & { database: string; host: string; password: string; port: number; user: string; };
 export type TDBOptions = TMVOptions & { insertOptions?: { onConflict: string; }; };
+export type TDBOptionsWithoutClient = TMVOptionsWithoutClient & { insertOptions?: { onConflict: string; }; };
+
 export type TExecutor = mysql.Pool | mysql.PoolConnection | mysql.Connection;
 export type TField = { key: string; sign?: string; operator: TOperator; };
+
 export type TMVOptions = {
 	isLoggerEnabled?: boolean;
 	logger?: SharedTypes.TLogger;
 	client?: TExecutor;
 };
+
+export type TMVOptionsWithoutClient = {
+	isLoggerEnabled?: boolean;
+	logger?: SharedTypes.TLogger;
+};
+
+export type TMaterializedView<T extends readonly string[] | string[] = readonly string[]> = {
+	additionalSortingFields?: string[];
+	coreFields: T;
+	name: string;
+};
+
 export type TOperator =
 	| "="
 	| "<>"
@@ -48,7 +64,10 @@ export type TOperator =
 	| "$nilike"
 	| "$nin"
 	| "$withoutParameters";
+
 export type TSOptions = TMVOptions;
+export type TSOptionsWithoutClient = TMVOptionsWithoutClient;
+
 export type TSearchParams = {
 	[key: string]:
 	| TSearchParamsWithOperator
@@ -82,6 +101,8 @@ export type TSearchParamsWithOperator = {
 	// "$~"?: string | string[];
 	// "$?"?: string | string[];
 };
+
+export type TSequence = { name: string; };
 export type TTable<T extends readonly string[] | string[] = readonly string[]> = {
 	additionalSortingFields?: string[];
 	createField: { title: T[number]; type: "unix_timestamp" | "timestamp"; } | null;
@@ -92,3 +113,5 @@ export type TTable<T extends readonly string[] | string[] = readonly string[]> =
 	updateField: { title: T[number]; type: "unix_timestamp" | "timestamp"; } | null;
 };
 export type TVOptions = TMVOptions;
+export type TVOptionsWithoutClient = TMVOptionsWithoutClient;
+export type TView<T extends readonly string[] | string[] = readonly string[]> = TMaterializedView<T>;

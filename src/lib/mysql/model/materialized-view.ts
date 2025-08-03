@@ -15,7 +15,7 @@ import { setLoggerAndExecutor } from "../helpers/index.js";
  * The `BaseMaterializedView` class provides methods to interact with and manage materialized views
  * in a MySQL database. It includes functionality for querying, counting, and refreshing materialized views.
  */
-export class BaseMaterializedView {
+export class BaseMaterializedView<const T extends readonly string[] = readonly string[]> {
 	#sortingOrders = new Set(["ASC", "DESC"]);
 	#coreFieldsSet;
 	#isLoggerEnabled: boolean | undefined;
@@ -41,7 +41,7 @@ export class BaseMaterializedView {
 	/**
 	 * @type The core fields of the materialized view.
 	 */
-	coreFields: string[];
+	coreFields: readonly string[];
 
 	/**
 	 * Creates an instance of `BaseMaterializedView`.
@@ -50,15 +50,24 @@ export class BaseMaterializedView {
 	 * @param data.coreFields - The core fields of the materialized view.
 	 * @param data.name - The name of the materialized view.
 	 * @param [data.additionalSortingFields] - Additional fields allowed for sorting.
-	 * @param dbCreds - Database credentials.
+	 * @param [dbCreds] - Database credentials.
 	 * @param [options] - Additional options.
 	 */
 	constructor(
-		data: { additionalSortingFields?: string[]; coreFields: string[]; name: string; },
-		dbCreds: Types.TDBCreds,
+		data: Types.TMaterializedView<T>,
+		dbCreds?: Types.TDBCreds,
 		options?: Types.TMVOptions,
 	) {
-		this.#executor = connection.getStandardPool(dbCreds);
+		const { client } = options || {};
+
+		if (client) {
+			this.#executor = client;
+		} else if (dbCreds) {
+			this.#executor = connection.getStandardPool(dbCreds);
+		} else {
+			throw new Error("No client or dbCreds provided");
+		}
+
 		this.name = data.name;
 		this.coreFields = data.coreFields;
 
@@ -157,12 +166,12 @@ export class BaseMaterializedView {
 	 */
 	setClientInCurrentClass(client: Types.TExecutor): this {
 		return new (this.constructor as new (
-			data: { additionalSortingFields?: string[]; coreFields: string[]; name: string; },
-			dbCreds: Types.TDBCreds,
+			data: Types.TMaterializedView<T>,
+			dbCreds?: Types.TDBCreds,
 			options?: Types.TMVOptions,
 		) => this)(
 			{ ...this.#initialArgs.data },
-			{ ...this.#initialArgs.dbCreds },
+			this.#initialArgs.dbCreds ? { ...this.#initialArgs.dbCreds } : undefined,
 			{ ...this.#initialArgs.options, client },
 		);
 	}
@@ -179,7 +188,7 @@ export class BaseMaterializedView {
 	setClientInBaseClass(client: Types.TExecutor): BaseMaterializedView {
 		return new BaseMaterializedView(
 			{ ...this.#initialArgs.data },
-			{ ...this.#initialArgs.dbCreds },
+			this.#initialArgs.dbCreds ? { ...this.#initialArgs.dbCreds } : undefined,
 			{ ...this.#initialArgs.options, client },
 		);
 	}
