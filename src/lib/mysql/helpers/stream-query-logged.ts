@@ -4,8 +4,8 @@ import { randomUUID } from "node:crypto";
 import { PoolConnection as RawPoolConnection } from "mysql2";
 import mysql from "mysql2/promise";
 
+import * as ModelTypes from "../model/types.js";
 import * as SharedTypes from "../../../shared-types/index.js";
-import { TExecutor } from "../model/types.js";
 
 function isPool(conn: unknown): conn is mysql.Pool {
 	return typeof conn === "object" && conn !== null && "getConnection" in conn;
@@ -20,9 +20,10 @@ function isRawConnection(conn: unknown): conn is RawPoolConnection {
 }
 
 async function runStreamQuery(
-	executor: TExecutor,
+	executor: ModelTypes.TExecutor,
 	query: string,
 	values?: unknown[],
+	config?: ModelTypes.StreamOptions,
 ): Promise<Readable> {
 	if (isPool(executor)) {
 		const promiseConn = await executor.getConnection();
@@ -42,7 +43,7 @@ async function runStreamQuery(
 	} else if (isPoolConnection(executor)) {
 		const rawConn = executor.connection as unknown as RawPoolConnection;
 
-		return rawConn.query(query, values).stream();
+		return rawConn.query(query, values).stream(config);
 	} else if (isRawConnection(executor)) {
 		return (executor as RawPoolConnection).query(query, values).stream();
 	} else {
@@ -52,11 +53,12 @@ async function runStreamQuery(
 
 async function streamQueryLogged(
 	this: {
-		client: TExecutor;
+		client: ModelTypes.TExecutor;
 		logger: SharedTypes.TLogger;
 	},
 	query: string,
 	values?: unknown[],
+	config?: ModelTypes.StreamOptions,
 ): Promise<Readable> {
 	const queryId = randomUUID();
 	const start = performance.now();
@@ -66,7 +68,7 @@ async function streamQueryLogged(
 	this.logger.info(`[${queryId}] Stream query started. QUERY: ${query} VALUES: ${JSON.stringify(values)}`);
 
 	try {
-		stream = await runStreamQuery(this.client, query, values);
+		stream = await runStreamQuery(this.client, query, values, config);
 	} catch (error) {
 		const execTime = Math.round(performance.now() - start);
 
@@ -99,7 +101,7 @@ async function streamQueryLogged(
 }
 
 export function setStreamExecutor(
-	executor: TExecutor,
+	executor: ModelTypes.TExecutor,
 	options?: {
 		isLoggerEnabled?: boolean;
 		logger?: SharedTypes.TLogger;
@@ -112,20 +114,20 @@ export function setStreamExecutor(
 		const resultLogger = logger || { error: console.error, info: console.log };
 
 		return {
-			executeSqlStream: async (sql: {
-				query: string;
-				values?: unknown[];
-			}): Promise<Readable> => {
-				return streamQueryLogged.bind({ client: executor, logger: resultLogger })(sql.query, sql.values);
+			executeSqlStream: async (
+				sql: { query: string; values?: unknown[]; },
+				config?: ModelTypes.StreamOptions,
+			): Promise<Readable> => {
+				return streamQueryLogged.bind({ client: executor, logger: resultLogger })(sql.query, sql.values, config);
 			},
 		};
 	} else {
 		return {
-			executeSqlStream: async (sql: {
-				query: string;
-				values?: unknown[];
-			}): Promise<Readable> => {
-				return runStreamQuery(executor, sql.query, sql.values);
+			executeSqlStream: async (
+				sql: { query: string; values?: unknown[]; },
+				config?: ModelTypes.StreamOptions,
+			): Promise<Readable> => {
+				return runStreamQuery(executor, sql.query, sql.values, config);
 			},
 		};
 	}

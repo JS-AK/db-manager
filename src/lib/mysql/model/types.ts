@@ -1,3 +1,5 @@
+import { Readable } from "node:stream";
+
 import mysql from "mysql2/promise";
 
 import * as SharedTypes from "../../../shared-types/index.js";
@@ -16,11 +18,18 @@ export type SNDArray = ClearString[] | ClearNumber[] | ClearDate[];
 export type SNDB = SND | ClearBoolean;
 export type SNDBArray = SNDArray | ClearBoolean[];
 
+export type StreamOptions = {
+	highWaterMark?: number;
+	objectMode?: boolean;
+};
+
 export type TDBCreds = mysql.PoolOptions & { database: string; host: string; password: string; port: number; user: string; };
 export type TDBOptions = TMVOptions & { insertOptions?: { onConflict: string; }; };
 export type TDBOptionsWithoutClient = TMVOptionsWithoutClient & { insertOptions?: { onConflict: string; }; };
 
+export type TExecuteSqlStream = (sql: { query: string; values?: unknown[]; }, config?: StreamOptions) => Promise<Readable>;
 export type TExecutor = mysql.Pool | mysql.PoolConnection | mysql.Connection;
+
 export type TField = { key: string; sign?: string; operator: TOperator; };
 
 export type TMVOptions = {

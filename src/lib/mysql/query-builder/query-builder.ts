@@ -1,5 +1,3 @@
-import { Readable } from "node:stream";
-
 import mysql from "mysql2/promise";
 
 import * as DomainTypes from "../domain/types.js";
@@ -21,7 +19,7 @@ export class QueryBuilder {
 	#queryHandler;
 	#logger?: SharedTypes.TLogger;
 	#executeSql;
-	#executeSqlStream: (sql: { query: string; values?: unknown[]; }) => Promise<Readable>;
+	#executeSqlStream: ModelTypes.TExecuteSqlStream;
 
 	#joinTypes: Record<ModelTypes.Join, string> = {
 		CROSS: "CROSS",
@@ -623,13 +621,20 @@ export class QueryBuilder {
 	/**
 	 * Executes the SQL query and returns a readable stream of typed rows.
 	 *
-	 * @typeParam T - The expected shape of each streamed row.
+	 * @param data - Optional execution parameters.
+	 * @param data.streamOptions - Optional stream configuration:
+	 * - `highWaterMark`: The maximum number of objects to store in the internal buffer before ceasing to read from the underlying resource.
+	 * - `objectMode`: If `true`, the stream will emit JavaScript objects rather than `Buffer` or `string` values.
+	 *
 	 * @returns A readable stream that emits rows of type `T` on the `"data"` event.
 	 */
-	async executeQueryStream<T>(): Promise<SharedTypes.ITypedPgStream<T>> {
+	async executeQueryStream<T>(data?: {
+		streamOptions?: ModelTypes.StreamOptions;
+	}): Promise<SharedTypes.ITypedPgStream<T>> {
+		const { streamOptions } = data || {};
 		const sql = this.compareQuery();
 
-		return this.#executeSqlStream(sql);
+		return this.#executeSqlStream(sql, streamOptions);
 	}
 
 	/**

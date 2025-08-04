@@ -1,5 +1,3 @@
-import { Readable } from "node:stream";
-
 import pg from "pg";
 
 import * as DomainTypes from "../domain/types.js";
@@ -21,7 +19,7 @@ export class QueryBuilder {
 	#queryHandler;
 	#logger?: SharedTypes.TLogger;
 	#executeSql;
-	#executeSqlStream: (sql: { query: string; values?: unknown[]; }) => Promise<Readable>;
+	#executeSqlStream: ModelTypes.TExecuteSqlStream;
 
 	#joinTypes: Record<ModelTypes.Join, string> = {
 		CROSS: "CROSS",
@@ -642,13 +640,24 @@ export class QueryBuilder {
 	/**
 	 * Executes the SQL query and returns a readable stream of typed rows.
 	 *
-	 * @typeParam T - The expected shape of each streamed row.
+	 * Useful for processing large result sets without loading them entirely into memory.
+	 *
+	 * @param [data] - Optional execution parameters.
+	 * @param [data.streamOptions] - Optional configuration for stream behavior:
+	 * - `batchSize`: Number of rows fetched from the database per batch.
+	 * - `highWaterMark`: Maximum number of rows buffered internally before pausing reads.
+	 * - `rowMode`: If set to `"array"`, rows are returned as arrays instead of objects.
+	 * - `types`: Custom type parser map for PostgreSQL data types.
+	 *
 	 * @returns A readable stream that emits rows of type `T` on the `"data"` event.
 	 */
-	async executeQueryStream<T extends pg.QueryResultRow>(): Promise<SharedTypes.ITypedPgStream<T>> {
+	async executeQueryStream<T>(data?: {
+		streamOptions?: ModelTypes.StreamOptions;
+	}): Promise<SharedTypes.ITypedPgStream<T>> {
+		const { streamOptions } = data || {};
 		const sql = this.compareQuery();
 
-		return this.#executeSqlStream(sql);
+		return this.#executeSqlStream(sql, streamOptions);
 	}
 
 	/**

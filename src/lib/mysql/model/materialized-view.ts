@@ -1,5 +1,3 @@
-import { Readable } from "node:stream";
-
 import mysql from "mysql2/promise";
 
 import * as Helpers from "../helpers/index.js";
@@ -21,7 +19,7 @@ export class BaseMaterializedView<const T extends readonly string[] = readonly s
 	#isLoggerEnabled: boolean | undefined;
 	#logger?: SharedTypes.TLogger;
 	#executeSql;
-	#executeSqlStream: (sql: { query: string; values?: unknown[]; }) => Promise<Readable>;
+	#executeSqlStream: Types.TExecuteSqlStream;
 
 	#initialArgs;
 
@@ -420,28 +418,36 @@ export class BaseMaterializedView<const T extends readonly string[] = readonly s
 
 	/**
 	 * Returns a stream of records from the database based on the provided search parameters.
-	 * Useful for handling large result sets efficiently.
+	 * Useful for handling large result sets efficiently without loading all data into memory.
 	 *
-	 * @param params - Search parameters.
-	 * @param params.$and - AND conditions for the search.
-	 * @param [params.$or] - OR conditions for the search.
-	 * @param [selected=["*"]] - Fields to be selected.
-	 * @param [pagination] - Pagination details.
-	 * @param [order] - Order by details.
-	 * @param order.orderBy - Field to order by.
-	 * @param order.ordering - Ordering direction ("ASC" or "DESC").
+	 * @param params - Search parameters for filtering results.
+	 * @param params.$and - Required conditions combined using logical AND.
+	 * @param [params.$or] - Optional conditions combined using logical OR.
 	 *
-	 * @returns A promise that resolves to an array of records.
+	 * @param [selected=["*"]] - List of field names to include in each record.
+	 *
+	 * @param [pagination] - Controls how many records to retrieve and from which offset.
+	 *
+	 * @param [order] - Sort order configuration.
+	 * @param order[].orderBy - The field to sort by.
+	 * @param order[].ordering - Sort direction: `"ASC"` or `"DESC"`.
+	 *
+	 * @param [streamOptions] - Optional configuration for the underlying stream:
+	 * - `highWaterMark`: Maximum number of records buffered in the stream.
+	 * - `objectMode`: If `true`, the stream will emit objects (should be enabled by default for object streams).
+	 *
+	 * @returns A readable stream that emits rows of type `T` on the `"data"` event.
 	 */
 	async streamArrByParams<T>(
 		params: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
 		selected: string[] = ["*"],
 		pagination?: SharedTypes.TPagination,
 		order?: { orderBy: string; ordering: SharedTypes.TOrdering; }[],
+		streamOptions?: Types.StreamOptions,
 	): Promise<SharedTypes.ITypedPgStream<T>> {
 		const sql = this.compareQuery.streamArrByParams(params, selected, pagination, order);
 
-		return this.#executeSqlStream(sql);
+		return this.#executeSqlStream(sql, streamOptions);
 	}
 
 	/**

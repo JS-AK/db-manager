@@ -1,6 +1,11 @@
 import * as SharedTypes from "../../../shared-types/index.js";
 import * as Types from "./types.js";
-import { BaseMaterializedView as Model, TExecutor } from "../model/index.js";
+
+import {
+	BaseMaterializedView as Model,
+	StreamOptions,
+	TExecutor,
+} from "../model/index.js";
 
 export type BaseMaterializedViewGeneric = {
 	AdditionalSortingFields?: string;
@@ -263,31 +268,41 @@ export class BaseMaterializedView<
 	 * Useful for efficiently processing large datasets without loading them entirely into memory.
 	 *
 	 * @param options - The options for retrieving records.
-	 * @param options.params - The search parameters to match records.
-	 * @param [options.paramsOr] - An optional array of search parameters, where at least one must be matched.
-	 * @param [options.selected] - The fields to return for each matched record.
-	 * @param [options.pagination] - The pagination options.
-	 * @param [options.order] - The sorting options.
-	 * @param options.order.orderBy - The field by which to sort the results.
-	 * @param options.order.ordering - The ordering direction (e.g., ASC, DESC).
+	 * @param options.params - The search parameters to match all (AND condition).
+	 * @param [options.paramsOr] - An optional array of search parameters where at least one must match (OR condition).
+	 * @param [options.selected] - The list of fields to include in each returned record.
+	 * @param [options.pagination] - The pagination options to control result limits and offsets.
+	 * @param [options.order] - The sorting rules for the result set.
+	 * @param options.order[].orderBy - The field to sort by.
+	 * @param options.order[].ordering - The sorting direction (`ASC` or `DESC`).
 	 *
-	 * @returns A promise that resolves to an array of records with the selected fields.
+	 * @param [streamOptions] - Optional configuration for the stream behavior:
+	 * - `batchSize`: Number of rows fetched from the database per batch.
+	 * - `highWaterMark`: Maximum number of rows buffered in memory.
+	 * - `rowMode`: If set to `"array"`, rows will be returned as arrays instead of objects.
+	 * - `types`: Custom type parser map for Postgres types.
+	 *
+	 * @returns A readable stream emitting records of type `Pick<VG["CoreFields"], T>` on the `"data"` event.
 	 */
-	async streamArrByParams<T extends keyof BMVG["CoreFields"]>(options: {
-		params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>;
-		paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>[];
-		selected?: [T, ...T[]];
-		pagination?: SharedTypes.TPagination;
-		order?: {
-			orderBy: Extract<keyof BMVG["CoreFields"], string> | (BMVG["AdditionalSortingFields"] extends string ? BMVG["AdditionalSortingFields"] : never);
-			ordering: SharedTypes.TOrdering;
-		}[];
-	}): Promise<SharedTypes.ITypedPgStream<Pick<BMVG["CoreFields"], T>>> {
+	async streamArrByParams<T extends keyof BMVG["CoreFields"]>(
+		options: {
+			params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>;
+			paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>[];
+			selected?: [T, ...T[]];
+			pagination?: SharedTypes.TPagination;
+			order?: {
+				orderBy: Extract<keyof BMVG["CoreFields"], string> | (BMVG["AdditionalSortingFields"] extends string ? BMVG["AdditionalSortingFields"] : never);
+				ordering: SharedTypes.TOrdering;
+			}[];
+		},
+		streamOptions?: StreamOptions,
+	): Promise<SharedTypes.ITypedPgStream<Pick<BMVG["CoreFields"], T>>> {
 		return this.model.streamArrByParams<Pick<BMVG["CoreFields"], T>>(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 			options.pagination,
 			options.order,
+			streamOptions,
 		);
 	}
 }
