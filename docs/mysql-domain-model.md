@@ -84,7 +84,7 @@ if (userFounded) {
 ```typescript
 // data-access-layer/repository/user/domain.ts
 
-import { MYSQL } from "../../../../../../index.js";
+import { MYSQL } from "@js-ak/db-manager";
 import * as Types from "./types.js";
 
 export const domain = (dbCreds: MYSQL.ModelTypes.TDBCreds) => {
@@ -132,7 +132,7 @@ export type SearchFields = Partial<TableFields>;
 ```typescript
 // data-access-layer/repository-manager.ts
 
-import { MYSQL } from "../../../../index.js";
+import { MYSQL } from "@js-ak/db-manager";
 import * as Repository from "./repository/index.js";
 
 export const createRepositoryManager = (creds: MYSQL.ModelTypes.TDBCreds) => new MYSQL.RepositoryManager(

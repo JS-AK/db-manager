@@ -84,7 +84,7 @@ if (userFounded) {
 ```typescript
 // data-access-layer/repository/user/domain.ts
 
-import { PG } from "../../../../../../index.js";
+import { PG } from "@js-ak/db-manager";
 import * as Types from "./types.js";
 
 export const domain = (dbCreds: PG.ModelTypes.TDBCreds) => {
@@ -132,7 +132,7 @@ export type SearchFields = Partial<TableFields>;
 ```typescript
 // data-access-layer/repository-manager.ts
 
-import { PG } from "../../../../index.js";
+import { PG } from "@js-ak/db-manager";
 import * as Repository from "./repository/index.js";
 
 export const createRepositoryManager = (creds: PG.ModelTypes.TDBCreds) => new PG.RepositoryManager(
