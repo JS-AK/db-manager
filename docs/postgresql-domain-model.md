@@ -2,7 +2,7 @@
 
 ## Overview
 
-The PostgreSQL Core module provides essential functionalities for interacting with a PostgreSQL database. It includes a Domain class that encapsulates operations related to entities in the database, offering functionalities for creating, retrieving, updating, and deleting records.
+The PostgreSQL Core module provides essential functionalities for interacting with a PostgreSQL database. It includes a domain layer that encapsulates operations related to entities in the database, offering functionalities for creating, retrieving, updating, and deleting records.
 
 ## Prerequisites
 
@@ -12,96 +12,28 @@ Before using the PostgreSQL Core module, ensure the following steps are complete
 
 2. **Apply Migrations**: [(PostgreSQL Migration System)](postgresql-migration-system) Execute necessary database migrations to prepare the database schema for the application. This includes creating tables, defining indexes, and setting up any initial data.
 
-## Usage Example
+## Usage Example (Modern Structure)
 
-To effectively use the data-access-layer, it"s recommended to maintain the following file structure:
+### File Structure
 
 ```text
-data-access-layer
-    ├──────── models     # Directory for storing database models
-    │  ├───── entity     # Directory for the entity model
-    │  │  ├── domain.js  # Contains the domain logic for the entity model
-    │  │  ├── model.js   # Contains the database model definition for the entity
-    │  │  └── index.js   # Aggregates exports from domain.js and model.js for entity
-    │  └───── index.js   # Aggregates exports for all models
-    └──────── index.js   # Entry point for the data access layer
+data-access-layer/
+  repository-manager.ts
+  repository/
+    user/
+      domain.ts
+      types.ts
+      index.ts
+    index.ts
+  index.ts
 ```
 
-```javascript
-// data-access-layer/index.js
-import { PG } from "@js-ak/db-manager";
-import * as Models from "./models/index.js";
+### Example: Using the Domain Model
 
-export const init = (config) => {
-    const repository = {
-        entity: new Models.Entity.Domain(config),
-    };
+```typescript
+// src/examples/pg/01/index.ts
 
-    PG.BaseModel.getStandardPool(config).on("error", (error) => {
-        console.error(error.message)
-    });
-
-    PG.BaseModel.getStandardPool(config).on("connect", (client) => {
-        client.on("error", (error) => { console.error(error.message) });
-    });
-
-    return { repository };
-};
-
-export const shutdown = async (config) => {
-  await PG.BaseModel.removeStandardPool(config);
-}
-```
-
-```javascript
-// data-access-layer/models/index.js
-export * as Entity from "./entity/index.js";
-```
-
-```javascript
-// data-access-layer/models/entity/index.js
-export * from "./domain.js";
-export * from "./model.js";
-```
-
-```javascript
-// data-access-layer/models/entity/domain.js
-import { PG } from "@js-ak/db-manager";
-import { Model } from "./model.js";
-
-export class Domain extends PG.BaseDomain {
-    constructor(creds) {
-        super({ model: new Model(creds) });
-    }
-}
-
-```
-
-```javascript
-// data-access-layer/models/entity/model.js
-import { PG } from "@js-ak/db-manager";
-
-export class Model extends PG.BaseModel {
-    constructor(creds) {
-        super(
-            {
-                createField: { title: "created_at", type: "timestamp" },
-                primaryKey: "id",
-                tableFields: ["id", "amount", "amount_range", "first_name", "last_name", "created_at", "updated_at"],
-                tableName: "entities",
-                updateField: { title: "updated_at", type: "timestamp" },
-            },
-            creds,
-        );
-    }
-}
-
-```
-
-### External use of data access layer
-
-```javascript
-import { init, shutdown } from "./data-access-layer/index.js";
+import { RepositoryManager } from "./data-access-layer/index.js";
 
 const creds = {
     database: "database",
@@ -111,37 +43,104 @@ const creds = {
     user: "user",
 };
 
-const { repository } = init(creds);
+const repositoryManager = RepositoryManager.create(creds);
 
-const entity = await repository.entity.createOne({
-    amount: 42,
-    first_name: "Foo",
-    last_name: "Bar",
+await repositoryManager.init();
+
+const userRepository = repositoryManager.repository.user;
+
+const user = await userRepository.createOne({
+    first_name: "user firstName",
+    last_name: "user lastName",
 });
 
-console.log({ entity });
+console.log({ user });
 
-const { message, one } = await repository.entity.getOneByParams({
-    params: { first_name: "Foo" },
+const { message, one: userFounded } = await userRepository.getOneByParams({
+    params: { first_name: "user firstName" },
     selected: ["id"],
 });
 
-if (one) {
-    await repository.entity.updateOneByPk(one.id, {
-        first_name: "Foo updated",
+if (userFounded) {
+    console.log({ userFounded });
+
+    await userRepository.updateOneByPk(userFounded.id, {
+        first_name: "user firstName updated",
     });
 
-    const { one: updated } = await repository.entity.getOneByParams({
-        params: { id: one.id },
+    const { one: userUpdated } = await userRepository.getOneByParams({
+        params: { id: userFounded.id },
         selected: ["id"],
     });
 
-    console.log({ updated });
+    console.log({ userUpdated });
 } else {
     console.log({ message });
 }
+```
 
-await shutdown(creds);
+### Example: domain.ts for user
+
+```typescript
+// data-access-layer/repository/user/domain.ts
+
+import { PG } from "../../../../../../index.js";
+import * as Types from "./types.js";
+
+export const domain = (dbCreds: PG.ModelTypes.TDBCreds) => {
+    return new PG.Repository.Table<{ CoreFields: Types.TableFields; }>({
+        dbCreds,
+        schema: {
+            tableName: "users",
+            primaryKey: "id",
+            tableFields: [
+                "id",
+                "first_name",
+                "last_name",
+                "created_at",
+                "updated_at",
+            ],
+            createField: { title: "created_at", type: "timestamp" },
+            updateField: { title: "updated_at", type: "timestamp" },
+        },
+    });
+};
+```
+
+### Example: types.ts for user
+
+```typescript
+// data-access-layer/repository/user/types.ts
+
+export type TableFields = {
+    id: string;
+    first_name: string;
+    last_name: string;
+    created_at: Date;
+    updated_at: Date | null;
+};
+
+export type CreateFields = Pick<TableFields, "first_name" | "last_name">;
+export type UpdateFields = Partial<Pick<TableFields, "first_name" | "last_name">>;
+export type EntityFull = Pick<TableFields, "id" | "first_name" | "last_name" | "created_at" | "updated_at">;
+export type EntityListed = Pick<TableFields, "id" | "first_name" | "last_name">;
+export type SearchFields = Partial<TableFields>;
+```
+
+### Example: repository-manager.ts
+
+```typescript
+// data-access-layer/repository-manager.ts
+
+import { PG } from "../../../../index.js";
+import * as Repository from "./repository/index.js";
+
+export const createRepositoryManager = (creds: PG.ModelTypes.TDBCreds) => new PG.RepositoryManager(
+    {
+        user: Repository.User.domain(creds),
+    },
+    { config: creds, isLoggerEnabled: false, logger: console },
+);
 ```
 
 ## Domain Core Methods
