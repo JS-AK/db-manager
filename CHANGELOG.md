@@ -1,3 +1,11 @@
+# [3.47.0](https://github.com/JS-AK/db-manager/compare/v3.46.0...v3.47.0) (2025-08-04)
+
+
+### Features
+
+* added pass options to stream queries ([002fc1d](https://github.com/JS-AK/db-manager/commit/002fc1dd707dc6fb503d158041100d4e9cda668d))
+* added pass options to stream queries ([0ef3829](https://github.com/JS-AK/db-manager/commit/0ef3829b10f13aab0ce5131ba641e8a2c02fd785))
+
 # [3.46.0](https://github.com/JS-AK/db-manager/compare/v3.45.0...v3.46.0) (2025-08-03)
 
 
