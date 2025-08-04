@@ -1,5 +1,3 @@
-import { Readable } from "node:stream";
-
 import mysql from "mysql2/promise";
 
 import * as Helpers from "../helpers/index.js";
@@ -21,7 +19,7 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 	#isLoggerEnabled: boolean | undefined;
 	#logger?: SharedTypes.TLogger;
 	#executeSql;
-	#executeSqlStream: (sql: { query: string; values?: unknown[]; }) => Promise<Readable>;
+	#executeSqlStream: Types.TExecuteSqlStream;
 
 	#initialArgs;
 
@@ -761,28 +759,36 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 
 	/**
 	 * Returns a stream of records from the database based on the provided search parameters.
-	 * Useful for handling large result sets efficiently.
+	 * Useful for handling large result sets efficiently without loading all data into memory.
 	 *
-	 * @param params - The search parameters used to filter records.
-	 * @param params.$and - The conditions that must be met for a record to be included in the results.
-	 * @param [params.$or] - Optional array of conditions where at least one must be met for a record to be included in the results.
-	 * @param [selected=["*"]] - Optional array of fields to select from the records. If not specified, all fields are selected.
-	 * @param [pagination] - Optional pagination options to limit and offset the results.
-	 * @param [order] - Optional array of order options for sorting the results.
-	 * @param order[].orderBy - The field by which to sort the results.
-	 * @param order[].ordering - The sorting direction ("ASC" for ascending or "DESC" for descending).
+	 * @param params - Search parameters for filtering results.
+	 * @param params.$and - Required conditions combined using logical AND.
+	 * @param [params.$or] - Optional conditions combined using logical OR.
 	 *
-	 * @returns A stream of matching records.
+	 * @param [selected=["*"]] - List of field names to include in each record.
+	 *
+	 * @param [pagination] - Controls how many records to retrieve and from which offset.
+	 *
+	 * @param [order] - Sort order configuration.
+	 * @param order[].orderBy - The field to sort by.
+	 * @param order[].ordering - Sort direction: `"ASC"` or `"DESC"`.
+	 *
+	 * @param [streamOptions] - Optional configuration for the underlying stream:
+	 * - `highWaterMark`: Maximum number of records buffered in the stream.
+	 * - `objectMode`: If `true`, the stream will emit objects (should be enabled by default for object streams).
+	 *
+	 * @returns A readable stream that emits rows of type `T` on the `"data"` event.
 	 */
 	async streamArrByParams<T>(
 		params: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
 		selected: string[] = ["*"],
 		pagination?: SharedTypes.TPagination,
 		order?: { orderBy: string; ordering: SharedTypes.TOrdering; }[],
+		streamOptions?: Types.StreamOptions,
 	): Promise<SharedTypes.ITypedPgStream<T>> {
 		const sql = this.compareQuery.streamArrByParams(params, selected, pagination, order);
 
-		return this.#executeSqlStream(sql);
+		return this.#executeSqlStream(sql, streamOptions);
 	}
 
 	/**

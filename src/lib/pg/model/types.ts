@@ -1,3 +1,5 @@
+import { Readable } from "node:stream";
+
 import pg from "pg";
 
 import * as SharedTypes from "../../../shared-types/index.js";
@@ -14,11 +16,21 @@ export type SNDArray = ClearString[] | ClearNumber[] | ClearDate[];
 export type SNDB = SND | ClearBoolean;
 export type SNDBArray = SNDArray | ClearBoolean[];
 
+export type StreamOptions = {
+	batchSize?: number;
+	highWaterMark?: number;
+	rowMode?: "array";
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	types?: any;
+};
+
 export type TDBCreds = pg.PoolConfig & { database: string; host: string; password: string; port: number; user: string; };
 export type TDBOptions = TMVOptions & { insertOptions?: { onConflict: string; }; };
 export type TDBOptionsWithoutClient = TMVOptionsWithoutClient & { insertOptions?: { onConflict: string; }; };
 
+export type TExecuteSqlStream = (sql: { query: string; values?: unknown[]; }, config?: StreamOptions) => Promise<Readable>;
 export type TExecutor = pg.Pool | pg.PoolClient | pg.Client;
+
 export type TField = { key: string; sign?: string; operator: TOperator; };
 
 export type TMVOptions = {

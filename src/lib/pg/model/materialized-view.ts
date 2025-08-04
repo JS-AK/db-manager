@@ -1,5 +1,3 @@
-import { Readable } from "node:stream";
-
 import pg from "pg";
 
 import * as Helpers from "../helpers/index.js";
@@ -20,7 +18,7 @@ export class BaseMaterializedView<const T extends readonly string[] = readonly s
 	#isLoggerEnabled: boolean | undefined;
 	#logger?: SharedTypes.TLogger;
 	#executeSql;
-	#executeSqlStream: (sql: { query: string; values?: unknown[]; }) => Promise<Readable>;
+	#executeSqlStream: Types.TExecuteSqlStream;
 
 	#initialArgs;
 
@@ -435,28 +433,38 @@ export class BaseMaterializedView<const T extends readonly string[] = readonly s
 
 	/**
 	 * Returns a stream of records from the database based on the provided search parameters.
-	 * Useful for handling large result sets efficiently.
+	 * Useful for handling large result sets efficiently without loading all data into memory.
 	 *
-	 * @param params - Search parameters.
-	 * @param params.$and - AND conditions for the search.
-	 * @param [params.$or] - OR conditions for the search.
-	 * @param [selected=["*"]] - Fields to be selected.
-	 * @param [pagination] - Pagination details.
-	 * @param [order] - Order by details.
-	 * @param order.orderBy - Field to order by.
-	 * @param order.ordering - Ordering direction ("ASC" or "DESC").
+	 * @param params - The filter conditions for the query.
+	 * @param params.$and - Required set of conditions combined with AND.
+	 * @param [params.$or] - Optional set of conditions combined with OR.
 	 *
-	 * @returns A promise that resolves to an array of records.
+	 * @param [selected=["*"]] - List of field names to select from each record.
+	 *
+	 * @param [pagination] - Controls the offset and limit of the query.
+	 *
+	 * @param [order] - Specifies sorting rules for the result set.
+	 * @param order[].orderBy - Field to sort the results by.
+	 * @param order[].ordering - Sorting direction: `"ASC"` or `"DESC"`.
+	 *
+	 * @param [streamOptions] - Optional configuration for stream behavior:
+	 * - `batchSize`: Number of rows fetched from the database per batch.
+	 * - `highWaterMark`: Maximum number of rows buffered internally before pausing reads.
+	 * - `rowMode`: If set to `"array"`, rows are returned as arrays instead of objects.
+	 * - `types`: Custom type parser map for PostgreSQL data types.
+	 *
+	 * @returns A readable stream that emits rows of type `T` on the `"data"` event.
 	 */
 	async streamArrByParams<T extends pg.QueryResultRow>(
 		params: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
 		selected: string[] = ["*"],
 		pagination?: SharedTypes.TPagination,
 		order?: { orderBy: string; ordering: SharedTypes.TOrdering; }[],
+		streamOptions?: Types.StreamOptions,
 	): Promise<SharedTypes.ITypedPgStream<T>> {
 		const sql = this.compareQuery.streamArrByParams(params, selected, pagination, order);
 
-		return this.#executeSqlStream(sql);
+		return this.#executeSqlStream(sql, streamOptions);
 	}
 
 	/**
