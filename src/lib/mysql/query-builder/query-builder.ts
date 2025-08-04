@@ -621,8 +621,6 @@ export class QueryBuilder {
 	/**
 	 * Executes the SQL query and returns a readable stream of typed rows.
 	 *
-	 * @typeParam T - The expected shape of each streamed row.
-	 *
 	 * @param data - Optional execution parameters.
 	 * @param data.streamOptions - Optional stream configuration:
 	 * - `highWaterMark`: The maximum number of objects to store in the internal buffer before ceasing to read from the underlying resource.
