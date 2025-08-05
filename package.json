@@ -1,6 +1,6 @@
 {
   "name": "@js-ak/db-manager",
-  "version": "3.47.0",
+  "version": "3.48.0-next.1",
   "description": "db-manager",
   "publishConfig": {
     "access": "public",
@@ -10,20 +10,20 @@
   "main": "build/cjs/index.js",
   "module": "build/esm/index.js",
   "types": "build/types/index.d.ts",
-    "exports": {
-      ".": {
-        "types": "./build/types/index.d.ts",
-        "require": "./build/cjs/index.js",
-        "import": "./build/esm/index.js",
-        "default": "./build/esm/index.js"
-      },
-      "./cjs": {
-        "require": "./build/cjs/index.js"
-      },
-      "./esm": {
-        "import": "./build/esm/index.js"
-      }
+  "exports": {
+    ".": {
+      "types": "./build/types/index.d.ts",
+      "require": "./build/cjs/index.js",
+      "import": "./build/esm/index.js",
+      "default": "./build/esm/index.js"
     },
+    "./cjs": {
+      "require": "./build/cjs/index.js"
+    },
+    "./esm": {
+      "import": "./build/esm/index.js"
+    }
+  },
   "files": [
     "build/esm/lib",
     "build/esm/shared-helpers",

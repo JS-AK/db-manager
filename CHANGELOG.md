@@ -1,3 +1,10 @@
+# [3.48.0-next.1](https://github.com/JS-AK/db-manager/compare/v3.47.0...v3.48.0-next.1) (2025-08-05)
+
+
+### Features
+
+* added cjs support ([fcb0d57](https://github.com/JS-AK/db-manager/commit/fcb0d57d338b4afe2fbe5ae2a1fc89c9ee2c853c))
+
 # [3.47.0](https://github.com/JS-AK/db-manager/compare/v3.46.0...v3.47.0) (2025-08-04)
 
 
