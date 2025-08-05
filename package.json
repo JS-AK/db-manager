@@ -7,22 +7,48 @@
     "registry": "https://registry.npmjs.org/"
   },
   "type": "module",
-  "main": "build/index.js",
-  "types": "build/index.d.ts",
+  "main": "build/cjs/index.js",
+  "module": "build/esm/index.js",
+  "types": "build/types/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./build/types/index.d.ts",
+        "require": "./build/cjs/index.js",
+        "import": "./build/esm/index.js",
+        "default": "./build/esm/index.js"
+      },
+      "./cjs": {
+        "require": "./build/cjs/index.js"
+      },
+      "./esm": {
+        "import": "./build/esm/index.js"
+      }
+    },
   "files": [
-    "build/lib",
-    "build/shared-helpers",
-    "build/shared-types",
-    "build/index.js",
-    "build/index.d.ts",
+    "build/esm/lib",
+    "build/esm/shared-helpers",
+    "build/esm/shared-types",
+    "build/esm/index.js",
+    "build/esm/package.json",
+    "build/cjs/lib",
+    "build/cjs/shared-helpers",
+    "build/cjs/shared-types",
+    "build/cjs/index.js",
+    "build/cjs/package.json",
+    "build/types/lib",
+    "build/types/index.d.ts",
     "LICENSE",
     "README.md",
     "package.json"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "npm run build:cjs && npm run build:esm && npm run postbuild:cjs && npm run postbuild:esm",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
     "lint": "eslint . --ext .ts",
-    "test": "npm run build && node ./build/test/index.js"
+    "postbuild:esm": "node scripts/write-esm-package.js",
+    "postbuild:cjs": "node scripts/write-cjs-package.js",
+    "test": "npm run build && node ./build/esm/test/index.js"
   },
   "repository": {
     "type": "git",
