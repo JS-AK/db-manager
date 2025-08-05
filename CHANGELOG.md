@@ -1,3 +1,10 @@
+# [3.48.0-next.2](https://github.com/JS-AK/db-manager/compare/v3.48.0-next.1...v3.48.0-next.2) (2025-08-05)
+
+
+### Features
+
+* bump migration-systems ([f3e5e75](https://github.com/JS-AK/db-manager/commit/f3e5e75ea9c27584fca37c3b4891aba0fddc3c62))
+
 # [3.48.0-next.1](https://github.com/JS-AK/db-manager/compare/v3.47.0...v3.48.0-next.1) (2025-08-05)
 
 
