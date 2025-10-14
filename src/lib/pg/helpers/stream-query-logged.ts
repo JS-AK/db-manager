@@ -13,15 +13,93 @@ async function runStreamQuery(
 ): Promise<Readable> {
 	if (executor instanceof pg.Pool) {
 		const client = await executor.connect();
+		// Temporarily disable client-side query_timeout to avoid pg-query-stream callback error
+		// Ref: node-postgres issue #1860
+		const clientAny = client as unknown as { query_timeout?: number; connectionParameters?: { query_timeout?: number; }; };
+		const prevClientQueryTimeout: number | undefined = clientAny.query_timeout;
+		const prevConnQueryTimeout: number | undefined = clientAny.connectionParameters?.query_timeout;
+
+		if (
+			typeof prevClientQueryTimeout === "number"
+			&& prevClientQueryTimeout > 0
+		) {
+			clientAny.query_timeout = 0;
+		}
+
+		if (
+			typeof prevConnQueryTimeout === "number"
+			&& prevConnQueryTimeout > 0
+			&& clientAny.connectionParameters
+		) {
+			clientAny.connectionParameters.query_timeout = 0;
+		}
 
 		const stream = client.query(streamQuery);
 
-		stream.once("end", () => client.release());
-		stream.once("error", () => client.release());
+		let isReleased = false;
+
+		const cleanupAndRelease = () => {
+			// restore timeouts idempotently
+			if (typeof prevClientQueryTimeout === "number") {
+				clientAny.query_timeout = prevClientQueryTimeout;
+			}
+			if (typeof prevConnQueryTimeout === "number" && clientAny.connectionParameters) {
+				clientAny.connectionParameters.query_timeout = prevConnQueryTimeout;
+			}
+
+			if (!isReleased) {
+				isReleased = true;
+				client.release();
+			}
+		};
+
+		stream.once("end", cleanupAndRelease);
+		stream.once("error", cleanupAndRelease);
+		stream.once("close", cleanupAndRelease);
 
 		return stream;
 	} else {
-		return executor.query(streamQuery);
+		// Handle direct Client or externally managed PoolClient
+		const directClient = executor as unknown as {
+			query: (q: PgQueryStream) => Readable;
+			query_timeout?: number;
+			connectionParameters?: { query_timeout?: number; };
+		};
+		const prevClientQueryTimeout: number | undefined = directClient.query_timeout;
+		const prevConnQueryTimeout: number | undefined = directClient.connectionParameters?.query_timeout;
+
+		if (
+			typeof prevClientQueryTimeout === "number"
+			&& prevClientQueryTimeout > 0
+		) {
+			directClient.query_timeout = 0;
+		}
+
+		if (
+			typeof prevConnQueryTimeout === "number"
+			&& prevConnQueryTimeout > 0
+			&& directClient.connectionParameters
+		) {
+			directClient.connectionParameters.query_timeout = 0;
+		}
+
+		const stream = directClient.query(streamQuery);
+
+		const restoreClientTimeout = () => {
+			if (typeof prevClientQueryTimeout === "number") {
+				directClient.query_timeout = prevClientQueryTimeout;
+			}
+
+			if (typeof prevConnQueryTimeout === "number" && directClient.connectionParameters) {
+				directClient.connectionParameters.query_timeout = prevConnQueryTimeout;
+			}
+		};
+
+		stream.once("end", restoreClientTimeout);
+		stream.once("error", restoreClientTimeout);
+		stream.once("close", restoreClientTimeout);
+
+		return stream;
 	}
 }
 
