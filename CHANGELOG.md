@@ -1,3 +1,10 @@
+## [3.48.1](https://github.com/JS-AK/db-manager/compare/v3.48.0...v3.48.1) (2025-10-14)
+
+
+### Bug Fixes
+
+* prevent TypeError in pg-query-stream with client-side query_timeout ([42b8680](https://github.com/JS-AK/db-manager/commit/42b868007ac4ff121812cf039e12cf273537b921)), closes [#1860](https://github.com/JS-AK/db-manager/issues/1860)
+
 # [3.48.0](https://github.com/JS-AK/db-manager/compare/v3.47.0...v3.48.0) (2025-08-05)
 
 
