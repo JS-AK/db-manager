@@ -972,6 +972,75 @@ export const start = async (creds: PG.ModelTypes.TDBCreds): Promise<void> => {
 		);
 
 		await testContext.test(
+			"stream with client-side query_timeout disabled (pool)",
+			async () => {
+				// Create a dedicated pool with client-side query_timeout enabled
+				const pool = PG.BaseModel.getStandardPool(
+					{ ...creds, query_timeout: 50 },
+					"stream-timeout",
+				);
+
+				try {
+					const stream = await userRepository
+						.model
+						.queryBuilder({ client: pool })
+						.executeRawQueryStream<{ s: number; }>("SELECT pg_sleep(0.2) AS s");
+
+					const rows: { s: number; }[] = [];
+
+					await new Promise<void>((resolve, reject) => {
+						stream.on("data", (row) => { rows.push(row); });
+						stream.on("end", () => {
+							try {
+								assert.strictEqual(rows.length, 1);
+								assert.ok(!Number.isNaN(Number(rows[0]?.s)));
+								resolve();
+							} catch (err) { reject(err as Error); }
+						});
+						stream.on("error", (err) => { reject(err); });
+					});
+				} finally {
+					await PG.connection.removeStandardPool(creds, "stream-timeout");
+				}
+			},
+		);
+
+		await testContext.test(
+			"stream with client-side query_timeout disabled (direct client)",
+			async () => {
+				const client = PG.connection.createClient({
+					...creds,
+					query_timeout: 50,
+				});
+
+				await client.connect();
+
+				try {
+					const stream = await userRepository
+						.model
+						.queryBuilder({ client })
+						.executeRawQueryStream<{ s: number; }>("SELECT pg_sleep(0.2) AS s");
+
+					const rows: { s: number; }[] = [];
+
+					await new Promise<void>((resolve, reject) => {
+						stream.on("data", (row) => { rows.push(row); });
+						stream.on("end", () => {
+							try {
+								assert.strictEqual(rows.length, 1);
+								assert.ok(!Number.isNaN(Number(rows[0]?.s)));
+								resolve();
+							} catch (err) { reject(err as Error); }
+						});
+						stream.on("error", (err) => { reject(err); });
+					});
+				} finally {
+					await client.end();
+				}
+			},
+		);
+
+		await testContext.test(
 			"Helpers.migrationsDown",
 			async () => { await Helpers.migrationsDown(creds, TEST_NAME); },
 		);
