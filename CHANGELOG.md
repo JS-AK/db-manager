@@ -1,3 +1,10 @@
+## [3.48.2](https://github.com/JS-AK/db-manager/compare/v3.48.1...v3.48.2) (2025-10-15)
+
+
+### Bug Fixes
+
+* Implement robust watchdog for stream query timeouts ([15d74c6](https://github.com/JS-AK/db-manager/commit/15d74c695eaa4f01dc031224ea12074f76e82615)), closes [#1860](https://github.com/JS-AK/db-manager/issues/1860)
+
 ## [3.48.1](https://github.com/JS-AK/db-manager/compare/v3.48.0...v3.48.1) (2025-10-14)
 
 
