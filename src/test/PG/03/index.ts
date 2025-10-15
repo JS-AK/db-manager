@@ -976,7 +976,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds): Promise<void> => {
 			async () => {
 				// Create a dedicated pool with client-side query_timeout enabled
 				const pool = PG.BaseModel.getStandardPool(
-					{ ...creds, query_timeout: 50 },
+					{ ...creds, query_timeout: 5000 },
 					"stream-timeout",
 				);
 
@@ -1006,11 +1006,43 @@ export const start = async (creds: PG.ModelTypes.TDBCreds): Promise<void> => {
 		);
 
 		await testContext.test(
+			"stream with client-side query_timeout fails (pool)",
+			async () => {
+				const pool = PG.BaseModel.getStandardPool(
+					{ ...creds, query_timeout: 50 },
+					"stream-timeout-fail",
+				);
+
+				try {
+					const stream = await userRepository
+						.model
+						.queryBuilder({ client: pool })
+						.executeRawQueryStream<{ s: number; }>("SELECT pg_sleep(0.2) AS s");
+
+					await assert.rejects(
+						new Promise<void>((resolve, reject) => {
+							stream.on("data", () => reject(new Error("Should not receive data")));
+							stream.on("end", () => resolve());
+							stream.on("error", (err) => reject(err));
+						}),
+						(error: Error) => {
+							assert.strictEqual(error.message, "Stream query timeout: first chunk not received in time 50ms. Connection timeout: 50ms.");
+
+							return true;
+						},
+					);
+				} finally {
+					await PG.connection.removeStandardPool(creds, "stream-timeout-fail");
+				}
+			},
+		);
+
+		await testContext.test(
 			"stream with client-side query_timeout disabled (direct client)",
 			async () => {
 				const client = PG.connection.createClient({
 					...creds,
-					query_timeout: 50,
+					query_timeout: 5000,
 				});
 
 				await client.connect();
@@ -1034,6 +1066,40 @@ export const start = async (creds: PG.ModelTypes.TDBCreds): Promise<void> => {
 						});
 						stream.on("error", (err) => { reject(err); });
 					});
+				} finally {
+					await client.end();
+				}
+			},
+		);
+
+		await testContext.test(
+			"stream with client-side query_timeout fails (direct client)",
+			async () => {
+				const client = PG.connection.createClient({
+					...creds,
+					query_timeout: 50,
+				});
+
+				await client.connect();
+
+				try {
+					const stream = await userRepository
+						.model
+						.queryBuilder({ client })
+						.executeRawQueryStream<{ s: number; }>("SELECT pg_sleep(0.2) AS s");
+
+					await assert.rejects(
+						new Promise<void>((resolve, reject) => {
+							stream.on("data", () => reject(new Error("Should not receive data")));
+							stream.on("end", () => resolve());
+							stream.on("error", (err) => reject(err));
+						}),
+						(error: Error) => {
+							assert.strictEqual(error.message, "Stream query timeout: first chunk not received in time 50ms. Connection timeout: 50ms.");
+
+							return true;
+						},
+					);
 				} finally {
 					await client.end();
 				}
