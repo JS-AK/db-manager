@@ -7,6 +7,48 @@ import pg from "pg";
 import * as ModelTypes from "../model/types.js";
 import * as SharedTypes from "../../../shared-types/index.js";
 
+function setupStreamWatchdog(
+	stream: Readable,
+	timeoutValues: { clientTimeout?: number; connTimeout?: number; },
+): () => void {
+	const { clientTimeout, connTimeout } = timeoutValues;
+
+	let timeoutMs: number | undefined;
+	let timeoutSource: "client" | "connection" | undefined;
+
+	if (typeof clientTimeout === "number" && clientTimeout > 0) {
+		timeoutMs = clientTimeout;
+		timeoutSource = "client";
+	} else if (typeof connTimeout === "number" && connTimeout > 0) {
+		timeoutMs = connTimeout;
+		timeoutSource = "connection";
+	}
+
+	const watchdog = typeof timeoutMs === "number" && timeoutMs > 0
+		? setTimeout(() => {
+			if (!stream.destroyed) {
+				let message = `Stream query timeout: first chunk not received in time ${timeoutMs}ms.`;
+
+				if (timeoutSource === "client") {
+					message += ` Client timeout: ${timeoutMs}ms.`;
+				} else if (timeoutSource === "connection") {
+					message += ` Connection timeout: ${timeoutMs}ms.`;
+				}
+
+				stream.destroy(new Error(message));
+			}
+		}, timeoutMs)
+		: undefined;
+
+	const clearWatchdog = () => {
+		if (watchdog) clearTimeout(watchdog);
+	};
+
+	stream.once("data", clearWatchdog);
+
+	return clearWatchdog;
+}
+
 async function runStreamQuery(
 	executor: ModelTypes.TExecutor,
 	streamQuery: PgQueryStream,
@@ -36,6 +78,11 @@ async function runStreamQuery(
 
 		const stream = client.query(streamQuery);
 
+		const clearWatchdog = setupStreamWatchdog(
+			stream,
+			{ clientTimeout: prevClientQueryTimeout, connTimeout: prevConnQueryTimeout },
+		);
+
 		let isReleased = false;
 
 		const cleanupAndRelease = () => {
@@ -46,6 +93,8 @@ async function runStreamQuery(
 			if (typeof prevConnQueryTimeout === "number" && clientAny.connectionParameters) {
 				clientAny.connectionParameters.query_timeout = prevConnQueryTimeout;
 			}
+
+			clearWatchdog();
 
 			if (!isReleased) {
 				isReleased = true;
@@ -85,6 +134,11 @@ async function runStreamQuery(
 
 		const stream = directClient.query(streamQuery);
 
+		const clearWatchdog = setupStreamWatchdog(
+			stream,
+			{ clientTimeout: prevClientQueryTimeout, connTimeout: prevConnQueryTimeout },
+		);
+
 		const restoreClientTimeout = () => {
 			if (typeof prevClientQueryTimeout === "number") {
 				directClient.query_timeout = prevClientQueryTimeout;
@@ -93,6 +147,8 @@ async function runStreamQuery(
 			if (typeof prevConnQueryTimeout === "number" && directClient.connectionParameters) {
 				directClient.connectionParameters.query_timeout = prevConnQueryTimeout;
 			}
+
+			clearWatchdog();
 		};
 
 		stream.once("end", restoreClientTimeout);
