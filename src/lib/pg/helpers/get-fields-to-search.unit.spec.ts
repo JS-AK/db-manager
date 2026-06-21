@@ -63,6 +63,28 @@ describe("getFieldsToSearch", () => {
 		expect(result.orderNumber).toBe(3);
 	});
 
+	it("should handle queryOrArray with multiple conditions in one branch", () => {
+		const data = {
+			queryArray: [{ key: "is_active", operator: "=" }],
+			queryOrArray: [
+				{
+					query: [
+						{ key: "name", operator: "=" },
+						{ key: "email", operator: "$like" },
+					],
+				},
+				{ query: [{ key: "phone", operator: "=" }] },
+			],
+		};
+		// @ts-expect-error - mock
+		const result = getFieldsToSearch(data);
+
+		expect(result.searchFields).toBe(
+			" WHERE (is_active = $1 AND (((name = $2) AND (email LIKE $3)) OR (phone = $4)))",
+		);
+		expect(result.orderNumber).toBe(4);
+	});
+
 	it("should handle pagination", () => {
 		const result = getFieldsToSearch({ queryArray: [] }, ["*"], { limit: 10, offset: 5 });
 
