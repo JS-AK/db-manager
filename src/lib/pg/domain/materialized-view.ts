@@ -200,8 +200,8 @@ export class BaseMaterializedView<
 			orderBy: Extract<keyof BMVG["CoreFields"], string> | (BMVG["AdditionalSortingFields"] extends string ? BMVG["AdditionalSortingFields"] : never);
 			ordering: SharedTypes.TOrdering;
 		}[];
-	}): Promise<Array<Pick<BMVG["CoreFields"], T>>> {
-		return this.model.getArrByParams<Pick<BMVG["CoreFields"], T>>(
+	}): Promise<Array<SharedTypes.PickRowFields<BMVG["CoreFields"], T>>> {
+		return this.model.getArrByParams<SharedTypes.PickRowFields<BMVG["CoreFields"], T>>(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 			options.pagination,
@@ -239,8 +239,8 @@ export class BaseMaterializedView<
 		params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>;
 		paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BMVG["SearchFields"], BMVG["CoreFields"]>>[];
 		selected?: [T, ...T[]];
-	}): Promise<{ message?: string; one?: Pick<BMVG["CoreFields"], T>; }> {
-		const one = await this.model.getOneByParams<Pick<BMVG["CoreFields"], T>>(
+	}): Promise<{ message?: string; one?: SharedTypes.PickRowFields<BMVG["CoreFields"], T>; }> {
+		const one = await this.model.getOneByParams<SharedTypes.PickRowFields<BMVG["CoreFields"], T>>(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 		);
@@ -282,7 +282,7 @@ export class BaseMaterializedView<
 	 * - `rowMode`: If set to `"array"`, rows will be returned as arrays instead of objects.
 	 * - `types`: Custom type parser map for Postgres types.
 	 *
-	 * @returns A readable stream emitting records of type `Pick<VG["CoreFields"], T>` on the `"data"` event.
+	 * @returns A readable stream emitting records of type `SharedTypes.PickRowFields<VG["CoreFields"], T>` on the `"data"` event.
 	 */
 	async streamArrByParams<T extends keyof BMVG["CoreFields"]>(
 		options: {
@@ -296,8 +296,8 @@ export class BaseMaterializedView<
 			}[];
 		},
 		streamOptions?: StreamOptions,
-	): Promise<SharedTypes.ITypedPgStream<Pick<BMVG["CoreFields"], T>>> {
-		return this.model.streamArrByParams<Pick<BMVG["CoreFields"], T>>(
+	): Promise<SharedTypes.ITypedPgStream<SharedTypes.PickRowFields<BMVG["CoreFields"], T>>> {
+		return this.model.streamArrByParams<SharedTypes.PickRowFields<BMVG["CoreFields"], T>>(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 			options.pagination,

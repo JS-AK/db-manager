@@ -216,8 +216,8 @@ export class View<VG extends ViewGeneric = ViewGeneric> {
 			orderBy: Extract<keyof VG["CoreFields"], string> | (VG["AdditionalSortingFields"] extends string ? VG["AdditionalSortingFields"] : never);
 			ordering: SharedTypes.TOrdering;
 		}[];
-	}): Promise<Array<Pick<VG["CoreFields"], T>>> {
-		return this.#model.getArrByParams<Pick<VG["CoreFields"], T>>(
+	}): Promise<Array<SharedTypes.PickRowFields<VG["CoreFields"], T>>> {
+		return this.#model.getArrByParams<SharedTypes.PickRowFields<VG["CoreFields"], T>>(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 			options.pagination,
@@ -255,8 +255,8 @@ export class View<VG extends ViewGeneric = ViewGeneric> {
 		params: Types.TSearchParams<Types.TConditionalDomainFieldsType<VG["SearchFields"], VG["CoreFields"]>>;
 		paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<VG["SearchFields"], VG["CoreFields"]>>[];
 		selected?: [T, ...T[]];
-	}): Promise<{ message?: string; one?: Pick<VG["CoreFields"], T>; }> {
-		const one = await this.#model.getOneByParams<Pick<VG["CoreFields"], T>>(
+	}): Promise<{ message?: string; one?: SharedTypes.PickRowFields<VG["CoreFields"], T>; }> {
+		const one = await this.#model.getOneByParams<SharedTypes.PickRowFields<VG["CoreFields"], T>>(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 		);
@@ -287,7 +287,7 @@ export class View<VG extends ViewGeneric = ViewGeneric> {
 	 * - `rowMode`: If set to `"array"`, rows will be returned as arrays instead of objects.
 	 * - `types`: Custom type parser map for Postgres types.
 	 *
-	 * @returns A readable stream emitting records of type `Pick<VG["CoreFields"], T>` on the `"data"` event.
+	 * @returns A readable stream emitting records of type `SharedTypes.PickRowFields<VG["CoreFields"], T>` on the `"data"` event.
 	 */
 	async streamArrByParams<T extends keyof VG["CoreFields"]>(
 		options: {
@@ -301,8 +301,8 @@ export class View<VG extends ViewGeneric = ViewGeneric> {
 			}[];
 		},
 		streamOptions?: StreamOptions,
-	): Promise<SharedTypes.ITypedPgStream<Pick<VG["CoreFields"], T>>> {
-		return this.#model.streamArrByParams<Pick<VG["CoreFields"], T>>(
+	): Promise<SharedTypes.ITypedPgStream<SharedTypes.PickRowFields<VG["CoreFields"], T>>> {
+		return this.#model.streamArrByParams<SharedTypes.PickRowFields<VG["CoreFields"], T>>(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 			options.pagination,
