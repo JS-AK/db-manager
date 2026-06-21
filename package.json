@@ -36,6 +36,8 @@
     "build/cjs/index.js",
     "build/cjs/package.json",
     "build/types/lib",
+    "build/types/shared-helpers",
+    "build/types/shared-types",
     "build/types/index.d.ts",
     "LICENSE",
     "README.md",
