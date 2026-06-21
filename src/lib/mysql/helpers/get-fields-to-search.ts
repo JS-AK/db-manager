@@ -40,7 +40,7 @@ export const getFieldsToSearch = (
 	const res = {
 		orderByFields: "",
 		paginationFields: "",
-		searchFields: " WHERE ",
+		searchFields: " WHERE (",
 		selectedFields: selected.join(", "),
 	};
 
@@ -50,9 +50,19 @@ export const getFieldsToSearch = (
 		searchFields = queryArray.map((e: Types.TField) => {
 			const operatorFunction = operatorMappings.get(e.operator);
 
-			if (operatorFunction) return operatorFunction(e);
-
-			else return ` ${e.key} ${e.operator} ?`;
+			if (operatorFunction) {
+				if (queryArray.length === 1) {
+					return operatorFunction(e);
+				} else {
+					return `(${operatorFunction(e)})`;
+				}
+			} else {
+				if (queryArray.length === 1) {
+					return `${e.key} ${e.operator} ?`;
+				} else {
+					return `(${e.key} ${e.operator} ?)`;
+				}
+			}
 		}).join(" AND ");
 	} else {
 		searchFields = "1=1";
@@ -68,16 +78,24 @@ export const getFieldsToSearch = (
 			const comparedFields = query.map((e: Types.TField) => {
 				const operatorFunction = operatorMappings.get(e.operator);
 
-				if (operatorFunction) return operatorFunction(e);
-
-				else return ` ${e.key} ${e.operator} ?`;
+				if (operatorFunction) {
+					return `(${operatorFunction(e)})`;
+				} else {
+					return `(${e.key} ${e.operator} ?)`;
+				}
 			}).join(" AND ");
 
-			comparedFieldsOr.push(`(${comparedFields})`);
+			if (query.length === 1) {
+				comparedFieldsOr.push(comparedFields);
+			} else {
+				comparedFieldsOr.push(`(${comparedFields})`);
+			}
 		}
 
 		res.searchFields += ` AND (${comparedFieldsOr.join(" OR ")})`;
 	}
+
+	res.searchFields += ")";
 
 	if (order) {
 		if (Array.isArray(order)) {

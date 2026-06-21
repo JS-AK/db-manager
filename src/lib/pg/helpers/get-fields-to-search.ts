@@ -43,7 +43,7 @@ export const getFieldsToSearch = (
 		orderByFields: "",
 		orderNumber: 0,
 		paginationFields: "",
-		searchFields: " WHERE ",
+		searchFields: " WHERE (",
 		selectedFields: selected.join(", "),
 	};
 
@@ -105,6 +105,8 @@ export const getFieldsToSearch = (
 
 		res.searchFields += ` AND (${comparedFieldsOr.join(" OR ")})`;
 	}
+
+	res.searchFields += ")";
 
 	if (order) {
 		if (Array.isArray(order)) {
