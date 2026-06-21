@@ -377,8 +377,8 @@ export class Table<TG extends TableGeneric = TableGeneric> {
 	async createOne<T extends Extract<keyof TG["CoreFields"], string>[] = Extract<keyof TG["CoreFields"], string>[]>(
 		recordParams: Types.TConditionalRawParamsType<TG["CreateFields"], TG["CoreFields"]>,
 		saveOptions?: { returningFields?: T; },
-	): Promise<T extends undefined ? TG["CoreFields"] : Pick<TG["CoreFields"], T[0]>> {
-		const res = await this.#model.createOne<T extends undefined ? TG["CoreFields"] : Pick<TG["CoreFields"], T[0]>>(recordParams, saveOptions);
+	): Promise<T extends undefined ? SharedTypes.ResolveRowFields<TG> : SharedTypes.PickRowFields<TG["CoreFields"], T[0]>> {
+		const res = await this.#model.createOne<T extends undefined ? SharedTypes.ResolveRowFields<TG> : SharedTypes.PickRowFields<TG["CoreFields"], T[0]>>(recordParams, saveOptions);
 
 		if (!res) throw new Error(`Save to ${this.#model.tableName} table error`);
 
@@ -399,8 +399,8 @@ export class Table<TG extends TableGeneric = TableGeneric> {
 	async createMany<T extends Extract<keyof TG["CoreFields"], string>[] = Extract<keyof TG["CoreFields"], string>[]>(
 		recordParams: Types.TConditionalRawParamsType<TG["CreateFields"], TG["CoreFields"]>[],
 		saveOptions?: { returningFields?: T; },
-	): Promise<(T extends undefined ? TG["CoreFields"][] : Pick<TG["CoreFields"], T[0]>[])[]> {
-		const res = await this.#model.createMany<T extends undefined ? TG["CoreFields"][] : Pick<TG["CoreFields"], T[0]>[]>(recordParams, saveOptions);
+	): Promise<(T extends undefined ? SharedTypes.ResolveRowFields<TG>[] : SharedTypes.PickRowFields<TG["CoreFields"], T[0]>[])[]> {
+		const res = await this.#model.createMany<T extends undefined ? SharedTypes.ResolveRowFields<TG>[] : SharedTypes.PickRowFields<TG["CoreFields"], T[0]>[]>(recordParams, saveOptions);
 
 		if (!res) throw new Error(`Save to ${this.#model.tableName} table error`);
 
@@ -508,8 +508,8 @@ export class Table<TG extends TableGeneric = TableGeneric> {
 			orderBy: Extract<keyof TG["CoreFields"], string> | (TG["AdditionalSortingFields"] extends string ? TG["AdditionalSortingFields"] : never);
 			ordering: SharedTypes.TOrdering;
 		}[];
-	}): Promise<Array<Pick<TG["CoreFields"], T>>> {
-		return this.#model.getArrByParams<Pick<TG["CoreFields"], T>>(
+	}): Promise<Array<SharedTypes.PickRowFields<TG["CoreFields"], T>>> {
+		return this.#model.getArrByParams<SharedTypes.PickRowFields<TG["CoreFields"], T>>(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 			options.pagination,
@@ -581,8 +581,8 @@ export class Table<TG extends TableGeneric = TableGeneric> {
 		params: Types.TSearchParams<Types.TConditionalDomainFieldsType<TG["SearchFields"], TG["CoreFields"]>>;
 		paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<TG["SearchFields"], TG["CoreFields"]>>[];
 		selected?: [T, ...T[]];
-	}): Promise<{ message?: string; one?: Pick<TG["CoreFields"], T>; }> {
-		const one = await this.#model.getOneByParams<Pick<TG["CoreFields"], T>>(
+	}): Promise<{ message?: string; one?: SharedTypes.PickRowFields<TG["CoreFields"], T>; }> {
+		const one = await this.#model.getOneByParams<SharedTypes.PickRowFields<TG["CoreFields"], T>>(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 		);
@@ -602,8 +602,8 @@ export class Table<TG extends TableGeneric = TableGeneric> {
 	 *
 	 * @returns A promise that resolves to the retrieved record with the selected fields or a message if not found.
 	 */
-	async getOneByPk<T>(pk: T): Promise<{ message?: string; one?: TG["CoreFields"]; }> {
-		const one = await this.#model.getOneByPk<T, TG["CoreFields"]>(pk);
+	async getOneByPk<T>(pk: T): Promise<{ message?: string; one?: SharedTypes.ResolveRowFields<TG>; }> {
+		const one = await this.#model.getOneByPk<T, SharedTypes.ResolveRowFields<TG>>(pk);
 
 		if (!one) return { message: `Not found from ${this.#model.tableName}` };
 
@@ -631,7 +631,7 @@ export class Table<TG extends TableGeneric = TableGeneric> {
 	 * - `rowMode`: If set to `"array"`, rows will be returned as arrays instead of objects.
 	 * - `types`: Custom type parser map for Postgres types.
 	 *
-	 * @returns A readable stream emitting records of type `Pick<VG["CoreFields"], T>` on the `"data"` event.
+	 * @returns A readable stream emitting records of type `SharedTypes.PickRowFields<VG["CoreFields"], T>` on the `"data"` event.
 	 */
 	async streamArrByParams<T extends keyof TG["CoreFields"]>(
 		options: {
@@ -645,8 +645,8 @@ export class Table<TG extends TableGeneric = TableGeneric> {
 			}[];
 		},
 		streamOptions?: StreamOptions,
-	): Promise<SharedTypes.ITypedPgStream<Pick<TG["CoreFields"], T>>> {
-		return this.#model.streamArrByParams<Pick<TG["CoreFields"], T>>(
+	): Promise<SharedTypes.ITypedPgStream<SharedTypes.PickRowFields<TG["CoreFields"], T>>> {
+		return this.#model.streamArrByParams<SharedTypes.PickRowFields<TG["CoreFields"], T>>(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 			options.pagination,
@@ -673,8 +673,8 @@ export class Table<TG extends TableGeneric = TableGeneric> {
 			returningFields?: T;
 		},
 		updateFields: Types.TConditionalRawParamsType<TG["UpdateFields"], TG["CoreFields"]>,
-	): Promise<TG["CoreFields"][]> {
-		return this.#model.updateByParams({ $and: queryConditions.params, $or: queryConditions.paramsOr, returningFields: queryConditions.returningFields }, updateFields);
+	): Promise<SharedTypes.ResolveRowFields<TG>[]> {
+		return this.#model.updateByParams({ $and: queryConditions.params, $or: queryConditions.paramsOr, returningFields: queryConditions.returningFields }, updateFields) as Promise<SharedTypes.ResolveRowFields<TG>[]>;
 	}
 
 	/**
@@ -691,8 +691,8 @@ export class Table<TG extends TableGeneric = TableGeneric> {
 		primaryKeyValue: T,
 		updateFields: Types.TConditionalRawParamsType<TG["UpdateFields"], TG["CoreFields"]>,
 		updateOptions?: { returningFields?: R; },
-	): Promise<TG["CoreFields"] | undefined> {
-		const one = await this.#model.updateOneByPk<TG["CoreFields"], T>(primaryKeyValue, updateFields, updateOptions);
+	): Promise<SharedTypes.ResolveRowFields<TG> | undefined> {
+		const one = await this.#model.updateOneByPk<SharedTypes.ResolveRowFields<TG>, T>(primaryKeyValue, updateFields, updateOptions);
 
 		return one;
 	}

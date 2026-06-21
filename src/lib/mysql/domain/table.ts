@@ -11,6 +11,7 @@ export type BaseTableGeneric = {
 	AdditionalSortingFields?: string;
 	CreateFields?: SharedTypes.TRawParams;
 	CoreFields: SharedTypes.TRawParams;
+	RowFields?: SharedTypes.TRawParams;
 	SearchFields?: Types.TDomainFields;
 	UpdateFields?: SharedTypes.TRawParams;
 };
@@ -464,8 +465,8 @@ export class BaseTable<
 			orderBy: Extract<keyof BTG["CoreFields"], string> | (BTG["AdditionalSortingFields"] extends string ? BTG["AdditionalSortingFields"] : never);
 			ordering: SharedTypes.TOrdering;
 		}[];
-	}): Promise<Array<Pick<BTG["CoreFields"], T>>> {
-		return this.model.getArrByParams<Pick<BTG["CoreFields"], T>>(
+	}): Promise<Array<SharedTypes.PickRowFields<BTG["CoreFields"], T>>> {
+		return this.model.getArrByParams<SharedTypes.PickRowFields<BTG["CoreFields"], T>>(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 			options.pagination,
@@ -537,8 +538,8 @@ export class BaseTable<
 		params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
 		paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>[];
 		selected?: [T, ...T[]];
-	}): Promise<{ message?: string; one?: Pick<BTG["CoreFields"], T>; }> {
-		const one = await this.model.getOneByParams<Pick<BTG["CoreFields"], T>>(
+	}): Promise<{ message?: string; one?: SharedTypes.PickRowFields<BTG["CoreFields"], T>; }> {
+		const one = await this.model.getOneByParams<SharedTypes.PickRowFields<BTG["CoreFields"], T>>(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 		);
@@ -558,8 +559,8 @@ export class BaseTable<
 	 *
 	 * @returns A promise that resolves to the retrieved record with the selected fields or a message if not found.
 	 */
-	async getOneByPk<T>(pk: T): Promise<{ message?: string; one?: BTG["CoreFields"]; }> {
-		const one = await this.model.getOneByPk<T, BTG["CoreFields"]>(pk);
+	async getOneByPk<T>(pk: T): Promise<{ message?: string; one?: SharedTypes.ResolveRowFields<BTG>; }> {
+		const one = await this.model.getOneByPk<T, SharedTypes.ResolveRowFields<BTG>>(pk);
 
 		if (!one) return { message: `Not found from ${this.model.tableName}` };
 
@@ -585,7 +586,7 @@ export class BaseTable<
 	 * - `highWaterMark`: The max number of records buffered in the stream.
 	 * - `objectMode`: If `true`, the stream operates in object mode (default for object streams).
 	 *
-	 * @returns A readable stream emitting records of type `Pick<VG["CoreFields"], T>` on the `"data"` event.
+	 * @returns A readable stream emitting records of type `SharedTypes.PickRowFields<VG["CoreFields"], T>` on the `"data"` event.
 	 */
 	async streamArrByParams<T extends keyof BTG["CoreFields"]>(
 		options: {
@@ -599,8 +600,8 @@ export class BaseTable<
 			}[];
 		},
 		streamOptions?: StreamOptions,
-	): Promise<SharedTypes.ITypedPgStream<Pick<BTG["CoreFields"], T>>> {
-		return this.model.streamArrByParams<Pick<BTG["CoreFields"], T>>(
+	): Promise<SharedTypes.ITypedPgStream<SharedTypes.PickRowFields<BTG["CoreFields"], T>>> {
+		return this.model.streamArrByParams<SharedTypes.PickRowFields<BTG["CoreFields"], T>>(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 			options.pagination,

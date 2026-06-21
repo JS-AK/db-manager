@@ -5,6 +5,13 @@ export interface ITypedPgStream<T> extends Readable {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	on(event: string, listener: (...args: any[]) => void): this;
 }
+export type {
+	PickRowFields,
+	ResolveRowFields,
+	RowFieldsFromCore,
+	TRowFieldsGeneric,
+	UnquoteSqlKey,
+} from "./sql-field-keys.js";
 export type TLogger = { error: (str: string) => void; info: (str: string) => void; };
 export type TOrdering = "ASC" | "DESC";
 export type TPagination = { limit: number; offset: number; };

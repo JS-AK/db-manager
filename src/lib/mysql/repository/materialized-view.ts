@@ -218,8 +218,8 @@ export class MaterializedView<MVG extends MaterializedViewGeneric = Materialized
 			orderBy: Extract<keyof MVG["CoreFields"], string> | (MVG["AdditionalSortingFields"] extends string ? MVG["AdditionalSortingFields"] : never);
 			ordering: SharedTypes.TOrdering;
 		}[];
-	}): Promise<Array<Pick<MVG["CoreFields"], T>>> {
-		return this.model.getArrByParams<Pick<MVG["CoreFields"], T>>(
+	}): Promise<Array<SharedTypes.PickRowFields<MVG["CoreFields"], T>>> {
+		return this.model.getArrByParams<SharedTypes.PickRowFields<MVG["CoreFields"], T>>(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 			options.pagination,
@@ -257,8 +257,8 @@ export class MaterializedView<MVG extends MaterializedViewGeneric = Materialized
 		params: Types.TSearchParams<Types.TConditionalDomainFieldsType<MVG["SearchFields"], MVG["CoreFields"]>>;
 		paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<MVG["SearchFields"], MVG["CoreFields"]>>[];
 		selected?: [T, ...T[]];
-	}): Promise<{ message?: string; one?: Pick<MVG["CoreFields"], T>; }> {
-		const one = await this.model.getOneByParams<Pick<MVG["CoreFields"], T>>(
+	}): Promise<{ message?: string; one?: SharedTypes.PickRowFields<MVG["CoreFields"], T>; }> {
+		const one = await this.model.getOneByParams<SharedTypes.PickRowFields<MVG["CoreFields"], T>>(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 		);
@@ -298,7 +298,7 @@ export class MaterializedView<MVG extends MaterializedViewGeneric = Materialized
 	 * - `highWaterMark`: The max number of records buffered in the stream.
 	 * - `objectMode`: If `true`, the stream operates in object mode (default for object streams).
 	 *
-	 * @returns A readable stream emitting records of type `Pick<VG["CoreFields"], T>` on the `"data"` event.
+	 * @returns A readable stream emitting records of type `SharedTypes.PickRowFields<VG["CoreFields"], T>` on the `"data"` event.
 	 */
 	async streamArrByParams<T extends keyof MVG["CoreFields"]>(
 		options: {
@@ -312,8 +312,8 @@ export class MaterializedView<MVG extends MaterializedViewGeneric = Materialized
 			}[];
 		},
 		streamOptions?: StreamOptions,
-	): Promise<SharedTypes.ITypedPgStream<Pick<MVG["CoreFields"], T>>> {
-		return this.model.streamArrByParams<Pick<MVG["CoreFields"], T>>(
+	): Promise<SharedTypes.ITypedPgStream<SharedTypes.PickRowFields<MVG["CoreFields"], T>>> {
+		return this.model.streamArrByParams<SharedTypes.PickRowFields<MVG["CoreFields"], T>>(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 			options.pagination,

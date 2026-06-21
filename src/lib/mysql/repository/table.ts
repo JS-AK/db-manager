@@ -486,8 +486,8 @@ export class Table<TG extends TableGeneric = TableGeneric> {
 			orderBy: Extract<keyof TG["CoreFields"], string> | (TG["AdditionalSortingFields"] extends string ? TG["AdditionalSortingFields"] : never);
 			ordering: SharedTypes.TOrdering;
 		}[];
-	}): Promise<Array<Pick<TG["CoreFields"], T>>> {
-		return this.model.getArrByParams<Pick<TG["CoreFields"], T>>(
+	}): Promise<Array<SharedTypes.PickRowFields<TG["CoreFields"], T>>> {
+		return this.model.getArrByParams<SharedTypes.PickRowFields<TG["CoreFields"], T>>(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 			options.pagination,
@@ -559,8 +559,8 @@ export class Table<TG extends TableGeneric = TableGeneric> {
 		params: Types.TSearchParams<Types.TConditionalDomainFieldsType<TG["SearchFields"], TG["CoreFields"]>>;
 		paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<TG["SearchFields"], TG["CoreFields"]>>[];
 		selected?: [T, ...T[]];
-	}): Promise<{ message?: string; one?: Pick<TG["CoreFields"], T>; }> {
-		const one = await this.model.getOneByParams<Pick<TG["CoreFields"], T>>(
+	}): Promise<{ message?: string; one?: SharedTypes.PickRowFields<TG["CoreFields"], T>; }> {
+		const one = await this.model.getOneByParams<SharedTypes.PickRowFields<TG["CoreFields"], T>>(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 		);
@@ -580,8 +580,8 @@ export class Table<TG extends TableGeneric = TableGeneric> {
 	 *
 	 * @returns A promise that resolves to the retrieved record with the selected fields or a message if not found.
 	 */
-	async getOneByPk<T>(pk: T): Promise<{ message?: string; one?: TG["CoreFields"]; }> {
-		const one = await this.model.getOneByPk<T, TG["CoreFields"]>(pk);
+	async getOneByPk<T>(pk: T): Promise<{ message?: string; one?: SharedTypes.ResolveRowFields<TG>; }> {
+		const one = await this.model.getOneByPk<T, SharedTypes.ResolveRowFields<TG>>(pk);
 
 		if (!one) return { message: `Not found from ${this.model.tableName}` };
 
@@ -607,7 +607,7 @@ export class Table<TG extends TableGeneric = TableGeneric> {
 	 * - `highWaterMark`: The max number of records buffered in the stream.
 	 * - `objectMode`: If `true`, the stream operates in object mode (default for object streams).
 	 *
-	 * @returns A readable stream emitting records of type `Pick<VG["CoreFields"], T>` on the `"data"` event.
+	 * @returns A readable stream emitting records of type `SharedTypes.PickRowFields<VG["CoreFields"], T>` on the `"data"` event.
 	 */
 	async streamArrByParams<T extends keyof TG["CoreFields"]>(
 		options: {
@@ -621,8 +621,8 @@ export class Table<TG extends TableGeneric = TableGeneric> {
 			}[];
 		},
 		streamOptions?: StreamOptions,
-	): Promise<SharedTypes.ITypedPgStream<Pick<TG["CoreFields"], T>>> {
-		return this.model.streamArrByParams<Pick<TG["CoreFields"], T>>(
+	): Promise<SharedTypes.ITypedPgStream<SharedTypes.PickRowFields<TG["CoreFields"], T>>> {
+		return this.model.streamArrByParams<SharedTypes.PickRowFields<TG["CoreFields"], T>>(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 			options.pagination,

@@ -11,6 +11,7 @@ export type BaseTableGeneric = {
 	AdditionalSortingFields?: string;
 	CreateFields?: SharedTypes.TRawParams;
 	CoreFields: SharedTypes.TRawParams;
+	RowFields?: SharedTypes.TRawParams;
 	SearchFields?: Types.TDomainFields;
 	UpdateFields?: SharedTypes.TRawParams;
 };
@@ -354,8 +355,8 @@ export class BaseTable<
 	async createOne<T extends Extract<keyof BTG["CoreFields"], string>[] = Extract<keyof BTG["CoreFields"], string>[]>(
 		recordParams: Types.TConditionalRawParamsType<BTG["CreateFields"], BTG["CoreFields"]>,
 		saveOptions?: { returningFields?: T; },
-	): Promise<T extends undefined ? BTG["CoreFields"] : Pick<BTG["CoreFields"], T[0]>> {
-		const res = await this.model.createOne<T extends undefined ? BTG["CoreFields"] : Pick<BTG["CoreFields"], T[0]>>(recordParams, saveOptions);
+	): Promise<T extends undefined ? SharedTypes.ResolveRowFields<BTG> : SharedTypes.PickRowFields<BTG["CoreFields"], T[0]>> {
+		const res = await this.model.createOne<T extends undefined ? SharedTypes.ResolveRowFields<BTG> : SharedTypes.PickRowFields<BTG["CoreFields"], T[0]>>(recordParams, saveOptions);
 
 		if (!res) throw new Error(`Save to ${this.model.tableName} table error`);
 
@@ -376,8 +377,8 @@ export class BaseTable<
 	async createMany<T extends Extract<keyof BTG["CoreFields"], string>[] = Extract<keyof BTG["CoreFields"], string>[]>(
 		recordParams: Types.TConditionalRawParamsType<BTG["CreateFields"], BTG["CoreFields"]>[],
 		saveOptions?: { returningFields?: T; },
-	): Promise<(T extends undefined ? BTG["CoreFields"][] : Pick<BTG["CoreFields"], T[0]>[])[]> {
-		const res = await this.model.createMany<T extends undefined ? BTG["CoreFields"][] : Pick<BTG["CoreFields"], T[0]>[]>(recordParams, saveOptions);
+	): Promise<(T extends undefined ? SharedTypes.ResolveRowFields<BTG>[] : SharedTypes.PickRowFields<BTG["CoreFields"], T[0]>[])[]> {
+		const res = await this.model.createMany<T extends undefined ? SharedTypes.ResolveRowFields<BTG>[] : SharedTypes.PickRowFields<BTG["CoreFields"], T[0]>[]>(recordParams, saveOptions);
 
 		if (!res) throw new Error(`Save to ${this.model.tableName} table error`);
 
@@ -485,8 +486,8 @@ export class BaseTable<
 			orderBy: Extract<keyof BTG["CoreFields"], string> | (BTG["AdditionalSortingFields"] extends string ? BTG["AdditionalSortingFields"] : never);
 			ordering: SharedTypes.TOrdering;
 		}[];
-	}): Promise<Array<Pick<BTG["CoreFields"], T>>> {
-		return this.model.getArrByParams<Pick<BTG["CoreFields"], T>>(
+	}): Promise<Array<SharedTypes.PickRowFields<BTG["CoreFields"], T>>> {
+		return this.model.getArrByParams<SharedTypes.PickRowFields<BTG["CoreFields"], T>>(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 			options.pagination,
@@ -558,8 +559,8 @@ export class BaseTable<
 		params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
 		paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>[];
 		selected?: [T, ...T[]];
-	}): Promise<{ message?: string; one?: Pick<BTG["CoreFields"], T>; }> {
-		const one = await this.model.getOneByParams<Pick<BTG["CoreFields"], T>>(
+	}): Promise<{ message?: string; one?: SharedTypes.PickRowFields<BTG["CoreFields"], T>; }> {
+		const one = await this.model.getOneByParams<SharedTypes.PickRowFields<BTG["CoreFields"], T>>(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 		);
@@ -579,8 +580,8 @@ export class BaseTable<
 	 *
 	 * @returns A promise that resolves to the retrieved record with the selected fields or a message if not found.
 	 */
-	async getOneByPk<T>(pk: T): Promise<{ message?: string; one?: BTG["CoreFields"]; }> {
-		const one = await this.model.getOneByPk<T, BTG["CoreFields"]>(pk);
+	async getOneByPk<T>(pk: T): Promise<{ message?: string; one?: SharedTypes.ResolveRowFields<BTG>; }> {
+		const one = await this.model.getOneByPk<T, SharedTypes.ResolveRowFields<BTG>>(pk);
 
 		if (!one) return { message: `Not found from ${this.model.tableName}` };
 
@@ -608,7 +609,7 @@ export class BaseTable<
 	 * - `rowMode`: If set to `"array"`, rows will be returned as arrays instead of objects.
 	 * - `types`: Custom type parser map for Postgres types.
 	 *
-	 * @returns A readable stream emitting records of type `Pick<VG["CoreFields"], T>` on the `"data"` event.
+	 * @returns A readable stream emitting records of type `SharedTypes.PickRowFields<VG["CoreFields"], T>` on the `"data"` event.
 	 */
 	async streamArrByParams<T extends keyof BTG["CoreFields"]>(
 		options: {
@@ -622,8 +623,8 @@ export class BaseTable<
 			}[];
 		},
 		streamOptions?: StreamOptions,
-	): Promise<SharedTypes.ITypedPgStream<Pick<BTG["CoreFields"], T>>> {
-		return this.model.streamArrByParams<Pick<BTG["CoreFields"], T>>(
+	): Promise<SharedTypes.ITypedPgStream<SharedTypes.PickRowFields<BTG["CoreFields"], T>>> {
+		return this.model.streamArrByParams<SharedTypes.PickRowFields<BTG["CoreFields"], T>>(
 			{ $and: options.params, $or: options.paramsOr },
 			options.selected as string[],
 			options.pagination,
@@ -650,8 +651,8 @@ export class BaseTable<
 			returningFields?: T;
 		},
 		updateFields: Types.TConditionalRawParamsType<BTG["UpdateFields"], BTG["CoreFields"]>,
-	): Promise<BTG["CoreFields"][]> {
-		return this.model.updateByParams({ $and: queryConditions.params, $or: queryConditions.paramsOr, returningFields: queryConditions.returningFields }, updateFields);
+	): Promise<SharedTypes.ResolveRowFields<BTG>[]> {
+		return this.model.updateByParams({ $and: queryConditions.params, $or: queryConditions.paramsOr, returningFields: queryConditions.returningFields }, updateFields) as Promise<SharedTypes.ResolveRowFields<BTG>[]>;
 	}
 
 	/**
@@ -668,8 +669,8 @@ export class BaseTable<
 		primaryKeyValue: T,
 		updateFields: Types.TConditionalRawParamsType<BTG["UpdateFields"], BTG["CoreFields"]>,
 		updateOptions?: { returningFields?: R; },
-	): Promise<BTG["CoreFields"] | undefined> {
-		const one = await this.model.updateOneByPk<BTG["CoreFields"], T>(primaryKeyValue, updateFields, updateOptions);
+	): Promise<SharedTypes.ResolveRowFields<BTG> | undefined> {
+		const one = await this.model.updateOneByPk<SharedTypes.ResolveRowFields<BTG>, T>(primaryKeyValue, updateFields, updateOptions);
 
 		return one;
 	}
