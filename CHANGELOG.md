@@ -1,3 +1,10 @@
+## [3.48.4](https://github.com/JS-AK/db-manager/compare/v3.48.3...v3.48.4) (2026-06-21)
+
+
+### Bug Fixes
+
+*  align queryOrArray parentheses with MySQL in getFieldsToSearch ([724a91d](https://github.com/JS-AK/db-manager/commit/724a91deff48a5236ddd8fe52b8df401572c9572))
+
 ## [3.48.3](https://github.com/JS-AK/db-manager/compare/v3.48.2...v3.48.3) (2026-06-21)
 
 
