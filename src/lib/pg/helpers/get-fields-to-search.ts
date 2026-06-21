@@ -90,17 +90,21 @@ export const getFieldsToSearch = (
 
 					res.orderNumber = orderNumber;
 
-					return text;
+					return `(${text})`;
 				} else {
 					res.orderNumber += 1;
 
 					const text = `${e.key} ${e.operator} $${res.orderNumber}`;
 
-					return text;
+					return `(${text})`;
 				}
 			}).join(" AND ");
 
-			comparedFieldsOr.push(`(${comparedFields})`);
+			if (query.length === 1) {
+				comparedFieldsOr.push(comparedFields);
+			} else {
+				comparedFieldsOr.push(`(${comparedFields})`);
+			}
 		}
 
 		res.searchFields += ` AND (${comparedFieldsOr.join(" OR ")})`;
