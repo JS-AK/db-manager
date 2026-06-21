@@ -1,3 +1,10 @@
+## [3.48.6](https://github.com/JS-AK/db-manager/compare/v3.48.5...v3.48.6) (2026-06-21)
+
+
+### Bug Fixes
+
+* include shared-types declarations in npm package files ([12e6bb5](https://github.com/JS-AK/db-manager/commit/12e6bb5b8bf7cf07393335bc12fb8319fa8e13e5))
+
 ## [3.48.5](https://github.com/JS-AK/db-manager/compare/v3.48.4...v3.48.5) (2026-06-21)
 
 
