@@ -44,13 +44,4 @@ describe("sql field key types", () => {
 
 		expectTypeOf<ResolveRowFields<Generic>>().toEqualTypeOf<RowFieldsFromCore<EveCoreFields>>();
 	});
-
-	it("should prefer explicit RowFields override", () => {
-		type Generic = {
-			CoreFields: EveCoreFields;
-			RowFields: { custom: string; };
-		};
-
-		expectTypeOf<ResolveRowFields<Generic>>().toEqualTypeOf<{ custom: string; }>();
-	});
 });

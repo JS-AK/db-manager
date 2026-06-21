@@ -10,7 +10,6 @@ import {
 export type BaseMaterializedViewGeneric = {
 	AdditionalSortingFields?: string;
 	CoreFields: SharedTypes.TRawParams;
-	RowFields?: SharedTypes.TRawParams;
 	SearchFields?: Types.TDomainFields;
 };
 

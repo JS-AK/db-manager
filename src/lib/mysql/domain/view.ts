@@ -10,7 +10,6 @@ import {
 export type BaseViewGeneric = {
 	AdditionalSortingFields?: string;
 	CoreFields: SharedTypes.TRawParams;
-	RowFields?: SharedTypes.TRawParams;
 	SearchFields?: Types.TDomainFields;
 };
 

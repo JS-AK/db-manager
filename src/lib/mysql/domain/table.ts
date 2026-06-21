@@ -11,7 +11,6 @@ export type BaseTableGeneric = {
 	AdditionalSortingFields?: string;
 	CreateFields?: SharedTypes.TRawParams;
 	CoreFields: SharedTypes.TRawParams;
-	RowFields?: SharedTypes.TRawParams;
 	SearchFields?: Types.TDomainFields;
 	UpdateFields?: SharedTypes.TRawParams;
 };

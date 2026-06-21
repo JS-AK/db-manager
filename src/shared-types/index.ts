@@ -9,7 +9,6 @@ export type {
 	PickRowFields,
 	ResolveRowFields,
 	RowFieldsFromCore,
-	TRowFieldsGeneric,
 	UnquoteSqlKey,
 } from "./sql-field-keys.js";
 export type TLogger = { error: (str: string) => void; info: (str: string) => void; };

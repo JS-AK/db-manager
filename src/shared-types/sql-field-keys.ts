@@ -11,21 +11,16 @@ export type PickRowFields<
 > = Pick<RowFieldsFromCore<TCore>, UnquoteSqlKey<TSelected & string>>;
 
 /**
- * Resolves row shape: explicit `RowFields` or derived from `CoreFields`.
+ * Row shape returned by the driver for all `CoreFields` columns.
  */
-export type ResolveRowFields<TG extends TRowFieldsGeneric> =
-	TG["RowFields"] extends TRawParams ? TG["RowFields"] : RowFieldsFromCore<TG["CoreFields"]>;
+export type ResolveRowFields<TG extends { CoreFields: TRawParams; }> =
+	RowFieldsFromCore<TG["CoreFields"]>;
 
 /**
  * Maps all `CoreFields` keys to row object keys (unquoted when needed).
  */
 export type RowFieldsFromCore<T extends TRawParams> = {
 	[K in keyof T as UnquoteSqlKey<K & string>]: T[K];
-};
-
-export type TRowFieldsGeneric = {
-	CoreFields: TRawParams;
-	RowFields?: TRawParams;
 };
 
 /**
