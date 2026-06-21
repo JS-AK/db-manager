@@ -1,3 +1,10 @@
+## [3.48.3](https://github.com/JS-AK/db-manager/compare/v3.48.2...v3.48.3) (2026-06-21)
+
+
+### Bug Fixes
+
+* wrap search WHERE conditions in parentheses for AND/OR precedence ([ce59a56](https://github.com/JS-AK/db-manager/commit/ce59a56246a3b0ee354ff16a3dc651d09fd9daa2))
+
 ## [3.48.2](https://github.com/JS-AK/db-manager/compare/v3.48.1...v3.48.2) (2025-10-15)
 
 
