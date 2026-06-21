@@ -19,16 +19,16 @@ import * as Types from "../model/types.js";
  */
 export const operatorMappings: Map<
 	Types.TOperator,
-	(el: Types.TField) => string
+	(element: Types.TField) => string
 > = new Map([
 	["$custom", (element: Types.TField) => `${element.key} ${element.sign} ?`],
-	["$between", (el: Types.TField) => `${el.key} BETWEEN ? AND ?`],
-	["$in", (element: Types.TField) => ` ${element.key} IN (?)`],
-	["$like", (element: Types.TField) => ` ${element.key} LIKE ?`],
-	["$ilike", (element: Types.TField) => ` LOWER(${element.key}) LIKE LOWER(?)`],
-	["$nin", (element: Types.TField) => ` ${element.key} NOT IN (?)`],
-	["$nbetween", (el: Types.TField) => `${el.key} NOT BETWEEN ? AND ?`],
-	["$nlike", (element: Types.TField) => ` ${element.key} NOT LIKE ?`],
-	["$nilike", (element: Types.TField) => ` LOWER(${element.key}) NOT LIKE LOWER(?)`],
+	["$between", (element: Types.TField) => `${element.key} BETWEEN ? AND ?`],
+	["$in", (element: Types.TField) => `${element.key} IN (?)`],
+	["$like", (element: Types.TField) => `${element.key} LIKE ?`],
+	["$ilike", (element: Types.TField) => `LOWER(${element.key}) LIKE LOWER(?)`],
+	["$nin", (element: Types.TField) => `${element.key} NOT IN (?)`],
+	["$nbetween", (element: Types.TField) => `${element.key} NOT BETWEEN ? AND ?`],
+	["$nlike", (element: Types.TField) => `${element.key} NOT LIKE ?`],
+	["$nilike", (element: Types.TField) => `LOWER(${element.key}) NOT LIKE LOWER(?)`],
 	["$withoutParameters", (element: Types.TField) => element.key],
 ]);

@@ -48,7 +48,12 @@
     "lint": "eslint . --ext .ts",
     "postbuild:esm": "node scripts/write-esm-package.js",
     "postbuild:cjs": "node scripts/write-cjs-package.js",
-    "test": "npm run build && node ./build/esm/test/index.js"
+    "test": "npm run build && npm run test:unit && node ./build/esm/test/index.js",
+    "test:unit": "vitest run --config vitest.unit.config.js",
+    "clear-build:windows": "if exist build rmdir /s /q build",
+    "clear-build:linux": "rm -rf build",
+    "test-local:windows": "npm run clear-build:windows && npm run test",
+    "test-local:linux": "npm run clear-build:linux && npm run test"
   },
   "repository": {
     "type": "git",
@@ -86,10 +91,12 @@
     "@types/node": "20.14.8",
     "@typescript-eslint/eslint-plugin": "7.13.1",
     "@typescript-eslint/parser": "7.13.1",
+    "@vitest/coverage-v8": "3.2.4",
     "eslint": "8.57.0",
     "eslint-plugin-sort-destructure-keys": "2.0.0",
     "eslint-plugin-sort-exports": "0.9.1",
     "semantic-release": "24.0.0",
-    "typescript": "5.5.2"
+    "typescript": "5.5.2",
+    "vitest": "3.2.4"
   }
 }
