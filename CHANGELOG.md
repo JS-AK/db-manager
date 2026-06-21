@@ -1,3 +1,10 @@
+## [3.48.5](https://github.com/JS-AK/db-manager/compare/v3.48.4...v3.48.5) (2026-06-21)
+
+
+### Bug Fixes
+
+* map CoreFields SQL keys to row property names in query results ([05f42ac](https://github.com/JS-AK/db-manager/commit/05f42acdafc194ade74b5234d18816bd248032cd))
+
 ## [3.48.4](https://github.com/JS-AK/db-manager/compare/v3.48.3...v3.48.4) (2026-06-21)
 
 
