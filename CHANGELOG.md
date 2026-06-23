@@ -1,3 +1,10 @@
+# [3.49.0](https://github.com/JS-AK/db-manager/compare/v3.48.6...v3.49.0) (2026-06-23)
+
+
+### Features
+
+* add dialect-specific SQL identifier quoting for PG and MySQL ([c0e9185](https://github.com/JS-AK/db-manager/commit/c0e918529eee13c11b58b77695d8e12583a7a5d0))
+
 ## [3.48.6](https://github.com/JS-AK/db-manager/compare/v3.48.5...v3.48.6) (2026-06-21)
 
 
