@@ -1,3 +1,5 @@
+import * as SharedHelpers from "../../../shared-helpers/index.js";
+
 import * as Types from "../model/types.js";
 
 import { processMappings } from "./process-mappings.js";
@@ -15,6 +17,9 @@ import { processMappings } from "./process-mappings.js";
 export const compareFields = (
 	params: Types.TSearchParams = {},
 	paramsOr?: Types.TSearchParams[],
+	options?: {
+		tableFieldsSet?: Set<string>;
+	},
 ): {
 	queryArray: Types.TField[];
 	queryOrArray: { query: Types.TField[]; }[];
@@ -23,12 +28,14 @@ export const compareFields = (
 	const queryArray: Types.TField[] = [];
 	const values: unknown[] = [];
 
+	const { tableFieldsSet } = options || {};
+
 	for (const entry of Object.entries(params)) {
 		const key = entry[0];
 		const value = entry[1];
 
 		if (value === null) {
-			queryArray.push({ key: `${key} IS NULL`, operator: "$withoutParameters" });
+			queryArray.push({ key: `${SharedHelpers.quotePgIdent(key, { tableFieldsSet })} IS NULL`, operator: "$withoutParameters" });
 		} else if (typeof value === "object") {
 			if (Array.isArray(value)) {
 				for (const v of value) {
@@ -39,7 +46,7 @@ export const compareFields = (
 							throw new Error(`Invalid value.key ${k}, Available values: ${Array.from(processMappings.keys())}`);
 						}
 
-						processFunction(key, v, queryArray, values);
+						processFunction(SharedHelpers.quotePgIdent(key, { tableFieldsSet }), v, queryArray, values);
 					}
 				}
 			} else {
@@ -50,11 +57,11 @@ export const compareFields = (
 						throw new Error(`Invalid value.key ${k}, Available values: ${Array.from(processMappings.keys())}`);
 					}
 
-					processFunction(key, value, queryArray, values);
+					processFunction(SharedHelpers.quotePgIdent(key, { tableFieldsSet }), value, queryArray, values);
 				}
 			}
 		} else if (value !== undefined) {
-			queryArray.push({ key, operator: "=" });
+			queryArray.push({ key: SharedHelpers.quotePgIdent(key, { tableFieldsSet }), operator: "=" });
 			values.push(value);
 		}
 	}
@@ -74,7 +81,7 @@ export const compareFields = (
 				const value = entry[1];
 
 				if (value === null) {
-					queryOrArrayLocal.push({ key: `${key} IS NULL`, operator: "$withoutParameters" });
+					queryOrArrayLocal.push({ key: `${SharedHelpers.quotePgIdent(key, { tableFieldsSet })} IS NULL`, operator: "$withoutParameters" });
 				} else if (typeof value === "object") {
 					if (Array.isArray(value)) {
 						for (const v of value) {
@@ -85,7 +92,7 @@ export const compareFields = (
 									throw new Error(`Invalid value.key ${k}, Available values: ${Array.from(processMappings.keys())}`);
 								}
 
-								processFunction(key, v, queryOrArrayLocal, values);
+								processFunction(SharedHelpers.quotePgIdent(key, { tableFieldsSet }), v, queryOrArrayLocal, values);
 							}
 						}
 					} else {
@@ -96,11 +103,11 @@ export const compareFields = (
 								throw new Error(`Invalid value.key ${k}, Available values: ${Array.from(processMappings.keys())}`);
 							}
 
-							processFunction(key, value, queryOrArrayLocal, values);
+							processFunction(SharedHelpers.quotePgIdent(key, { tableFieldsSet }), value, queryOrArrayLocal, values);
 						}
 					}
 				} else if (value !== undefined) {
-					queryOrArrayLocal.push({ key, operator: "=" });
+					queryOrArrayLocal.push({ key: SharedHelpers.quotePgIdent(key, { tableFieldsSet }), operator: "=" });
 					values.push(value);
 				}
 			}

@@ -1,6 +1,7 @@
 import pg from "pg";
 
 import * as Helpers from "../helpers/index.js";
+import * as SharedHelpers from "../../../shared-helpers/index.js";
 import * as SharedTypes from "../../../shared-types/index.js";
 import * as Types from "./types.js";
 import * as connection from "../connection.js";
@@ -15,6 +16,7 @@ import queries from "./queries.js";
 export class BaseMaterializedView<const T extends readonly string[] = readonly string[]> {
 	#sortingOrders = new Set(["ASC", "DESC"]);
 	#coreFieldsSet;
+	#coreFieldsCoreSet;
 	#isLoggerEnabled: boolean | undefined;
 	#logger?: SharedTypes.TLogger;
 	#executeSql;
@@ -29,6 +31,8 @@ export class BaseMaterializedView<const T extends readonly string[] = readonly s
 	 * - pg.Client
 	 */
 	#executor: Types.TExecutor;
+
+	#nameQuoted;
 
 	/**
 	 * The name of the materialized view.
@@ -66,7 +70,10 @@ export class BaseMaterializedView<const T extends readonly string[] = readonly s
 		}
 
 		this.name = data.name;
-		this.coreFields = data.coreFields;
+		this.#nameQuoted = SharedHelpers.quotePgIdent(this.name, { force: true });
+
+		this.coreFields = [...data.coreFields];
+		this.#coreFieldsCoreSet = new Set(this.coreFields);
 
 		this.#coreFieldsSet = new Set([
 			...this.coreFields,
@@ -198,7 +205,7 @@ export class BaseMaterializedView<const T extends readonly string[] = readonly s
 	 *
 	 * @returns A new instance of the base class with the new connection client.
 	 */
-	setClientInBaseClass(client: Types.TExecutor): BaseMaterializedView {
+	setClientInBaseClass(client: Types.TExecutor): BaseMaterializedView<T> {
 		return new BaseMaterializedView(
 			{ ...this.#initialArgs.data },
 			this.#initialArgs.dbCreds ? { ...this.#initialArgs.dbCreds } : undefined,
@@ -236,12 +243,16 @@ export class BaseMaterializedView<const T extends readonly string[] = readonly s
 		 */
 		getArrByParams: (
 			{ $and = {}, $or }: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
-			selected: string[] = ["*"],
+			selected = ["*"],
 			pagination?: SharedTypes.TPagination,
 			order?: { orderBy: string; ordering: SharedTypes.TOrdering; }[],
 		): { query: string; values: unknown[]; } => {
+			const orderResult: { orderBy: string; ordering: SharedTypes.TOrdering; }[] = [];
+
 			if (order?.length) {
 				for (const o of order) {
+					orderResult.push({ orderBy: SharedHelpers.quotePgIdent(o.orderBy, { tableFieldsSet: this.#coreFieldsCoreSet }), ordering: o.ordering });
+
 					if (!this.#coreFieldsSet.has(o.orderBy)) {
 						const allowedFields = Array.from(this.#coreFieldsSet).join(", ");
 
@@ -252,13 +263,19 @@ export class BaseMaterializedView<const T extends readonly string[] = readonly s
 				}
 			}
 
-			if (!selected.length) selected.push("*");
+			const selectedResult = [];
 
-			const { queryArray, queryOrArray, values } = this.compareFields($and, $or);
-			const { orderByFields, paginationFields, searchFields, selectedFields } = this.getFieldsToSearch({ queryArray, queryOrArray }, selected, pagination, order);
+			if (!selected.length) {
+				selectedResult.push("*");
+			} else {
+				selected.forEach((e) => selectedResult.push(SharedHelpers.quotePgIdent(e, { tableFieldsSet: this.#coreFieldsCoreSet })));
+			}
+
+			const { queryArray, queryOrArray, values } = this.compareFields($and, $or, { tableFieldsSet: this.#coreFieldsCoreSet });
+			const { orderByFields, paginationFields, searchFields, selectedFields } = this.getFieldsToSearch({ queryArray, queryOrArray }, selectedResult, pagination, orderResult);
 
 			return {
-				query: queries.getByParams(this.name, selectedFields, searchFields, orderByFields, paginationFields),
+				query: queries.getByParams(this.#nameQuoted, selectedFields, searchFields, orderByFields, paginationFields),
 				values,
 			};
 		},
@@ -274,11 +291,11 @@ export class BaseMaterializedView<const T extends readonly string[] = readonly s
 		getCountByParams: (
 			{ $and = {}, $or }: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
 		): { query: string; values: unknown[]; } => {
-			const { queryArray, queryOrArray, values } = this.compareFields($and, $or);
+			const { queryArray, queryOrArray, values } = this.compareFields($and, $or, { tableFieldsSet: this.#coreFieldsCoreSet });
 			const { searchFields } = this.getFieldsToSearch({ queryArray, queryOrArray });
 
 			return {
-				query: queries.getCountByParams(this.name, searchFields),
+				query: queries.getCountByParams(this.#nameQuoted, searchFields),
 				values,
 			};
 		},
@@ -294,16 +311,22 @@ export class BaseMaterializedView<const T extends readonly string[] = readonly s
 		 */
 		getOneByParams: (
 			{ $and = {}, $or }: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
-			selected: string[] = ["*"],
+			selected = ["*"],
 		): { query: string; values: unknown[]; } => {
-			if (!selected.length) selected.push("*");
+			const selectedResult = [];
 
-			const { queryArray, queryOrArray, values } = this.compareFields($and, $or);
-			const { orderByFields, paginationFields, searchFields, selectedFields } = this.getFieldsToSearch({ queryArray, queryOrArray }, selected, { limit: 1, offset: 0 });
+			if (!selected.length) {
+				selectedResult.push("*");
+			} else {
+				selected.forEach((e) => selectedResult.push(SharedHelpers.quotePgIdent(e, { tableFieldsSet: this.#coreFieldsCoreSet })));
+			}
+
+			const { queryArray, queryOrArray, values } = this.compareFields($and, $or, { tableFieldsSet: this.#coreFieldsCoreSet });
+			const { orderByFields, paginationFields, searchFields, selectedFields } = this.getFieldsToSearch({ queryArray, queryOrArray }, selectedResult, { limit: 1, offset: 0 });
 
 			return {
 				query: queries.getByParams(
-					this.name,
+					this.#nameQuoted,
 					selectedFields,
 					searchFields,
 					orderByFields,
@@ -328,7 +351,7 @@ export class BaseMaterializedView<const T extends readonly string[] = readonly s
 		 */
 		streamArrByParams: (
 			{ $and = {}, $or }: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
-			selected: string[] = ["*"],
+			selected = ["*"],
 			pagination?: SharedTypes.TPagination,
 			order?: { orderBy: string; ordering: SharedTypes.TOrdering; }[],
 		): { query: string; values: unknown[]; } => {
@@ -344,13 +367,19 @@ export class BaseMaterializedView<const T extends readonly string[] = readonly s
 				}
 			}
 
-			if (!selected.length) selected.push("*");
+			const selectedResult = [];
 
-			const { queryArray, queryOrArray, values } = this.compareFields($and, $or);
-			const { orderByFields, paginationFields, searchFields, selectedFields } = this.getFieldsToSearch({ queryArray, queryOrArray }, selected, pagination, order);
+			if (!selected.length) {
+				selectedResult.push("*");
+			} else {
+				selected.forEach((e) => selectedResult.push(SharedHelpers.quotePgIdent(e, { tableFieldsSet: this.#coreFieldsCoreSet })));
+			}
+
+			const { queryArray, queryOrArray, values } = this.compareFields($and, $or, { tableFieldsSet: this.#coreFieldsCoreSet });
+			const { orderByFields, paginationFields, searchFields, selectedFields } = this.getFieldsToSearch({ queryArray, queryOrArray }, selectedResult, pagination, order);
 
 			return {
-				query: queries.getByParams(this.name, selectedFields, searchFields, orderByFields, paginationFields),
+				query: queries.getByParams(this.#nameQuoted, selectedFields, searchFields, orderByFields, paginationFields),
 				values,
 			};
 		},
@@ -393,7 +422,7 @@ export class BaseMaterializedView<const T extends readonly string[] = readonly s
 	 */
 	async getCountByParams(params: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; }): Promise<number> {
 		const sql = this.compareQuery.getCountByParams(params);
-		const { rows } = await this.executeSql<{ count: string; }>(sql);
+		const { rows } = await this.#executeSql(sql);
 
 		return Number(rows[0]?.count) || 0;
 	}
@@ -426,7 +455,7 @@ export class BaseMaterializedView<const T extends readonly string[] = readonly s
 	 * @returns A promise that resolves when the view is refreshed.
 	 */
 	async refresh(concurrently: boolean = false): Promise<void> {
-		const query = `REFRESH MATERIALIZED VIEW ${concurrently ? "CONCURRENTLY" : ""} ${this.name}`;
+		const query = `REFRESH MATERIALIZED VIEW ${concurrently ? "CONCURRENTLY " : ""}${this.#nameQuoted}`;
 
 		await this.#executeSql({ query });
 	}

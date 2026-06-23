@@ -54,8 +54,8 @@ export default {
 	createOne(
 		tableName: string,
 		fields: string[],
-		createField: { title: string; type: "unix_timestamp" | "timestamp"; } | null,
-		onConflict: string,
+		createField?: { title: string; type: "unix_timestamp" | "timestamp"; } | null,
+		onConflict?: string,
 		returning?: string[],
 	): string {
 		const intoFields = [];
@@ -85,7 +85,7 @@ export default {
 			}
 		}
 
-		return `INSERT INTO ${tableName} (${intoFields.join(",")}) VALUES (${valuesFields.join(",")}) ${onConflict} RETURNING ${returning?.length ? returning.join(",") : "*"};`;
+		return `INSERT INTO ${tableName} (${intoFields.join(",")}) VALUES (${valuesFields.join(",")}) ${onConflict || ""} RETURNING ${returning?.length ? returning.join(",") : "*"};`;
 	},
 
 	/**
@@ -183,7 +183,7 @@ export default {
 
 		const whereClause = conditions.join(" OR ");
 
-		return `SELECT COUNT(*) AS count FROM ${tableName} WHERE ${whereClause};`;
+		return `SELECT COUNT(*) AS count FROM ${tableName} WHERE (${whereClause});`;
 	},
 
 	/**
@@ -306,11 +306,11 @@ export default {
 		tableName: string,
 		fields: string[],
 		searchFields: string,
-		updateField: { title: string; type: "unix_timestamp" | "timestamp"; } | null,
-		startOrderNumber: number,
+		updateField?: { title: string; type: "unix_timestamp" | "timestamp"; } | null,
+		startOrderNumber?: number,
 		returning?: string[],
 	): string {
-		let idx = startOrderNumber;
+		let idx = startOrderNumber || 1;
 		let updateFields = fields.map((e: string) => `${e} = $${idx++}`).join(",");
 
 		if (updateField) {
@@ -349,7 +349,7 @@ export default {
 		tableName: string,
 		fields: string[],
 		primaryKeyField: SharedTypes.TPrimaryKeyField,
-		updateField: { title: string; type: "unix_timestamp" | "timestamp"; } | null,
+		updateField?: { title: string; type: "unix_timestamp" | "timestamp"; } | null,
 		returning?: string[],
 	): string {
 		let idx = 1;
