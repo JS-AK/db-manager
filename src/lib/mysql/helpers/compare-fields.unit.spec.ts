@@ -99,4 +99,15 @@ describe("compareFields", () => {
 		]);
 		expect(result.values).toEqual(["active", "John", 30]);
 	});
+
+	it("should quote identifiers when tableFieldsSet is provided", () => {
+		const tableFieldsSet = new Set(["typeID", "published"]);
+		const result = compareFields({ published: true, typeID: 34 }, undefined, { tableFieldsSet });
+
+		expect(result.queryArray).toEqual([
+			{ key: "`published`", operator: "=" },
+			{ key: "`typeID`", operator: "=" },
+		]);
+		expect(result.values).toEqual([true, 34]);
+	});
 });

@@ -15,6 +15,7 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 	#insertOptions;
 	#sortingOrders = new Set(["ASC", "DESC"]);
 	#tableFieldsSet;
+	#tableFieldsCoreSet;
 	#isLoggerEnabled: boolean | undefined;
 	#logger?: SharedTypes.TLogger;
 	#executeSql;
@@ -29,6 +30,11 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 	 * - pg.Client
 	 */
 	#executor: Types.TExecutor;
+
+	#createFieldQuoted;
+	#primaryKeyQuoted;
+	#tableNameQuoted;
+	#updateFieldQuoted;
 
 	createField;
 	primaryKey;
@@ -80,10 +86,27 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 		}
 
 		this.createField = data.createField;
+		this.#createFieldQuoted = this.createField
+			? { title: SharedHelpers.quotePgIdent(this.createField.title, { force: true }), type: this.createField.type }
+			: undefined;
+
 		this.primaryKey = data.primaryKey;
+		this.#primaryKeyQuoted = this.primaryKey
+			? Array.isArray(this.primaryKey)
+				? this.primaryKey.map((key) => SharedHelpers.quotePgIdent(key, { force: true }))
+				: SharedHelpers.quotePgIdent(this.primaryKey, { force: true })
+			: undefined;
+
 		this.tableName = data.tableName;
+		this.#tableNameQuoted = SharedHelpers.quotePgIdent(this.tableName, { force: true });
+
 		this.tableFields = [...data.tableFields];
+		this.#tableFieldsCoreSet = new Set(this.tableFields);
+
 		this.updateField = data.updateField;
+		this.#updateFieldQuoted = this.updateField
+			? { title: SharedHelpers.quotePgIdent(this.updateField.title, { force: true }), type: this.updateField.type }
+			: undefined;
 
 		this.#tableFieldsSet = new Set([
 			...this.tableFields,
@@ -240,22 +263,22 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 
 			const params = SharedHelpers.clearUndefinedFields(example);
 
-			Object.keys(params).forEach((e) => headers.add(e));
+			Object.keys(params).forEach((e) => headers.add(SharedHelpers.quotePgIdent(e, { tableFieldsSet: this.#tableFieldsCoreSet })));
 
-			if (this.createField) {
-				headers.add(this.createField.title);
+			if (this.#createFieldQuoted) {
+				headers.add(this.#createFieldQuoted.title);
 			}
 
 			for (const pR of recordParams) {
 				const params = SharedHelpers.clearUndefinedFields(pR);
-				const keys = new Set(Object.keys(params));
+				const keys = new Set(Object.keys(params).map((key) => SharedHelpers.quotePgIdent(key, { tableFieldsSet: this.#tableFieldsCoreSet })));
 				const paramsPrepared = [...Object.values(params)];
 
-				if (this.createField) {
-					if (!keys.has(this.createField.title)) {
-						keys.add(this.createField.title);
+				if (this.#createFieldQuoted) {
+					if (!keys.has(this.#createFieldQuoted.title)) {
+						keys.add(this.#createFieldQuoted.title);
 
-						switch (this.createField.type) {
+						switch (this.#createFieldQuoted.type) {
 							case "timestamp":
 								paramsPrepared.push(new Date().toISOString());
 								break;
@@ -265,7 +288,7 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 								break;
 
 							default:
-								throw new Error("Invalid type: " + this.createField.type);
+								throw new Error("Invalid type: " + this.#createFieldQuoted.type);
 						}
 					}
 				}
@@ -291,8 +314,8 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 					fields: k,
 					headers: [...headers],
 					onConflict,
-					returning: saveOptions?.returningFields,
-					tableName: this.tableName,
+					returning: saveOptions?.returningFields?.map((field) => SharedHelpers.quotePgIdent(field, { tableFieldsSet: this.#tableFieldsCoreSet })),
+					tableName: this.#tableNameQuoted,
 				}),
 				values: v,
 			};
@@ -308,29 +331,35 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 			if (!fields.length) { throw new Error("No one save field arrived"); }
 
 			return {
-				query: queries.createOne(this.tableName, fields, this.createField, onConflict, saveOptions?.returningFields),
+				query: queries.createOne(
+					this.#tableNameQuoted,
+					fields.map((field) => SharedHelpers.quotePgIdent(field, { tableFieldsSet: this.#tableFieldsCoreSet })),
+					this.#createFieldQuoted,
+					onConflict,
+					saveOptions?.returningFields?.map((field) => SharedHelpers.quotePgIdent(field, { tableFieldsSet: this.#tableFieldsCoreSet })),
+				),
 				values: Object.values(clearedParams),
 			};
 		},
 		deleteAll: (): { query: string; } => {
-			return { query: queries.deleteAll(this.tableName) };
+			return { query: queries.deleteAll(this.#tableNameQuoted) };
 		},
 		deleteByParams: (
 			{ $and = {}, $or }: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
 		): { query: string; values: unknown[]; } => {
-			const { queryArray, queryOrArray, values } = this.compareFields($and, $or);
+			const { queryArray, queryOrArray, values } = this.compareFields($and, $or, { tableFieldsSet: this.#tableFieldsCoreSet });
 			const { searchFields } = this.getFieldsToSearch({ queryArray, queryOrArray });
 
 			return {
-				query: queries.deleteByParams(this.tableName, searchFields),
+				query: queries.deleteByParams(this.#tableNameQuoted, searchFields),
 				values,
 			};
 		},
 		deleteOneByPk: <T>(primaryKey: T): { query: string; values: unknown[]; } => {
-			if (!this.primaryKey) { throw new Error("Primary key not specified"); }
+			if (!this.#primaryKeyQuoted) { throw new Error("Primary key not specified"); }
 
 			return {
-				query: queries.deleteByPk(this.tableName, this.primaryKey),
+				query: queries.deleteByPk(this.#tableNameQuoted, this.#primaryKeyQuoted),
 				values: Array.isArray(primaryKey) ? primaryKey : [primaryKey],
 			};
 		},
@@ -340,8 +369,12 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 			pagination?: SharedTypes.TPagination,
 			order?: { orderBy: string; ordering: SharedTypes.TOrdering; }[],
 		): { query: string; values: unknown[]; } => {
+			const orderResult: { orderBy: string; ordering: SharedTypes.TOrdering; }[] = [];
+
 			if (order?.length) {
 				for (const o of order) {
+					orderResult.push({ orderBy: SharedHelpers.quotePgIdent(o.orderBy, { tableFieldsSet: this.#tableFieldsCoreSet }), ordering: o.ordering });
+
 					if (!this.#tableFieldsSet.has(o.orderBy)) {
 						const allowedFields = Array.from(this.#tableFieldsSet).join(", ");
 
@@ -352,43 +385,51 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 				}
 			}
 
-			if (!selected.length) selected.push("*");
+			const selectedResult = [];
 
-			const { queryArray, queryOrArray, values } = this.compareFields($and, $or);
-			const { orderByFields, paginationFields, searchFields, selectedFields } = this.getFieldsToSearch({ queryArray, queryOrArray }, selected, pagination, order);
+			if (!selected.length) {
+				selectedResult.push("*");
+			} else {
+				selected.forEach((e) => selectedResult.push(SharedHelpers.quotePgIdent(e, { tableFieldsSet: this.#tableFieldsCoreSet })));
+			}
+
+			const { queryArray, queryOrArray, values } = this.compareFields($and, $or, { tableFieldsSet: this.#tableFieldsCoreSet });
+			const { orderByFields, paginationFields, searchFields, selectedFields } = this.getFieldsToSearch({ queryArray, queryOrArray }, selectedResult, pagination, orderResult);
 
 			return {
-				query: queries.getByParams(this.tableName, selectedFields, searchFields, orderByFields, paginationFields),
+				query: queries.getByParams(this.#tableNameQuoted, selectedFields, searchFields, orderByFields, paginationFields),
 				values,
 			};
 		},
 		getCountByParams: (
 			{ $and = {}, $or }: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
 		): { query: string; values: unknown[]; } => {
-			const { queryArray, queryOrArray, values } = this.compareFields($and, $or);
+			const { queryArray, queryOrArray, values } = this.compareFields($and, $or, { tableFieldsSet: this.#tableFieldsCoreSet });
 			const { searchFields } = this.getFieldsToSearch({ queryArray, queryOrArray });
 
 			return {
-				query: queries.getCountByParams(this.tableName, searchFields),
+				query: queries.getCountByParams(this.#tableNameQuoted, searchFields),
 				values,
 			};
 		},
 		getCountByPks: <T>(pks: T[]): { query: string; values: unknown[]; } => {
-			if (!this.primaryKey) { throw new Error("Primary key not specified"); }
+			if (!this.#primaryKeyQuoted) { throw new Error("Primary key not specified"); }
 
 			if (Array.isArray(pks[0])) {
-				if (!Array.isArray(this.primaryKey)) { throw new Error("invalid primary key type"); }
+				if (!Array.isArray(this.#primaryKeyQuoted)) { throw new Error("invalid primary key type"); }
 
 				return {
-					query: queries.getCountByCompositePks(this.primaryKey as string[], this.tableName, pks.length),
+					query: queries.getCountByCompositePks(this.#primaryKeyQuoted, this.#tableNameQuoted, pks.length),
 					values: pks.flat(),
 				};
 			}
 
-			if (Array.isArray(this.primaryKey)) { throw new Error("invalid primary key type"); }
+			if (Array.isArray(this.#primaryKeyQuoted)) {
+				throw new Error("invalid primary key type");
+			}
 
 			return {
-				query: queries.getCountByPks(this.primaryKey as string, this.tableName),
+				query: queries.getCountByPks(this.#primaryKeyQuoted, this.#tableNameQuoted),
 				values: [pks],
 			};
 		},
@@ -396,24 +437,24 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 			pks: T[],
 			{ $and = {}, $or }: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
 		): { query: string; values: unknown[]; } => {
-			if (!this.primaryKey) { throw new Error("Primary key not specified"); }
+			if (!this.#primaryKeyQuoted) { throw new Error("Primary key not specified"); }
 
-			const { queryArray, queryOrArray, values } = this.compareFields($and, $or);
+			const { queryArray, queryOrArray, values } = this.compareFields($and, $or, { tableFieldsSet: this.#tableFieldsCoreSet });
 			const { orderNumber, searchFields } = this.getFieldsToSearch({ queryArray, queryOrArray });
 
 			if (Array.isArray(pks[0])) {
-				if (!Array.isArray(this.primaryKey)) { throw new Error("invalid primary key type"); }
+				if (!Array.isArray(this.#primaryKeyQuoted)) { throw new Error("invalid primary key type"); }
 
 				return {
-					query: queries.getCountByCompositePksAndParams(this.primaryKey, this.tableName, searchFields, orderNumber, pks.length),
+					query: queries.getCountByCompositePksAndParams(this.#primaryKeyQuoted, this.#tableNameQuoted, searchFields, orderNumber, pks.length),
 					values: [...values, ...pks.flat()],
 				};
 			}
 
-			if (Array.isArray(this.primaryKey)) { throw new Error("invalid primary key type"); }
+			if (Array.isArray(this.#primaryKeyQuoted)) { throw new Error("invalid primary key type"); }
 
 			return {
-				query: queries.getCountByPksAndParams(this.primaryKey, this.tableName, searchFields, orderNumber),
+				query: queries.getCountByPksAndParams(this.#primaryKeyQuoted, this.#tableNameQuoted, searchFields, orderNumber),
 				values: [...values, pks],
 			};
 		},
@@ -421,14 +462,20 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 			{ $and = {}, $or }: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; },
 			selected = ["*"],
 		): { query: string; values: unknown[]; } => {
-			if (!selected.length) selected.push("*");
+			const selectedResult = [];
 
-			const { queryArray, queryOrArray, values } = this.compareFields($and, $or);
-			const { orderByFields, paginationFields, searchFields, selectedFields } = this.getFieldsToSearch({ queryArray, queryOrArray }, selected, { limit: 1, offset: 0 });
+			if (!selected.length) {
+				selectedResult.push("*");
+			} else {
+				selected.forEach((e) => selectedResult.push(SharedHelpers.quotePgIdent(e, { tableFieldsSet: this.#tableFieldsCoreSet })));
+			}
+
+			const { queryArray, queryOrArray, values } = this.compareFields($and, $or, { tableFieldsSet: this.#tableFieldsCoreSet });
+			const { orderByFields, paginationFields, searchFields, selectedFields } = this.getFieldsToSearch({ queryArray, queryOrArray }, selectedResult, { limit: 1, offset: 0 });
 
 			return {
 				query: queries.getByParams(
-					this.tableName,
+					this.#tableNameQuoted,
 					selectedFields,
 					searchFields,
 					orderByFields,
@@ -438,10 +485,10 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 			};
 		},
 		getOneByPk: <T>(primaryKey: T): { query: string; values: unknown[]; } => {
-			if (!this.primaryKey) { throw new Error("Primary key not specified"); }
+			if (!this.#primaryKeyQuoted) { throw new Error("Primary key not specified"); }
 
 			return {
-				query: queries.getOneByPk(this.tableName, this.primaryKey),
+				query: queries.getOneByPk(this.#tableNameQuoted, this.#primaryKeyQuoted),
 				values: Array.isArray(primaryKey) ? [...primaryKey] : [primaryKey],
 			};
 		},
@@ -463,13 +510,19 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 				}
 			}
 
-			if (!selected.length) selected.push("*");
+			const selectedResult = [];
 
-			const { queryArray, queryOrArray, values } = this.compareFields($and, $or);
-			const { orderByFields, paginationFields, searchFields, selectedFields } = this.getFieldsToSearch({ queryArray, queryOrArray }, selected, pagination, order);
+			if (!selected.length) {
+				selectedResult.push("*");
+			} else {
+				selected.forEach((e) => selectedResult.push(SharedHelpers.quotePgIdent(e, { tableFieldsSet: this.#tableFieldsCoreSet })));
+			}
+
+			const { queryArray, queryOrArray, values } = this.compareFields($and, $or, { tableFieldsSet: this.#tableFieldsCoreSet });
+			const { orderByFields, paginationFields, searchFields, selectedFields } = this.getFieldsToSearch({ queryArray, queryOrArray }, selectedResult, pagination, order);
 
 			return {
-				query: queries.getByParams(this.tableName, selectedFields, searchFields, orderByFields, paginationFields),
+				query: queries.getByParams(this.#tableNameQuoted, selectedFields, searchFields, orderByFields, paginationFields),
 				values,
 			};
 		},
@@ -477,15 +530,24 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 			queryConditions: { $and: Types.TSearchParams; $or?: Types.TSearchParams[]; returningFields?: string[]; },
 			updateFields: SharedTypes.TRawParams = {},
 		): { query: string; values: unknown[]; } => {
-			const { queryArray, queryOrArray, values } = this.compareFields(queryConditions.$and, queryConditions.$or);
+			const { queryArray, queryOrArray, values } = this.compareFields(queryConditions.$and, queryConditions.$or, { tableFieldsSet: this.#tableFieldsCoreSet });
 			const { orderNumber, searchFields } = this.getFieldsToSearch({ queryArray, queryOrArray });
 			const clearedUpdate = SharedHelpers.clearUndefinedFields(updateFields);
-			const fieldsToUpdate = Object.keys(clearedUpdate);
+			const fieldsToUpdate = Object.keys(clearedUpdate).map((e) => SharedHelpers.quotePgIdent(e, { tableFieldsSet: this.#tableFieldsCoreSet }));
 
-			if (!queryArray.length) throw new Error("No one update field arrived");
+			if (!queryArray.length) {
+				throw new Error("No one update field arrived");
+			}
 
 			return {
-				query: queries.updateByParams(this.tableName, fieldsToUpdate, searchFields, this.updateField, orderNumber + 1, queryConditions?.returningFields),
+				query: queries.updateByParams(
+					this.#tableNameQuoted,
+					fieldsToUpdate,
+					searchFields,
+					this.#updateFieldQuoted,
+					orderNumber + 1,
+					queryConditions?.returningFields?.map((e) => SharedHelpers.quotePgIdent(e, { tableFieldsSet: this.#tableFieldsCoreSet })),
+				),
 				values: [...values, ...Object.values(clearedUpdate)],
 			};
 		},
@@ -494,15 +556,25 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 			updateFields: SharedTypes.TRawParams = {},
 			updateOptions?: { returningFields?: string[]; },
 		): { query: string; values: unknown[]; } => {
-			if (!this.primaryKey) { throw new Error("Primary key not specified"); }
+			if (!this.#primaryKeyQuoted) {
+				throw new Error("Primary key not specified");
+			}
 
 			const clearedParams = SharedHelpers.clearUndefinedFields(updateFields);
-			const fields = Object.keys(clearedParams);
+			const fields = Object.keys(clearedParams).map((e) => SharedHelpers.quotePgIdent(e, { tableFieldsSet: this.#tableFieldsCoreSet }));
 
-			if (!fields.length) throw new Error("No one update field arrived");
+			if (!fields.length) {
+				throw new Error("No one update field arrived");
+			}
 
 			return {
-				query: queries.updateByPk(this.tableName, fields, this.primaryKey, this.updateField, updateOptions?.returningFields),
+				query: queries.updateByPk(
+					this.#tableNameQuoted,
+					fields,
+					this.#primaryKeyQuoted,
+					this.#updateFieldQuoted,
+					updateOptions?.returningFields?.map((e) => SharedHelpers.quotePgIdent(e, { tableFieldsSet: this.#tableFieldsCoreSet })),
+				),
 				values: [...Object.values(clearedParams), ...Array.isArray(primaryKeyValue) ? [...primaryKeyValue] : [primaryKeyValue]],
 			};
 		},

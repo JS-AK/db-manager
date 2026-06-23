@@ -26,3 +26,37 @@ export function isHasFields<T extends object>(
 
 	return fields.every((field) => objKeys.includes(field));
 }
+
+export function quoteMysqlIdent(bare: string, options?: {
+	force?: boolean;
+	tableFieldsSet?: Set<string>;
+}): string {
+	const { force, tableFieldsSet } = options || {};
+
+	if (force) {
+		return `\`${bare}\``;
+	}
+
+	if (!tableFieldsSet?.has(bare)) {
+		return bare;
+	}
+
+	return `\`${bare}\``;
+}
+
+export function quotePgIdent(bare: string, options?: {
+	force?: boolean;
+	tableFieldsSet?: Set<string>;
+}): string {
+	const { force, tableFieldsSet } = options || {};
+
+	if (force) {
+		return `"${bare}"`;
+	}
+
+	if (!tableFieldsSet?.has(bare)) {
+		return bare;
+	}
+
+	return `"${bare}"`;
+}
