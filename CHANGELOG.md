@@ -1,3 +1,11 @@
+# [3.50.0](https://github.com/JS-AK/db-manager/compare/v3.49.0...v3.50.0) (2026-06-25)
+
+
+### Features
+
+* support atomic update operators in MYSQL update queries ([f946d68](https://github.com/JS-AK/db-manager/commit/f946d68088a1d79e76f9fdccb0853e8d58e4b621))
+* support atomic update operators in PG update queries ([91ecb33](https://github.com/JS-AK/db-manager/commit/91ecb3336051f821cb8556db263c6eb26592e06c))
+
 # [3.49.0](https://github.com/JS-AK/db-manager/compare/v3.48.6...v3.49.0) (2026-06-23)
 
 
