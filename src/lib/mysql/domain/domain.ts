@@ -240,7 +240,7 @@ export class BaseDomain<TC extends {
 				params: Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>;
 				paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>[];
 			},
-			updateFields: Types.TConditionalRawParamsType<TC["UpdateFields"], TC["TableFields"]>,
+			updateFields: Types.TConditionalUpdateParamsType<TC["UpdateFields"], TC["TableFields"]>,
 		): Types.TCompareQueryResult => this.model.compareQuery.updateByParams({ $and: queryConditions.params, $or: queryConditions.paramsOr }, updateFields),
 
 		/**
@@ -253,7 +253,7 @@ export class BaseDomain<TC extends {
 		 */
 		updateOneByPk: <T>(
 			primaryKeyValue: T,
-			updateFields: Types.TConditionalRawParamsType<TC["UpdateFields"], TC["TableFields"]>,
+			updateFields: Types.TConditionalUpdateParamsType<TC["UpdateFields"], TC["TableFields"]>,
 		): Types.TCompareQueryResult => this.model.compareQuery.updateOneByPk(primaryKeyValue, updateFields),
 	};
 
@@ -470,7 +470,7 @@ export class BaseDomain<TC extends {
 			params: Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>;
 			paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>[];
 		},
-		updateFields: Types.TConditionalRawParamsType<TC["UpdateFields"], TC["TableFields"]>,
+		updateFields: Types.TConditionalUpdateParamsType<TC["UpdateFields"], TC["TableFields"]>,
 	): Promise<void> {
 		await this.model.updateByParams({ $and: queryConditions.params, $or: queryConditions.paramsOr }, updateFields);
 
@@ -487,7 +487,7 @@ export class BaseDomain<TC extends {
 	 */
 	async updateOneByPk<T>(
 		primaryKeyValue: T,
-		updateFields: Types.TConditionalRawParamsType<TC["UpdateFields"], TC["TableFields"]>,
+		updateFields: Types.TConditionalUpdateParamsType<TC["UpdateFields"], TC["TableFields"]>,
 	): Promise<void> {
 		await this.model.updateOneByPk<T>(primaryKeyValue, updateFields);
 

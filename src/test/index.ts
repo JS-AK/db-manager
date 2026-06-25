@@ -3,6 +3,7 @@ import { start as startMYSQL02 } from "./MYSQL/02/index.js";
 import { start as startMYSQL03A } from "./MYSQL/03-A/index.js";
 import { start as startMYSQL03B } from "./MYSQL/03-B/index.js";
 import { start as startMYSQL04 } from "./MYSQL/04/index.js";
+import { start as startMYSQL06 } from "./MYSQL/06/index.js";
 
 import { start as startPG01 } from "./PG/01/index.js";
 import { start as startPG02 } from "./PG/02/index.js";
@@ -13,11 +14,11 @@ import { start as startPG06 } from "./PG/06/index.js";
 
 const startMYSQLTests = async () => {
 	const creds = {
-		database: "test-base",
+		database: process.env.MYSQL_DATABASE || "test-base",
 		host: process.env.MYSQL_HOST || "localhost",
-		password: "test-password",
+		password: process.env.MYSQL_PASSWORD || "test-password",
 		port: Number(process.env.MYSQL_PORT) || 3306,
-		user: "test-user",
+		user: process.env.MYSQL_USER || "test-user",
 	};
 
 	await startMYSQL01(creds);
@@ -25,15 +26,16 @@ const startMYSQLTests = async () => {
 	await startMYSQL03A(creds);
 	await startMYSQL03B(creds);
 	await startMYSQL04(creds);
+	await startMYSQL06(creds);
 };
 
 const startPGTests = async () => {
 	const creds = {
-		database: "postgres",
+		database: process.env.POSTGRES_DATABASE || "postgres",
 		host: process.env.POSTGRES_HOST || "localhost",
-		password: "admin",
+		password: process.env.POSTGRES_PASSWORD || "admin",
 		port: Number(process.env.POSTGRES_PORT) || 5432,
-		user: "postgres",
+		user: process.env.POSTGRES_USER || "postgres",
 	};
 
 	await startPG01(creds);

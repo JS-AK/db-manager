@@ -281,14 +281,13 @@ export class BaseModel<const T extends readonly string[] = readonly string[]> {
 		): { query: string; values: unknown[]; } => {
 			const { queryArray, queryOrArray, values } = this.compareFields(queryConditions.$and, queryConditions.$or);
 			const { searchFields } = this.getFieldsToSearch({ queryArray, queryOrArray });
-			const clearedUpdate = SharedHelpers.clearUndefinedFields(updateFields);
-			const fieldsToUpdate = Object.keys(clearedUpdate);
+			const { clauses, values: updateValues } = Helpers.prepareUpdateFields(updateFields, { tableFieldsSet: this.#tableFieldsSet });
 
 			if (!queryArray.length) throw new Error("No one update field arrived");
 
 			return {
-				query: queries.updateByParams(this.tableName, fieldsToUpdate, searchFields, this.updateField),
-				values: [...Object.values(clearedUpdate), ...values],
+				query: queries.updateByParams(this.tableName, clauses, searchFields, this.updateField),
+				values: [...updateValues, ...values],
 			};
 		},
 		updateOneByPk: <T>(
@@ -297,14 +296,13 @@ export class BaseModel<const T extends readonly string[] = readonly string[]> {
 		): { query: string; values: unknown[]; } => {
 			if (!this.primaryKey) { throw new Error("Primary key not specified"); }
 
-			const clearedParams = SharedHelpers.clearUndefinedFields(updateFields);
-			const fields = Object.keys(clearedParams);
+			const { clauses, values: updateValues } = Helpers.prepareUpdateFields(updateFields, { tableFieldsSet: this.#tableFieldsSet });
 
-			if (!fields.length) throw new Error("No one update field arrived");
+			if (!clauses.length) throw new Error("No one update field arrived");
 
 			return {
-				query: queries.updateByPk(this.tableName, fields, this.primaryKey, this.updateField),
-				values: [...Object.values(clearedParams), primaryKeyValue],
+				query: queries.updateByPk(this.tableName, clauses, this.primaryKey, this.updateField),
+				values: [...updateValues, primaryKeyValue],
 			};
 		},
 	};
@@ -537,12 +535,11 @@ export class BaseModel<const T extends readonly string[] = readonly string[]> {
 		} = data;
 
 		const params = SharedHelpers.clearUndefinedFields(paramsRaw);
-		const k = Object.keys(params);
-		const v = Object.values(params);
+		const { clauses, values: updateValues } = Helpers.prepareUpdateFields(params);
 
-		if (!k.length) throw new Error(`Invalid params, all fields are undefined - ${Object.keys(paramsRaw).join(", ")}`);
+		if (!clauses.length) throw new Error(`Invalid params, all fields are undefined - ${Object.keys(paramsRaw).join(", ")}`);
 
-		let updateFields = k.map((e: string) => `${e} = ?`).join(",");
+		let updateFields = Helpers.buildUpdateSetSql(clauses);
 
 		if (updateField) {
 			updateFields += `, ${updateField.title} = ${generateTimestampQuery(updateField.type)}`;
@@ -550,6 +547,6 @@ export class BaseModel<const T extends readonly string[] = readonly string[]> {
 
 		const query = `UPDATE ${tableName} SET ${updateFields} WHERE ${primaryKey.field} = ?;`;
 
-		return { query, values: [...v, primaryKey.value] };
+		return { query, values: [...updateValues, primaryKey.value] };
 	}
 }
