@@ -6,6 +6,7 @@ export type TArray2OrMore<T> = { 0: T; 1: T; } & Array<T>;
 export type TCompareQueryResult = { query: string; values?: unknown[]; };
 export type TConditionalDomainFieldsType<First, Second> = First extends TDomainFields ? First : Partial<Second>;
 export type TConditionalRawParamsType<First, Second> = First extends SharedTypes.TRawParams ? First : Partial<Second>;
+export type TConditionalUpdateParamsType<First, Second> = First extends TDomainFields ? TUpdateParams<First> : TUpdateParams<Partial<Second>>;
 export type TDomain<Model> = { model: Model; };
 export type TDomainFields = { [key: string]: any; };
 
@@ -16,6 +17,16 @@ export type TSearchParams<T> =
 
 export type TSearchParamsStrict<T> = {
 	[key in keyof T]: (null extends T[key] ? (null | { $eq: null; }) | TSearchParamValue<NonNullable<T[key]>> : TSearchParamValue<NonNullable<T[key]>>)
+};
+
+export type TUpdateParams<T> =
+	& TUpdateParamsStrict<T>
+	& { [key: string]: TUpdateDefault | undefined; };
+
+export type TUpdateParamsStrict<T> = {
+	[key in keyof T]: null extends T[key]
+		? TUpdateParamValue<NonNullable<T[key]>> | null
+		: TUpdateParamValue<NonNullable<T[key]>>
 };
 
 type TSearchParamValue<T> = T extends object
@@ -107,6 +118,43 @@ type BaseBoolean<T> =
 	| T
 	| { $ne: NonNullable<T> | null; }
 	| { $custom: { sign: string; value: string | number; }; };
+
+type TUpdateDefault =
+	| ClearBoolean
+	| ClearDate
+	| ClearNumber
+	| ClearString
+	| null
+	| TUpdateNumberOperators
+	| TUpdateStringOperators;
+
+type ExactlyOneKey<T extends Record<string, unknown>> = {
+	[K in keyof T]: Pick<T, K> & Partial<Record<Exclude<keyof T, K>, never>>
+}[keyof T];
+
+type TUpdateNumberOperatorMap = {
+	$inc: number;
+	$max: ClearNumber;
+	$min: ClearNumber;
+	$mul: number;
+};
+
+type TUpdateNumberOperators = ExactlyOneKey<TUpdateNumberOperatorMap>;
+
+type TUpdateParamValue<T> = T extends number
+	? T | TUpdateNumberOperators
+	: T extends string
+		? T | TUpdateStringOperators
+		: T;
+
+type TUpdateStringOperatorMap = {
+	$concat: string;
+	$max: ClearString;
+	$min: ClearString;
+	$prepend: string;
+};
+
+type TUpdateStringOperators = ExactlyOneKey<TUpdateStringOperatorMap>;
 
 /* type Join<K extends string, P extends string> = `${K}${P}`;
 

@@ -186,7 +186,12 @@ export const start = async (creds: PG.ModelTypes.TDBCreds): Promise<void> => {
 		await testContext.test(
 			"Composite pk",
 			async (testContext) => {
-				const user = await testUserRepository.createOne({ first_name: "test" });
+				const user = await testUserRepository.createOne({
+					first_name: "test",
+					last_name: "test",
+					rating: 10,
+					score: 1.5,
+				});
 
 				await testContext.test(
 					"testUser.getOneByPk",
@@ -196,18 +201,27 @@ export const start = async (creds: PG.ModelTypes.TDBCreds): Promise<void> => {
 						if (!result) throw new Error("result is empty");
 
 						assert.strictEqual(result.first_name, "test");
+						assert.strictEqual(result.last_name, "test");
+						assert.strictEqual(result.rating, 10);
+						assert.strictEqual(result.score, 1.5);
 					},
 				);
 
 				await testContext.test(
-					"testUserRepository.getOneByPk",
+					"testUserRepository.updateOneByPk",
 					async () => {
-						const result = await testUserRepository.updateOneByPk([user.id, user.id_sec], { last_name: "test" });
+						const result = await testUserRepository.updateOneByPk([user.id, user.id_sec], {
+							last_name: { $concat: "test2" },
+							rating: { $max: 100 },
+							score: { $mul: 1.5 },
+						});
 
 						if (!result) throw new Error("result is empty");
 
 						assert.strictEqual(result.first_name, "test");
-						assert.strictEqual(result.last_name, "test");
+						assert.strictEqual(result.last_name, "test" + "test2");
+						assert.strictEqual(result.rating, 100);
+						assert.strictEqual(result.score, 1.5 * 1.5);
 					},
 				);
 

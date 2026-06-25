@@ -292,7 +292,7 @@ export class BaseTable<
 				paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>[];
 				returningFields?: T;
 			},
-			updateFields: Types.TConditionalRawParamsType<BTG["UpdateFields"], BTG["CoreFields"]>,
+			updateFields: Types.TConditionalUpdateParamsType<BTG["UpdateFields"], BTG["CoreFields"]>,
 		): Types.TCompareQueryResult => this.model.compareQuery.updateByParams({ $and: queryConditions.params, $or: queryConditions.paramsOr, returningFields: queryConditions.returningFields }, updateFields),
 
 		/**
@@ -307,7 +307,7 @@ export class BaseTable<
 		 */
 		updateOneByPk: <T, R extends Extract<keyof BTG["CoreFields"], string>[] = Extract<keyof BTG["CoreFields"], string>[]>(
 			primaryKeyValue: T,
-			updateFields: Types.TConditionalRawParamsType<BTG["UpdateFields"], BTG["CoreFields"]>,
+			updateFields: Types.TConditionalUpdateParamsType<BTG["UpdateFields"], BTG["CoreFields"]>,
 			updateOptions?: { returningFields?: R; },
 		): Types.TCompareQueryResult => this.model.compareQuery.updateOneByPk(primaryKeyValue, updateFields, updateOptions),
 	};
@@ -649,7 +649,7 @@ export class BaseTable<
 			paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>[];
 			returningFields?: T;
 		},
-		updateFields: Types.TConditionalRawParamsType<BTG["UpdateFields"], BTG["CoreFields"]>,
+		updateFields: Types.TConditionalUpdateParamsType<BTG["UpdateFields"], BTG["CoreFields"]>,
 	): Promise<SharedTypes.ResolveRowFields<BTG>[]> {
 		return this.model.updateByParams({ $and: queryConditions.params, $or: queryConditions.paramsOr, returningFields: queryConditions.returningFields }, updateFields) as Promise<SharedTypes.ResolveRowFields<BTG>[]>;
 	}
@@ -666,7 +666,7 @@ export class BaseTable<
 	 */
 	async updateOneByPk<T, R extends Extract<keyof BTG["CoreFields"], string>[] = Extract<keyof BTG["CoreFields"], string>[]>(
 		primaryKeyValue: T,
-		updateFields: Types.TConditionalRawParamsType<BTG["UpdateFields"], BTG["CoreFields"]>,
+		updateFields: Types.TConditionalUpdateParamsType<BTG["UpdateFields"], BTG["CoreFields"]>,
 		updateOptions?: { returningFields?: R; },
 	): Promise<SharedTypes.ResolveRowFields<BTG> | undefined> {
 		const one = await this.model.updateOneByPk<SharedTypes.ResolveRowFields<BTG>, T>(primaryKeyValue, updateFields, updateOptions);

@@ -120,6 +120,13 @@ export type TTable<T extends readonly string[] | string[] = readonly string[]> =
 	tableName: string;
 	updateField: { title: T[number]; type: "unix_timestamp" | "timestamp"; } | null;
 };
+export type TUpdateClause = {
+	column: string;
+	kind: TUpdateOperator;
+};
+export type TUpdateOperator = "$concat" | "$inc" | "$max" | "$min" | "$mul" | "$prepend" | "$set";
+export type TUpdateOperatorParseResult = { kind: TUpdateOperator; operand: unknown; };
+
 export type TVOptions = TMVOptions;
 export type TVOptionsWithoutClient = TMVOptionsWithoutClient;
 export type TView<T extends readonly string[] | string[] = readonly string[]> = TMaterializedView<T>;

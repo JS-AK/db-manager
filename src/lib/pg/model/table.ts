@@ -532,8 +532,7 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 		): { query: string; values: unknown[]; } => {
 			const { queryArray, queryOrArray, values } = this.compareFields(queryConditions.$and, queryConditions.$or, { tableFieldsSet: this.#tableFieldsCoreSet });
 			const { orderNumber, searchFields } = this.getFieldsToSearch({ queryArray, queryOrArray });
-			const clearedUpdate = SharedHelpers.clearUndefinedFields(updateFields);
-			const fieldsToUpdate = Object.keys(clearedUpdate).map((e) => SharedHelpers.quotePgIdent(e, { tableFieldsSet: this.#tableFieldsCoreSet }));
+			const { clauses, values: updateValues } = Helpers.prepareUpdateFields(updateFields, { tableFieldsSet: this.#tableFieldsCoreSet });
 
 			if (!queryArray.length) {
 				throw new Error("No one update field arrived");
@@ -542,13 +541,13 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 			return {
 				query: queries.updateByParams(
 					this.#tableNameQuoted,
-					fieldsToUpdate,
+					clauses,
 					searchFields,
 					this.#updateFieldQuoted,
 					orderNumber + 1,
 					queryConditions?.returningFields?.map((e) => SharedHelpers.quotePgIdent(e, { tableFieldsSet: this.#tableFieldsCoreSet })),
 				),
-				values: [...values, ...Object.values(clearedUpdate)],
+				values: [...values, ...updateValues],
 			};
 		},
 		updateOneByPk: <T>(
@@ -560,22 +559,21 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 				throw new Error("Primary key not specified");
 			}
 
-			const clearedParams = SharedHelpers.clearUndefinedFields(updateFields);
-			const fields = Object.keys(clearedParams).map((e) => SharedHelpers.quotePgIdent(e, { tableFieldsSet: this.#tableFieldsCoreSet }));
+			const { clauses, values: updateValues } = Helpers.prepareUpdateFields(updateFields, { tableFieldsSet: this.#tableFieldsCoreSet });
 
-			if (!fields.length) {
+			if (!clauses.length) {
 				throw new Error("No one update field arrived");
 			}
 
 			return {
 				query: queries.updateByPk(
 					this.#tableNameQuoted,
-					fields,
+					clauses,
 					this.#primaryKeyQuoted,
 					this.#updateFieldQuoted,
 					updateOptions?.returningFields?.map((e) => SharedHelpers.quotePgIdent(e, { tableFieldsSet: this.#tableFieldsCoreSet })),
 				),
-				values: [...Object.values(clearedParams), ...Array.isArray(primaryKeyValue) ? [...primaryKeyValue] : [primaryKeyValue]],
+				values: [...updateValues, ...Array.isArray(primaryKeyValue) ? [...primaryKeyValue] : [primaryKeyValue]],
 			};
 		},
 	};
@@ -1124,12 +1122,11 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 		} = data;
 
 		const params = SharedHelpers.clearUndefinedFields(paramsRaw);
-		const k = Object.keys(params);
-		const v = Object.values(params);
+		const { clauses, values: updateValues } = Helpers.prepareUpdateFields(params);
 
-		if (!k.length) throw new Error(`Invalid params, all fields are undefined - ${Object.keys(paramsRaw).join(", ")}`);
+		if (!clauses.length) throw new Error(`Invalid params, all fields are undefined - ${Object.keys(paramsRaw).join(", ")}`);
 
-		let updateFields = k.map((e: string, idx: number) => `${e} = $${idx + 2}`).join(",");
+		let updateFields = Helpers.buildUpdateSetSql(clauses, 2);
 
 		if (updateField) {
 			switch (updateField.type) {
@@ -1154,6 +1151,6 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 
 		const query = `UPDATE ${tableName} SET ${updateFields} WHERE ${primaryKey.field} = $1 ${returningSQL};`;
 
-		return { query, values: [primaryKey.value, ...v] };
+		return { query, values: [primaryKey.value, ...updateValues] };
 	}
 }
