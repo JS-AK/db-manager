@@ -6,12 +6,12 @@ import { PG } from "../index.js";
 
 import * as Helpers from "../helpers.js";
 
-import * as TestTable from "./test-table-01/index.js";
+import * as TestTable01 from "./test-table-01/index.js";
 
 const TEST_NAME = Helpers.getParentDirectoryName(fileURLToPath(import.meta.url));
 
 export const start = async (creds: PG.ModelTypes.TDBCreds): Promise<void> => {
-	const testTable = new TestTable.Domain(creds);
+	const testTable01 = TestTable01.domain(creds);
 
 	await test("PG-" + TEST_NAME, async (testContext) => {
 		await testContext.test(
@@ -29,7 +29,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds): Promise<void> => {
 					await testContext.test(
 						"create createOne",
 						async () => {
-							const entity = await testTable.createOne(initialParams, { returningFields: ["title"] });
+							const entity = await testTable01.createOne(initialParams, { returningFields: ["title"] });
 
 							assert.strictEqual(entity.title, initialParams.title);
 						},
@@ -40,7 +40,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds): Promise<void> => {
 					await testContext.test(
 						"read getOneByParams",
 						async () => {
-							const { one } = await testTable.getOneByParams({ params: initialParams });
+							const { one } = await testTable01.getOneByParams({ params: initialParams });
 
 							assert.strictEqual(one?.title, initialParams.title);
 						},
@@ -51,7 +51,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds): Promise<void> => {
 					await testContext.test(
 						"update updateByParams",
 						async () => {
-							const [result] = await testTable.updateByParams({
+							const [result] = await testTable01.updateByParams({
 								params: initialParams,
 								returningFields: ["title"],
 							}, updatedParams);
@@ -65,7 +65,7 @@ export const start = async (creds: PG.ModelTypes.TDBCreds): Promise<void> => {
 					await testContext.test(
 						"read getOneByParams",
 						async () => {
-							const { one: entity } = await testTable.getOneByParams({ params: updatedParams });
+							const { one: entity } = await testTable01.getOneByParams({ params: updatedParams });
 
 							assert.strictEqual(entity?.title, updatedParams.title);
 						},
@@ -76,16 +76,16 @@ export const start = async (creds: PG.ModelTypes.TDBCreds): Promise<void> => {
 					await testContext.test(
 						"delete deleteByParams",
 						async () => {
-							await testTable.deleteByParams({ params: updatedParams });
+							await testTable01.deleteByParams({ params: updatedParams });
 
-							const res = await testTable.getArrByParams({ params: {} });
+							const res = await testTable01.getArrByParams({ params: {} });
 
 							assert.strictEqual(res.length, 0);
 						},
 					);
 				}
 
-				await testTable.deleteAll();
+				await testTable01.deleteAll();
 			},
 		);
 

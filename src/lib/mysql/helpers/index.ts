@@ -2,6 +2,7 @@ export * from "./build-update-set-expression.js";
 export * from "./build-update-set-sql.js";
 export * from "./compare-fields.js";
 export * from "./get-fields-to-search.js";
+export * from "./normalize-mysql-bind-value.js";
 export * from "./operator-mappings.js";
 export * from "./parse-update-operator-value.js";
 export * from "./prepare-update-fields.js";

@@ -282,7 +282,7 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 			for (const pR of recordParams) {
 				const params = SharedHelpers.clearUndefinedFields(pR);
 				const keys = new Set(Object.keys(params).map((key) => SharedHelpers.quoteMysqlIdent(key, { tableFieldsSet: this.#tableFieldsCoreSet })));
-				const paramsPrepared = [...Object.values(params)];
+				const paramsPrepared = Object.values(params).map(Helpers.normalizeMysqlBindValue);
 
 				if (this.#createFieldQuoted) {
 					if (!keys.has(this.#createFieldQuoted.title)) {
@@ -344,7 +344,7 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 					this.#createFieldQuoted,
 					onConflict,
 				),
-				values: Object.values(clearedParams),
+				values: Object.values(clearedParams).map(Helpers.normalizeMysqlBindValue),
 			};
 		},
 		deleteAll: (): { query: string; } => {
@@ -1011,7 +1011,7 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 				const keys = Object.keys(params);
 
 				k.push(keys);
-				v.push(...Object.values(params));
+				v.push(...Object.values(params).map(Helpers.normalizeMysqlBindValue));
 
 				if (!k.length) {
 					throw new Error(`Invalid params, all fields are undefined - ${Object.keys(paramsRaw).join(", ")}`);
@@ -1031,7 +1031,7 @@ export class BaseTable<const T extends readonly string[] = readonly string[]> {
 
 		const params = SharedHelpers.clearUndefinedFields(paramsRaw);
 		const k = Object.keys(params);
-		const v = Object.values(params);
+		const v = Object.values(params).map(Helpers.normalizeMysqlBindValue);
 
 		if (!k.length) throw new Error(`Invalid params, all fields are undefined - ${Object.keys(paramsRaw).join(", ")}`);
 

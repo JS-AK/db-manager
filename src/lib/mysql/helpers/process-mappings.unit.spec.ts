@@ -75,8 +75,8 @@ describe("processMappings for MySQL", () => {
 		const func = processMappings.get("$json");
 
 		func?.("field", { $json: { a: 1 } }, queryArray, values);
-		expect(queryArray).toEqual([{ key: "field", operator: "=" }]);
-		expect(values).toEqual([{ a: 1 }]);
+		expect(queryArray).toEqual([{ key: "field", operator: "$json" }]);
+		expect(values).toEqual(["{\"a\":1}"]);
 	});
 
 	it("should process $like operator", () => {

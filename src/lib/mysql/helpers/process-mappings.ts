@@ -1,5 +1,7 @@
 import * as Types from "../model/types.js";
 
+import { normalizeMysqlBindValue } from "./normalize-mysql-bind-value.js";
+
 /**
  * A mapping of search operators to their corresponding processing functions.
  *
@@ -45,7 +47,7 @@ export const processMappings: Map<
 				queryArray.push({ key: `${key} IS NULL`, operator: "$withoutParameters" });
 			} else {
 				queryArray.push({ key, operator: "=" });
-				values.push(v.$eq);
+				values.push(normalizeMysqlBindValue(v.$eq));
 			}
 		},
 	],
@@ -81,8 +83,8 @@ export const processMappings: Map<
 		(key: string, value: Types.TSearchParams[keyof Types.TSearchParams], queryArray: Types.TField[], values: unknown[]) => {
 			const v = value as { $json: object; };
 
-			queryArray.push({ key, operator: "=" });
-			values.push(v.$json);
+			queryArray.push({ key, operator: "$json" });
+			values.push(normalizeMysqlBindValue(v.$json));
 		},
 	],
 	[

@@ -11,11 +11,13 @@ import {
 import * as Helpers from "../helpers.js";
 
 import * as TestTable from "./test-table-01/index.js";
+import * as TestTable02 from "./test-table-02/index.js";
 
 const TEST_NAME = Helpers.getParentDirectoryName(fileURLToPath(import.meta.url));
 
 export const start = async (creds: PG.ModelTypes.TDBCreds): Promise<void> => {
 	const testTable = TestTable.domain(creds);
+	const testTable02 = TestTable02.domain(creds);
 
 	await test("PG-" + TEST_NAME, async (testContext) => {
 		await testContext.test(
@@ -972,6 +974,46 @@ export const start = async (creds: PG.ModelTypes.TDBCreds): Promise<void> => {
 				assert.strictEqual(result.length, 2);
 
 				await testTable.deleteAll();
+			},
+		);
+
+		await testContext.test(
+			"CRUD table 2",
+			async () => {
+				const { id: example1Id } = await testTable02.createOne({ title: "title" });
+
+				assert.strictEqual(typeof example1Id, "string");
+
+				{
+					const { one: example1 } = await testTable02.getOneByParams({ params: { id: example1Id } });
+
+					assert.strictEqual(typeof example1?.created_at, "string");
+					assert.strictEqual(example1?.description, null);
+					assert.strictEqual(typeof example1?.id, "string");
+					assert.strictEqual(example1?.title, "title");
+					assert.strictEqual(example1?.updated_at, null);
+				}
+
+				await testTable02.updateOneByPk(example1Id, {
+					description: "description",
+					title: "title updated",
+				});
+
+				const { one: example1 } = await testTable02.getOneByParams({ params: { id: example1Id } });
+
+				assert.strictEqual(typeof example1?.created_at, "string");
+				assert.strictEqual(example1?.description, "description");
+				assert.strictEqual(typeof example1?.id, "string");
+				assert.strictEqual(example1?.title, "title updated");
+				assert.strictEqual(typeof example1?.updated_at, "string");
+
+				const deletedId = await testTable02.deleteOneByPk(example1Id);
+
+				assert.strictEqual(deletedId, example1Id);
+
+				const { one: example1Deleted } = await testTable02.getOneByParams({ params: { id: example1Id } });
+
+				assert.strictEqual(example1Deleted, undefined);
 			},
 		);
 

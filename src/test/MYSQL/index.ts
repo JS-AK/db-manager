@@ -1,1 +1,5 @@
-export { MYSQL, Types } from "../../index.js";
+export {
+	Helpers,
+	MYSQL,
+	Types,
+} from "../../index.js";

@@ -15,6 +15,7 @@ import * as Types from "../model/types.js";
  * @property $nbetween - Generates a SQL `NOT BETWEEN` expression with two placeholders.
  * @property $nlike - Generates a SQL `NOT LIKE` expression for negated pattern matching.
  * @property $nilike - Generates a SQL `NOT ILIKE` expression for negated case-insensitive pattern matching.
+ * @property $json - Generates a JSON equality check using `CAST(? AS JSON)`.
  * @property $withoutParameters - Returns the field's key as the SQL expression without any parameters.
  */
 export const operatorMappings: Map<
@@ -30,5 +31,6 @@ export const operatorMappings: Map<
 	["$nbetween", (element: Types.TField) => `${element.key} NOT BETWEEN ? AND ?`],
 	["$nlike", (element: Types.TField) => `${element.key} NOT LIKE ?`],
 	["$nilike", (element: Types.TField) => `LOWER(${element.key}) NOT LIKE LOWER(?)`],
+	["$json", (element: Types.TField) => `${element.key} = CAST(? AS JSON)`],
 	["$withoutParameters", (element: Types.TField) => element.key],
 ]);

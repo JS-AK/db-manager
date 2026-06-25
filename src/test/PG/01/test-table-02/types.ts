@@ -1,19 +1,15 @@
 export type CreateFields = Pick<TableFields,
-	| "meta"
-	| "number_key"
 	| "title"
 > & Partial<Pick<TableFields,
-	| "books"
-	| "checklist"
 	| "description"
-	| "number_range"
-	| "updated_at"
 >>;
 
 export type EntityFull = Pick<TableFields,
-	| "created_at"
 	| "id"
+
 	| "title"
+
+	| "created_at"
 	| "updated_at"
 >;
 
@@ -25,25 +21,18 @@ export type EntityListed = Pick<TableFields,
 export type SearchFields = Partial<TableFields>;
 
 export type TableFields = {
-	id: number;
+	id: string;
 
-	books: string[] | null;
 	description: string | null;
-	meta: { firstName: string; lastName: string; };
-	checklist: { isDone: boolean; title: string; }[] | null;
-	number_key: number;
-	number_range: string | null;
 	title: string;
 
-	created_at: Date;
-	updated_at: Date | null;
+	created_at: string;
+	updated_at: string | null;
 };
 
 export type TableKeys = keyof TableFields;
 
 export type UpdateFields = Partial<Pick<TableFields,
 	| "description"
-	| "meta"
-	| "number_range"
 	| "title"
 >>;

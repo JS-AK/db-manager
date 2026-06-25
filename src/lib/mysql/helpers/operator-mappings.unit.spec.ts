@@ -81,6 +81,14 @@ describe("operatorMappings for MySQL", () => {
 		expect(result).toBe("LOWER(comment) NOT LIKE LOWER(?)");
 	});
 
+	it("should process $json operator", () => {
+		const func = operatorMappings.get("$json");
+		const el: Types.TField = { key: "`meta`", operator: "$json" };
+		const result = func?.(el);
+
+		expect(result).toBe("`meta` = CAST(? AS JSON)");
+	});
+
 	it("should process $withoutParameters operator", () => {
 		const func = operatorMappings.get("$withoutParameters");
 		const el: Types.TField = { key: "name IS NOT NULL", operator: "$withoutParameters" };

@@ -72,6 +72,7 @@ export type TOperator =
 	| "$nlike"
 	| "$nilike"
 	| "$nin"
+	| "$json"
 	| "$withoutParameters";
 
 export type TSOptions = TMVOptions;

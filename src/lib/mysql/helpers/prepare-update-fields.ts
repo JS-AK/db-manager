@@ -2,6 +2,7 @@ import * as SharedHelpers from "../../../shared-helpers/index.js";
 import * as SharedTypes from "../../../shared-types/index.js";
 import * as Types from "../model/types.js";
 
+import { normalizeMysqlBindValue } from "./normalize-mysql-bind-value.js";
 import { parseUpdateOperatorValue } from "./parse-update-operator-value.js";
 
 /**
@@ -37,7 +38,7 @@ export function prepareUpdateFields(
 			values.push(operator.operand);
 		} else {
 			clauses.push({ column, kind: "$set" });
-			values.push(value);
+			values.push(normalizeMysqlBindValue(value));
 		}
 	}
 
