@@ -10,10 +10,10 @@ import * as TestTable01 from "./test-table-01/index.js";
 
 const TEST_NAME = Helpers.getParentDirectoryName(fileURLToPath(import.meta.url));
 
-export const start = async (creds: MYSQL.ModelTypes.TDBCreds) => {
+export const start = async (creds: MYSQL.ModelTypes.TDBCreds): Promise<void> => {
 	const testTable01 = TestTable01.domain(creds);
 
-	return test("MYSQL-" + TEST_NAME, async (testContext) => {
+	await test("MYSQL-" + TEST_NAME, async (testContext) => {
 		await testContext.test(
 			"Helpers.migrationsUp",
 			async () => { await Helpers.migrationsUp(creds, TEST_NAME); },

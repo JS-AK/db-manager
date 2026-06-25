@@ -318,7 +318,7 @@ export class Table<TG extends TableGeneric = TableGeneric> {
 				paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<TG["SearchFields"], TG["CoreFields"]>>[];
 				returningFields?: T;
 			},
-			updateFields: Types.TConditionalRawParamsType<TG["UpdateFields"], TG["CoreFields"]>,
+			updateFields: Types.TConditionalUpdateParamsType<TG["UpdateFields"], TG["CoreFields"]>,
 		): Types.TCompareQueryResult => this.#model.compareQuery.updateByParams({ $and: queryConditions.params, $or: queryConditions.paramsOr, returningFields: queryConditions.returningFields }, updateFields),
 
 		/**
@@ -333,7 +333,7 @@ export class Table<TG extends TableGeneric = TableGeneric> {
 		 */
 		updateOneByPk: <T, R extends Extract<keyof TG["CoreFields"], string>[] = Extract<keyof TG["CoreFields"], string>[]>(
 			primaryKeyValue: T,
-			updateFields: Types.TConditionalRawParamsType<TG["UpdateFields"], TG["CoreFields"]>,
+			updateFields: Types.TConditionalUpdateParamsType<TG["UpdateFields"], TG["CoreFields"]>,
 			updateOptions?: { returningFields?: R; },
 		): Types.TCompareQueryResult => this.#model.compareQuery.updateOneByPk(primaryKeyValue, updateFields, updateOptions),
 	};
@@ -672,7 +672,7 @@ export class Table<TG extends TableGeneric = TableGeneric> {
 			paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<TG["SearchFields"], TG["CoreFields"]>>[];
 			returningFields?: T;
 		},
-		updateFields: Types.TConditionalRawParamsType<TG["UpdateFields"], TG["CoreFields"]>,
+		updateFields: Types.TConditionalUpdateParamsType<TG["UpdateFields"], TG["CoreFields"]>,
 	): Promise<SharedTypes.ResolveRowFields<TG>[]> {
 		return this.#model.updateByParams({ $and: queryConditions.params, $or: queryConditions.paramsOr, returningFields: queryConditions.returningFields }, updateFields) as Promise<SharedTypes.ResolveRowFields<TG>[]>;
 	}
@@ -689,7 +689,7 @@ export class Table<TG extends TableGeneric = TableGeneric> {
 	 */
 	async updateOneByPk<T, R extends Extract<keyof TG["CoreFields"], string>[] = Extract<keyof TG["CoreFields"], string>[]>(
 		primaryKeyValue: T,
-		updateFields: Types.TConditionalRawParamsType<TG["UpdateFields"], TG["CoreFields"]>,
+		updateFields: Types.TConditionalUpdateParamsType<TG["UpdateFields"], TG["CoreFields"]>,
 		updateOptions?: { returningFields?: R; },
 	): Promise<SharedTypes.ResolveRowFields<TG> | undefined> {
 		const one = await this.#model.updateOneByPk<SharedTypes.ResolveRowFields<TG>, T>(primaryKeyValue, updateFields, updateOptions);

@@ -2,17 +2,21 @@ import assert from "node:assert";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
-import { MYSQL } from "../index.js";
+import {
+	MYSQL,
+	Helpers as SharedHelpers,
+	Types,
+} from "../index.js";
 
 import * as Helpers from "../helpers.js";
 
-import * as TestTable01 from "./test-table-01/index.js";
+import * as TestTable from "./test-table-01/index.js";
 import * as TestTable02 from "./test-table-02/index.js";
 
 const TEST_NAME = Helpers.getParentDirectoryName(fileURLToPath(import.meta.url));
 
 export const start = async (creds: MYSQL.ModelTypes.TDBCreds) => {
-	const testTable01 = TestTable01.domain(creds);
+	const testTable = TestTable.domain(creds);
 	const testTable02 = TestTable02.domain(creds);
 
 	return test("MYSQL-" + TEST_NAME, async (testContext) => {
@@ -21,354 +25,1008 @@ export const start = async (creds: MYSQL.ModelTypes.TDBCreds) => {
 			async () => { await Helpers.migrationsUp(creds, TEST_NAME); },
 		);
 
-		await testContext.test("createOne", async () => {
-			const example1Id = await testTable01.createOne({ title: "test 1" });
-			const example2Id = await testTable01.createOne({ title: "test 2" });
-			const example3Id = await testTable01.createOne({ description: "test 3", title: "test 3" });
-			const example4Id = await testTable01.createOne({ title: "test 4" });
-			const example5Id = await testTable01.createOne({ title: "test 5" });
+		await testContext.test(
+			"deleteAll",
+			async () => {
+				await testTable.deleteAll();
+				const entities = await testTable.getArrByParams({ params: {} });
 
-			assert.strictEqual(example1Id, 1);
-			assert.strictEqual(example2Id, 2);
-			assert.strictEqual(example3Id, 3);
-			assert.strictEqual(example4Id, 4);
-			assert.strictEqual(example5Id, 5);
-		});
+				assert.strictEqual(entities.length, 0);
+			},
+		);
 
-		await testContext.test("CRUD table 2", async () => {
-			const example1Id = await testTable02.createOne({ title: "title" });
+		await testContext.test(
+			"createOne",
+			async () => {
+				const params = {
+					meta: { firstName: "firstName", lastName: "lastName" },
+					number_key: 1,
+					title: "title",
+				};
 
-			assert.strictEqual(typeof example1Id, "number");
+				const id = await testTable.createOne(params);
 
-			{
-				const { one: example1 } = await testTable02.getOneByParams({ params: { id: example1Id } });
+				const { one: entity } = await testTable.getOneByPk(id);
 
-				assert.strictEqual(typeof example1?.created_at, "number");
-				assert.strictEqual(example1?.description, null);
-				assert.strictEqual(typeof example1?.id, "number");
-				assert.strictEqual(example1?.title, "title");
-				assert.strictEqual(example1?.updated_at, null);
-			}
+				if (!entity) throw new Error("Entity not found");
 
-			await testTable02.updateOneByPk(example1Id, {
-				description: "description",
-				title: "title updated",
-			});
+				assert.strictEqual(!!entity.id, true);
+				assert.strictEqual(entity.meta.firstName, params.meta.firstName);
+				assert.strictEqual(entity.meta.lastName, params.meta.lastName);
+				assert.strictEqual(entity.title, params.title);
 
-			const { one: example1 } = await testTable02.getOneByParams({ params: { id: example1Id } });
+				await testTable.deleteAll();
+			},
+		);
 
-			assert.strictEqual(typeof example1?.created_at, "number");
-			assert.strictEqual(example1?.description, "description");
-			assert.strictEqual(typeof example1?.id, "number");
-			assert.strictEqual(example1?.title, "title updated");
-			assert.strictEqual(typeof example1?.updated_at, "number");
+		await testContext.test(
+			"transaction getInsertFields getUpdateFields",
+			async () => {
+				const transactionPool = MYSQL.BaseModel.getTransactionPool(creds);
+				const connection = await transactionPool.getConnection();
 
-			await testTable02.deleteOneByPk(example1Id);
+				try {
+					await connection.beginTransaction();
 
-			const { one: example1Deleted } = await testTable02.getOneByParams({ params: { id: example1Id } });
+					const params = {
+						meta: { firstName: "firstName", lastName: "lastName" },
+						number_key: 1,
+						title: "title",
+					};
 
-			assert.strictEqual(example1Deleted, undefined);
-		});
-
-		await testContext.test("transaction 1", async () => {
-			const transactionPool = MYSQL.BaseModel.getTransactionPool(creds);
-			const connection = await transactionPool.getConnection();
-
-			try {
-				await connection.beginTransaction();
-
-				await connection.query(`
-					DELETE
-					FROM ${testTable01.tableName}
-					WHERE title = ?
-				`, ["test 5"]);
-
-				await connection.commit();
-			} catch (error) {
-				await connection.rollback();
-				throw error;
-			} finally {
-				connection.release();
-			}
-		});
-
-		await testContext.test("transaction 2", async () => {
-			const transactionPool = MYSQL.BaseModel.getTransactionPool(creds);
-			const connection = await transactionPool.getConnection();
-
-			try {
-				await connection.beginTransaction();
-
-				await connection.query(`
-					DELETE
-					FROM ${testTable01.tableName}
-					WHERE title = ?
-				`, ["test 4"]);
-
-				await connection.commit();
-			} catch (error) {
-				await connection.rollback();
-				throw error;
-			} finally {
-				connection.release();
-			}
-		});
-
-		await testContext.test("transaction 3", async () => {
-			const transactionPool = MYSQL.BaseModel.getTransactionPool(creds);
-			const connection = await transactionPool.getConnection();
-
-			try {
-				await connection.beginTransaction();
-
-				let id = -1;
-
-				{
-					const description = "description transaction 1";
-					const title = "title transaction 1";
-
-					const { query, values } = MYSQL
-						.BaseModel
-						.getInsertFields<TestTable01.Types.CreateFields>({
-							params: { description, title },
-							tableName: testTable01.tableName,
-						});
+					const { query, values } = MYSQL.BaseModel.getInsertFields<TestTable.Types.CreateFields>({
+						params,
+						tableName: testTable.tableName,
+					});
 
 					const [inserted] = (await connection.query<MYSQL.ModelTypes.ResultSetHeader>(query, values));
 
-					const [[entity]] = (await connection.query<(MYSQL.ModelTypes.RowDataPacket & TestTable01.Types.TableFields)[]>(`
-						SELECT *
-						FROM ${testTable01.tableName}
-						WHERE id = ?
-					`, [inserted.insertId]));
+					if (!inserted.insertId) throw new Error("Entity not found");
 
-					if (!entity) throw new Error("Entity not found");
+					const entityId = inserted.insertId;
 
-					assert.strictEqual(entity.title, title);
-					assert.strictEqual(entity.description, description);
+					assert.strictEqual(typeof entityId, "number");
 
-					id = entity.id;
+					{
+						const params = [
+							{ meta: { firstName: "firstName", lastName: "lastName" }, number_key: 10, title: "title" },
+							{ meta: { firstName: "firstName", lastName: "lastName" }, number_key: 11, title: "title" },
+							{ meta: { firstName: "firstName", lastName: "lastName" }, number_key: 12, title: "title" },
+							{ meta: { firstName: "firstName", lastName: "lastName" }, number_key: 13, title: "title" },
+							{ meta: { firstName: "firstName", lastName: "lastName" }, number_key: 14, title: "title" },
+							{ meta: { firstName: "firstName", lastName: "lastName" }, number_key: 15, title: "title" },
+							{ meta: { firstName: "firstName", lastName: "lastName" }, number_key: 16, title: "title" },
+							{ meta: { firstName: "firstName", lastName: "lastName" }, number_key: 17, title: "title" },
+							{ meta: { firstName: "firstName", lastName: "lastName" }, number_key: 18, title: "title" },
+							{ meta: { firstName: "firstName", lastName: "lastName" }, number_key: 19, title: "title" },
+						];
+
+						const { query, values } = MYSQL.BaseModel.getInsertFields<TestTable.Types.CreateFields>({
+							params,
+							tableName: testTable.tableName,
+						});
+
+						const [bulkInserted] = (await connection.query<MYSQL.ModelTypes.ResultSetHeader>(query, values));
+
+						assert.strictEqual(bulkInserted.affectedRows, params.length);
+					}
+
+					{
+						const [[data]] = (await connection.query<(MYSQL.ModelTypes.RowDataPacket & Pick<TestTable.Types.TableFields, "meta" | "title">)[]>(`
+							SELECT meta, title
+							FROM ${testTable.tableName}
+							WHERE id = ?
+						`, [entityId]));
+
+						if (!data) throw new Error("Data not found");
+
+						assert.strictEqual(data.meta.firstName, params.meta.firstName);
+						assert.strictEqual(data.meta.lastName, params.meta.lastName);
+						assert.strictEqual(data.title, params.title);
+					}
+
+					{
+						const paramsToUpdate = {
+							meta: { firstName: "firstName updated", lastName: "lastName updated" },
+							title: "title updated",
+						};
+
+						const { query, values } = MYSQL.BaseModel.getUpdateFields<TestTable.Types.UpdateFields, TestTable.Types.TableKeys>({
+							params: paramsToUpdate,
+							primaryKey: { field: "id", value: entityId },
+							tableName: testTable.tableName,
+							updateField: testTable.updateField,
+						});
+
+						await connection.query(query, values);
+
+						{
+							const [[data]] = (await connection.query<(MYSQL.ModelTypes.RowDataPacket & Pick<TestTable.Types.TableFields, "meta" | "title">)[]>(`
+								SELECT meta, title
+								FROM ${testTable.tableName}
+								WHERE id = ?
+							`, [entityId]));
+
+							if (!data) throw new Error("Data not found");
+
+							assert.strictEqual(data.meta.firstName, paramsToUpdate.meta.firstName);
+							assert.strictEqual(data.meta.lastName, paramsToUpdate.meta.lastName);
+							assert.strictEqual(data.title, paramsToUpdate.title);
+						}
+					}
+
+					await connection.query(`DELETE FROM ${testTable.tableName}`);
+
+					{
+						const [entities] = (await connection.query<(MYSQL.ModelTypes.RowDataPacket & TestTable.Types.TableFields)[]>(`
+							SELECT *
+							FROM ${testTable.tableName}
+							WHERE id = ?
+						`, [entityId]));
+
+						assert.strictEqual(entities[0], undefined);
+					}
+
+					await connection.commit();
+				} catch (e) {
+					await connection.rollback();
+					throw e;
+				} finally {
+					connection.release();
+				}
+			},
+		);
+
+		await testContext.test(
+			"getCountByParams",
+			async () => {
+				await testTable.createDefaultState();
+
+				const count = await testTable.getCountByParams({ params: {} });
+
+				assert.strictEqual(count, 5);
+
+				await testTable.deleteAll();
+			},
+		);
+
+		await testContext.test(
+			"getCountByPks",
+			async () => {
+				await testTable.createDefaultState();
+
+				const ids = (await testTable.getArrByParams({ params: {} })).map((e) => e.id);
+				const count = await testTable.getCountByPks(ids);
+
+				assert.strictEqual(count, 5);
+
+				await testTable.deleteAll();
+			},
+		);
+
+		await testContext.test(
+			"getCountByPksAndParams",
+			async () => {
+				await testTable.createDefaultState();
+
+				const ids = (await testTable.getArrByParams({ params: {} })).map((e) => e.id);
+				const count = await testTable.getCountByPksAndParams(
+					ids,
+					{ params: { number_key: 1 } },
+				);
+
+				assert.strictEqual(count, 1);
+
+				await testTable.deleteAll();
+			},
+		);
+
+		await testContext.test(
+			"getArrByParams",
+			async (testContext) => {
+				await testTable.createDefaultState();
+
+				{
+					const params: {
+						params: MYSQL.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: {},
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const result = await testTable.getArrByParams(params);
+							const [one] = result;
+
+							if (!one) throw new Error("No one found");
+
+							assert.strictEqual(result.length, 5);
+							assert.strictEqual(SharedHelpers.isHasFields(one, [...testTable.tableFields]), true);
+						},
+					);
 				}
 
 				{
-					const description = "description transaction 1 updated";
-					const title = "title transaction 1 updated";
+					const params: {
+						params: MYSQL.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+						selected: [TestTable.Types.TableKeys];
+					} = {
+						params: {},
+						selected: ["number_key"],
+					};
 
-					const { query, values } = MYSQL
-						.BaseModel
-						.getUpdateFields<TestTable01.Types.UpdateFields, TestTable01.Types.TableKeys>({
-							params: { description, title },
-							primaryKey: { field: "id", value: id },
-							tableName: testTable01.tableName,
-							updateField: testTable01.updateField,
-						});
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const result = await testTable.getArrByParams(params);
+							const [one] = result;
 
-					await connection.query(query, values);
+							if (!one) throw new Error("No one found");
 
-					const [entities] = (await connection.query<(MYSQL.ModelTypes.RowDataPacket & TestTable01.Types.TableFields)[]>(`
-						SELECT *
-						FROM ${testTable01.tableName}
-						WHERE id = ?
-					`, [id]));
-
-					assert.strictEqual(entities[0]?.title, title);
-					assert.strictEqual(entities[0]?.description, description);
+							assert.strictEqual(result.length, 5);
+							assert.strictEqual(SharedHelpers.isHasFields(one, ["number_key"]), true);
+							assert.strictEqual(SharedHelpers.isHasFields(one, [...testTable.tableFields]), false);
+						},
+					);
 				}
 
-				await connection.query(`
-					DELETE
-					FROM ${testTable01.tableName}
-					WHERE id = ?
-				`, [id]);
+				{
+					const params: {
+						params: MYSQL.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: { number_key: { $between: [1, 2] } },
+					};
 
-				const [entities] = (await connection.query<(MYSQL.ModelTypes.RowDataPacket & TestTable01.Types.TableFields)[]>(`
-					SELECT *
-					FROM ${testTable01.tableName}
-					WHERE id = ?
-				`, [id]));
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const result = await testTable.getArrByParams(params);
 
-				assert.strictEqual(entities[0], undefined);
-
-				await connection.commit();
-			} catch (error) {
-				await connection.rollback();
-				throw error;
-			} finally {
-				connection.release();
-			}
-		});
-
-		await testContext.test("getOneByPk found", async () => {
-			const id = 1;
-
-			const { one: example } = await testTable01.getOneByPk(id);
-
-			assert.strictEqual(example?.id, id);
-		});
-
-		await testContext.test("getArrByParams", async () => {
-			const res = await testTable01.getArrByParams({
-				params: {},
-			});
-
-			assert.strictEqual(res.length, 3);
-		});
-
-		await testContext.test("getArrByParams with ordering", async () => {
-			{
-				const res = await testTable01.getArrByParams({
-					order: [{ orderBy: "title", ordering: "DESC" }],
-					params: {},
-				});
-
-				assert.strictEqual(res[0]?.title, "test 3");
-			}
-			{
-				const res = await testTable01.getArrByParams({
-					order: [{ orderBy: "title", ordering: "ASC" }],
-					params: {},
-				});
-
-				assert.strictEqual(res[0]?.title, "test 1");
-			}
-		});
-
-		await testContext.test("getArrByParams with params: { title: 'test 1' }", async () => {
-			const res = await testTable01.getArrByParams({
-				params: { title: "test 1" },
-			});
-
-			assert.strictEqual(res.length, 1);
-		});
-
-		await testContext.test("getArrByParams description: null", async () => {
-			const res = await testTable01.getArrByParams({
-				params: { description: null },
-			});
-
-			assert.strictEqual(res.length, 2);
-		});
-
-		await testContext.test("getOneByParams found", async () => {
-			const title = "test 1";
-
-			const { one: example } = await testTable01.getOneByParams({ params: { title } });
-
-			assert.strictEqual(!!example?.id, true);
-			assert.strictEqual(!!example?.created_at, true);
-			assert.strictEqual(!!example?.updated_at, false);
-			assert.strictEqual(example?.title, title);
-		});
-
-		await testContext.test("getArrByParams found", async () => {
-			const res = await testTable01.getArrByParams({
-				params: {
-					description: {
-						$like: "%test%",
-						$nlike: "%12345%",
-					},
-					id: {
-						$gte: 3,
-						$in: [2, 3],
-						$lte: 3,
-						$ne: null,
-						$nin: [1, 4],
-					},
-					updated_at: null,
-				},
-				paramsOr: [
-					{ description: null, title: "test 1" },
-					{
-						description: {
-							$like: "%tes%",
-							$ne: null,
-							$nlike: "%12345%",
+							assert.strictEqual(result.length, 2);
 						},
-						title: { $eq: "test 3" },
-					},
-				],
-			});
+					);
+				}
 
-			assert.strictEqual(res[0]?.title, "test 3");
-		});
+				{
+					const params: {
+						params: MYSQL.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: { number_range: { $like: "[100,201)%" } },
+					};
 
-		await testContext.test("getArrByParams found { $custom: { sign: \"LIKE\", value: \"%test 3%\" }", async () => {
-			const [entity] = await testTable01.getArrByParams({
-				params: {
-					description: { $custom: { sign: "LIKE", value: "%test 3%" } },
-				},
-			});
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const result = await testTable.getArrByParams(params);
 
-			assert.strictEqual(entity?.title, "test 3");
-		});
+							assert.strictEqual(result.length, 1);
+						},
+					);
+				}
 
-		await testContext.test("getOneByParams not found", async () => {
-			const title = "test 0";
+				{
+					const params: {
+						params: MYSQL.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: { number_key: { $gt: 2 } },
+					};
 
-			const { one: exampleNotFound } = await testTable01.getOneByParams({
-				params: { title },
-			});
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const result = await testTable.getArrByParams(params);
 
-			assert.strictEqual(exampleNotFound, undefined);
-		});
+							assert.strictEqual(result.length, 3);
+						},
+					);
+				}
 
-		await testContext.test("updateOneByPk", async () => {
-			const title = "test 1";
+				{
+					const params: {
+						params: MYSQL.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: { number_key: { $gte: 2 } },
+					};
 
-			const { one: example } = await testTable01.getOneByParams({ params: { title } });
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const result = await testTable.getArrByParams(params);
 
-			if (!example) throw new Error("example not found");
+							assert.strictEqual(result.length, 4);
+						},
+					);
+				}
 
-			const titleUpdated = "test 1 updated";
+				{
+					const params: {
+						params: MYSQL.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: { number_key: { $in: [1, 2] } },
+					};
 
-			await testTable01.updateOneByPk(example.id, { title: titleUpdated });
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const result = await testTable.getArrByParams(params);
 
-			{
-				const { one: example } = await testTable01.getOneByParams({ params: { title: titleUpdated } });
+							assert.strictEqual(result.length, 2);
+						},
+					);
+				}
 
-				assert.strictEqual(!!example?.id, true);
-				assert.strictEqual(!!example?.created_at, true);
-				assert.strictEqual(!!example?.updated_at, true);
-				assert.strictEqual(example?.title, titleUpdated);
-			}
-		});
+				{
+					const params: {
+						params: MYSQL.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: { description: { $like: "%description%" } },
+					};
 
-		await testContext.test("deleteOneByPk", async () => {
-			const title = "test 1 updated";
-			let exampleId = -1;
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const result = await testTable.getArrByParams(params);
 
-			{
-				const { one: example } = await testTable01.getOneByParams({ params: { title } });
+							assert.strictEqual(result.length, 5);
+						},
+					);
+				}
 
-				if (!example) throw new Error("example not found");
+				{
+					const params: {
+						params: MYSQL.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: { description: { $ilike: "%DESCRIPTION%" } },
+					};
 
-				await testTable01.deleteOneByPk(example.id);
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const result = await testTable.getArrByParams(params);
 
-				exampleId = example.id;
-			}
+							assert.strictEqual(result.length, 5);
+						},
+					);
+				}
 
-			{
-				const { one: example } = await testTable01.getOneByParams({ params: { id: exampleId } });
+				{
+					const params: {
+						params: MYSQL.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: { number_key: { $lt: 5 } },
+					};
 
-				assert.strictEqual(!!example, false);
-			}
-		});
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const result = await testTable.getArrByParams(params);
 
-		await testContext.test("deleteAll", async () => {
-			await testTable01.deleteAll();
+							assert.strictEqual(result.length, 4);
+						},
+					);
+				}
 
-			const rowsCount = await testTable01.getCountByParams({
-				params: {},
-			});
+				{
+					const params: {
+						params: MYSQL.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: { number_key: { $lte: 5 } },
+					};
 
-			assert.strictEqual(rowsCount, 0);
-		});
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const result = await testTable.getArrByParams(params);
 
-		await testContext.test("custom function test()", async () => {
-			const isNotFailed = await testTable01.test();
+							assert.strictEqual(result.length, 5);
+						},
+					);
+				}
 
-			assert.strictEqual(isNotFailed, true);
-		});
+				{
+					const params: {
+						params: MYSQL.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: { number_key: { $nbetween: [1, 2] } },
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const result = await testTable.getArrByParams(params);
+
+							assert.strictEqual(result.length, 3);
+						},
+					);
+				}
+
+				{
+					const params: {
+						params: MYSQL.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: { number_key: { $ne: 1 } },
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const result = await testTable.getArrByParams(params);
+
+							assert.strictEqual(result.length, 4);
+						},
+					);
+				}
+
+				{
+					const params: {
+						params: MYSQL.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: { number_key: { $ne: null } },
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const result = await testTable.getArrByParams(params);
+
+							assert.strictEqual(result.length, 5);
+						},
+					);
+				}
+
+				{
+					const params: {
+						params: MYSQL.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: { number_key: { $nin: [1, 2] } },
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const result = await testTable.getArrByParams(params);
+
+							assert.strictEqual(result.length, 3);
+						},
+					);
+				}
+
+				{
+					const params: {
+						params: MYSQL.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: { description: { $nlike: "%description%" } },
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const result = await testTable.getArrByParams(params);
+
+							assert.strictEqual(result.length, 0);
+						},
+					);
+				}
+
+				{
+					const params: {
+						params: MYSQL.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: { description: { $nilike: "%DESCRIPTION%" } },
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const result = await testTable.getArrByParams(params);
+
+							assert.strictEqual(result.length, 0);
+						},
+					);
+				}
+
+				{
+					const params: {
+						params: MYSQL.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+						paramsOr: MYSQL.DomainTypes.TSearchParams<TestTable.Types.SearchFields>[];
+					} = {
+						params: { number_key: { $in: [1, 2] } },
+						paramsOr: [{ number_key: 1 }, { number_key: 2 }],
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const result = await testTable.getArrByParams(params);
+
+							assert.strictEqual(result.length, 2);
+						},
+					);
+				}
+
+				{
+					const params: {
+						pagination: Types.TPagination;
+						params: MYSQL.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+						paramsOr: MYSQL.DomainTypes.TSearchParams<TestTable.Types.SearchFields>[];
+					} = {
+						pagination: { limit: 1, offset: 1 },
+						params: { number_key: { $in: [1, 2] } },
+						paramsOr: [{ number_key: 1 }, { number_key: 2 }],
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const result = await testTable.getArrByParams(params);
+
+							assert.strictEqual(result.length, 1);
+						},
+					);
+				}
+
+				await testTable.deleteAll();
+			},
+		);
+
+		await testContext.test(
+			"getOneByParams",
+			async (testContext) => {
+				await testTable.createDefaultState();
+
+				{
+					const params: {
+						params: MYSQL.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: { number_key: 1 },
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const { one } = await testTable.getOneByParams(params);
+
+							if (!one) throw new Error("No one found");
+
+							assert.strictEqual(one.number_key, 1);
+							assert.strictEqual(SharedHelpers.isHasFields(one, [...testTable.tableFields]), true);
+						},
+					);
+				}
+
+				{
+					const params: {
+						params: MYSQL.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+						selected: [TestTable.Types.TableKeys];
+					} = {
+						params: { number_key: 1 },
+						selected: ["number_key"],
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const { one } = await testTable.getOneByParams({
+								params: params.params,
+								selected: params.selected,
+							});
+
+							if (!one) throw new Error("No one found");
+
+							assert.strictEqual(one.number_key, 1);
+							assert.strictEqual(SharedHelpers.isHasFields(one, ["number_key"]), true);
+							assert.strictEqual(SharedHelpers.isHasFields(one, [...testTable.tableFields]), false);
+						},
+					);
+				}
+
+				{
+					const likeText = "description 5";
+					const params: {
+						params: MYSQL.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: { description: { $like: `%${likeText}%` } },
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const { one } = await testTable.getOneByParams(params);
+
+							if (!one) throw new Error("No one found");
+
+							assert.strictEqual(one.description, likeText);
+						},
+					);
+				}
+
+				{
+					const likeText = "description 5";
+					const params: {
+						params: MYSQL.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: {
+							description: [
+								{ $like: `%${likeText}%` },
+								{ $like: likeText },
+								{ $nlike: "ABC" },
+								{ $ne: null },
+							],
+							updated_at: null,
+						},
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const { one } = await testTable.getOneByParams(params);
+
+							if (!one) throw new Error("No one found");
+
+							assert.strictEqual(one.description, likeText);
+						},
+					);
+				}
+
+				{
+					const params: {
+						params: MYSQL.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: { number_key: { $lt: 2 } },
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const { one } = await testTable.getOneByParams(params);
+
+							if (!one) throw new Error("No one found");
+
+							assert.strictEqual(one.number_key, 1);
+						},
+					);
+				}
+
+				{
+					const params: {
+						params: MYSQL.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: { number_key: { $lte: 1 } },
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const { one } = await testTable.getOneByParams(params);
+
+							if (!one) throw new Error("No one found");
+
+							assert.strictEqual(one.number_key, 1);
+						},
+					);
+				}
+
+				{
+					const params: {
+						params: MYSQL.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: {
+							number_key: { $eq: 1 },
+							updated_at: { $eq: null },
+						},
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const { one } = await testTable.getOneByParams(params);
+
+							if (!one) throw new Error("No one found");
+
+							assert.strictEqual(one.number_key, 1);
+						},
+					);
+				}
+
+				{
+					const params: {
+						params: MYSQL.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: {
+							created_at: [
+								{ $gt: new Date("2000-01-01") },
+								{ $gte: new Date("2000-01-01") },
+							],
+							number_key: { $eq: 1 },
+						},
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const { one } = await testTable.getOneByParams(params);
+
+							if (!one) throw new Error("No one found");
+
+							assert.strictEqual(one.number_key, 1);
+						},
+					);
+				}
+
+				{
+					const params: {
+						params: MYSQL.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: {
+							created_at: { $ne: null },
+							number_key: { $eq: 1 },
+						},
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const { one } = await testTable.getOneByParams(params);
+
+							if (!one) throw new Error("No one found");
+
+							assert.strictEqual(one.number_key, 1);
+						},
+					);
+				}
+
+				{
+					const params: {
+						params: MYSQL.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: {
+							"JSON_UNQUOTE(JSON_EXTRACT(meta, '$.firstName'))": "firstName 1",
+						},
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const result = await testTable.getOneByParams(params);
+
+							assert.strictEqual(result.one?.meta.firstName, "firstName 1");
+						},
+					);
+				}
+
+				{
+					const params: {
+						params: MYSQL.DomainTypes.TSearchParams<TestTable.Types.SearchFields>;
+					} = {
+						params: {
+							meta: { $json: { firstName: "firstName 1", lastName: "lastName 1" } },
+						},
+					};
+
+					await testContext.test(
+						JSON.stringify(params),
+						async () => {
+							const result = await testTable.getOneByParams(params);
+
+							assert.strictEqual(result.one?.meta.firstName, "firstName 1");
+							assert.strictEqual(result.one?.meta.lastName, "lastName 1");
+						},
+					);
+				}
+
+				await testTable.deleteAll();
+			},
+		);
+
+		await testContext.test(
+			"CRUD",
+			async (testContext) => {
+				let id = -1;
+				const initialParams = {
+					description: "description",
+					meta: { firstName: "firstName", lastName: "lastName" },
+					number_key: 1,
+					number_range: "[100,201)",
+					title: "title",
+				};
+				const updatedParams = {
+					description: "description updated",
+					meta: { firstName: "firstName updated", lastName: "lastName updated" },
+					number_key: 2,
+					number_range: "[200,301)",
+					title: "title updated",
+				};
+
+				{
+					await testContext.test(
+						"create createOne",
+						async () => {
+							id = await testTable.createOne(initialParams);
+
+							const { one: entity } = await testTable.getOneByPk(id);
+
+							if (!entity) throw new Error("Entity not found");
+
+							assert.strictEqual(entity.description, initialParams.description);
+							assert.strictEqual(entity.meta.firstName, initialParams.meta.firstName);
+							assert.strictEqual(entity.meta.lastName, initialParams.meta.lastName);
+							assert.strictEqual(entity.number_key, initialParams.number_key);
+							assert.strictEqual(entity.number_range, initialParams.number_range);
+							assert.strictEqual(entity.title, initialParams.title);
+						},
+					);
+				}
+
+				{
+					await testContext.test(
+						"read getOneByPk",
+						async () => {
+							const { one } = await testTable.getOneByPk(id);
+
+							assert.strictEqual(one?.description, initialParams.description);
+							assert.strictEqual(one?.meta.firstName, initialParams.meta.firstName);
+							assert.strictEqual(one?.meta.lastName, initialParams.meta.lastName);
+							assert.strictEqual(one?.number_key, initialParams.number_key);
+							assert.strictEqual(one?.number_range, initialParams.number_range);
+							assert.strictEqual(one?.title, initialParams.title);
+						},
+					);
+				}
+
+				{
+					await testContext.test(
+						"read getOneByParams",
+						async () => {
+							const { one } = await testTable.getOneByParams({ params: { id } });
+
+							assert.strictEqual(one?.description, initialParams.description);
+							assert.strictEqual(one?.meta.firstName, initialParams.meta.firstName);
+							assert.strictEqual(one?.meta.lastName, initialParams.meta.lastName);
+							assert.strictEqual(one?.number_key, initialParams.number_key);
+							assert.strictEqual(one?.number_range, initialParams.number_range);
+							assert.strictEqual(one?.title, initialParams.title);
+						},
+					);
+				}
+
+				{
+					await testContext.test(
+						"update updateOneByPk",
+						async () => {
+							await testTable.updateOneByPk(id, updatedParams);
+
+							const { one: entity } = await testTable.getOneByPk(id);
+
+							assert.strictEqual(entity?.description, updatedParams.description);
+							assert.strictEqual(entity?.meta.firstName, updatedParams.meta.firstName);
+							assert.strictEqual(entity?.meta.lastName, updatedParams.meta.lastName);
+							assert.strictEqual(entity?.number_key, updatedParams.number_key);
+							assert.strictEqual(entity?.number_range, updatedParams.number_range);
+							assert.strictEqual(entity?.title, updatedParams.title);
+						},
+					);
+				}
+
+				{
+					await testContext.test(
+						"read getOneByParams",
+						async () => {
+							const { one: entity } = await testTable.getOneByParams({ params: { id } });
+
+							assert.strictEqual(entity?.description, updatedParams.description);
+							assert.strictEqual(entity?.meta.firstName, updatedParams.meta.firstName);
+							assert.strictEqual(entity?.meta.lastName, updatedParams.meta.lastName);
+							assert.strictEqual(entity?.number_key, updatedParams.number_key);
+							assert.strictEqual(entity?.number_range, updatedParams.number_range);
+							assert.strictEqual(entity?.title, updatedParams.title);
+						},
+					);
+				}
+
+				{
+					await testContext.test(
+						"delete deleteOneByPk",
+						async () => {
+							await testTable.deleteOneByPk(id);
+						},
+					);
+				}
+
+				{
+					await testContext.test(
+						"read getOneByParams",
+						async () => {
+							const { one } = await testTable.getOneByParams({ params: { id } });
+
+							assert.strictEqual(one, undefined);
+						},
+					);
+				}
+
+				await testTable.deleteAll();
+			},
+		);
+
+		await testContext.test(
+			"deleteByParams",
+			async () => {
+				await testTable.createDefaultState();
+
+				await testTable.deleteByParams({ params: { number_key: { $gte: 4 } } });
+
+				const result = await testTable.getArrByParams({ params: {} });
+
+				assert.strictEqual(result.length, 3);
+
+				await testTable.deleteAll();
+			},
+		);
+
+		await testContext.test(
+			"deleteByParams",
+			async () => {
+				await testTable.createDefaultState();
+
+				await testTable.updateByParams(
+					{ params: { number_key: { $gte: 4 } } },
+					{ title: "title updated" },
+				);
+
+				const result = await testTable.getArrByParams({ params: { title: "title updated" } });
+
+				assert.strictEqual(result.length, 2);
+
+				await testTable.deleteAll();
+			},
+		);
+
+		await testContext.test(
+			"CRUD table 2",
+			async () => {
+				const example1Id = await testTable02.createOne({ title: "title" });
+
+				assert.strictEqual(typeof example1Id, "number");
+
+				{
+					const { one: example1 } = await testTable02.getOneByParams({ params: { id: example1Id } });
+
+					assert.strictEqual(typeof example1?.created_at, "number");
+					assert.strictEqual(example1?.description, null);
+					assert.strictEqual(typeof example1?.id, "number");
+					assert.strictEqual(example1?.title, "title");
+					assert.strictEqual(example1?.updated_at, null);
+				}
+
+				await testTable02.updateOneByPk(example1Id, {
+					description: "description",
+					title: "title updated",
+				});
+
+				const { one: example1 } = await testTable02.getOneByParams({ params: { id: example1Id } });
+
+				assert.strictEqual(typeof example1?.created_at, "number");
+				assert.strictEqual(example1?.description, "description");
+				assert.strictEqual(typeof example1?.id, "number");
+				assert.strictEqual(example1?.title, "title updated");
+				assert.strictEqual(typeof example1?.updated_at, "number");
+
+				await testTable02.deleteOneByPk(example1Id);
+
+				const { one: example1Deleted } = await testTable02.getOneByParams({ params: { id: example1Id } });
+
+				assert.strictEqual(example1Deleted, undefined);
+			},
+		);
+
+		await testContext.test(
+			"custom test function",
+			async () => {
+				const isNotFailed = await testTable.test();
+
+				assert.strictEqual(isNotFailed, true);
+			},
+		);
 
 		await testContext.test(
 			"Helpers.migrationsDown",

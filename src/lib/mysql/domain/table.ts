@@ -284,7 +284,7 @@ export class BaseTable<
 				params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
 				paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>[];
 			},
-			updateFields: Types.TConditionalRawParamsType<BTG["UpdateFields"], BTG["CoreFields"]>,
+			updateFields: Types.TConditionalUpdateParamsType<BTG["UpdateFields"], BTG["CoreFields"]>,
 		): Types.TCompareQueryResult => this.model.compareQuery.updateByParams({ $and: queryConditions.params, $or: queryConditions.paramsOr }, updateFields),
 
 		/**
@@ -297,7 +297,7 @@ export class BaseTable<
 		 */
 		updateOneByPk: <T>(
 			primaryKeyValue: T,
-			updateFields: Types.TConditionalRawParamsType<BTG["UpdateFields"], BTG["CoreFields"]>,
+			updateFields: Types.TConditionalUpdateParamsType<BTG["UpdateFields"], BTG["CoreFields"]>,
 		): Types.TCompareQueryResult => this.model.compareQuery.updateOneByPk(primaryKeyValue, updateFields),
 	};
 
@@ -624,7 +624,7 @@ export class BaseTable<
 			params: Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>;
 			paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<BTG["SearchFields"], BTG["CoreFields"]>>[];
 		},
-		updateFields: Types.TConditionalRawParamsType<BTG["UpdateFields"], BTG["CoreFields"]>,
+		updateFields: Types.TConditionalUpdateParamsType<BTG["UpdateFields"], BTG["CoreFields"]>,
 	): Promise<void> {
 		await this.model.updateByParams({ $and: queryConditions.params, $or: queryConditions.paramsOr }, updateFields);
 
@@ -641,7 +641,7 @@ export class BaseTable<
 	 */
 	async updateOneByPk<T>(
 		primaryKeyValue: T,
-		updateFields: Types.TConditionalRawParamsType<BTG["UpdateFields"], BTG["CoreFields"]>,
+		updateFields: Types.TConditionalUpdateParamsType<BTG["UpdateFields"], BTG["CoreFields"]>,
 	): Promise<void> {
 		await this.model.updateOneByPk<T>(primaryKeyValue, updateFields);
 

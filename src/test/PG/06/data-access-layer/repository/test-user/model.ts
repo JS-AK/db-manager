@@ -10,6 +10,8 @@ export const model = (creds: PG.ModelTypes.TDBCreds) => new PG.Model.BaseTable(
 
 			"first_name",
 			"last_name",
+			"rating",
+			"score",
 
 			"created_at",
 			"updated_at",

@@ -4,6 +4,8 @@ CREATE TABLE test_users(
 
     first_name                      TEXT,
     last_name                       TEXT,
+    rating                          INTEGER,
+    score                           DOUBLE PRECISION,
 
     created_at                      TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at                      TIMESTAMP WITH TIME ZONE,

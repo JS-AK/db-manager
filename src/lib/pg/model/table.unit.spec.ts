@@ -16,7 +16,7 @@ const mockClient = {} as pg.Client;
 const usersSchema = {
 	createField: null,
 	primaryKey: "id",
-	tableFields: ["id", "name", "age", "published"],
+	tableFields: ["id", "name", "age", "published", "rating", "score"],
 	tableName: "users",
 	updateField: { title: "updated_at", type: "timestamp" as const },
 } satisfies Types.TTable;
@@ -47,7 +47,7 @@ describe("BaseTable", () => {
 
 			expect(table.tableName).toBe("users");
 			expect(table.primaryKey).toBe("id");
-			expect(table.tableFields).toEqual(["id", "name", "age", "published"]);
+			expect(table.tableFields).toEqual(["id", "name", "age", "published", "rating", "score"]);
 			expect(table.updateField).toEqual({ title: "updated_at", type: "timestamp" });
 		});
 	});
@@ -329,6 +329,36 @@ describe("BaseTable", () => {
 				{ name: "John" },
 			)).toThrow("No one update field arrived");
 		});
+
+		it("should build UPDATE with $inc", () => {
+			const table = createTable();
+			const result = table.compareQuery.updateByParams(
+				{ $and: { id: 1, tokens: { $gte: 10 } } },
+				{ tokens: { $inc: -5 } },
+			);
+
+			expect(result.query).toBe(
+				"UPDATE \"users\" SET tokens = tokens + $3, \"updated_at\" = NOW() WHERE (\"id\" = $1 AND tokens >= $2) RETURNING *;",
+			);
+			expect(result.values).toEqual([1, 10, -5]);
+		});
+
+		it("should build UPDATE with $mul, $max and $concat", () => {
+			const table = createTable();
+			const result = table.compareQuery.updateByParams(
+				{ $and: { id: 1 } },
+				{
+					name: { $prepend: "Dr. " },
+					rating: { $max: 5 },
+					score: { $mul: 1.5 },
+				},
+			);
+
+			expect(result.query).toBe(
+				"UPDATE \"users\" SET \"name\" = $2 || \"name\",\"rating\" = GREATEST(\"rating\", $3),\"score\" = \"score\" * $4, \"updated_at\" = NOW() WHERE (\"id\" = $1) RETURNING *;",
+			);
+			expect(result.values).toEqual([1, "Dr. ", 5, 1.5]);
+		});
 	});
 
 	describe("compareQuery.updateOneByPk", () => {
@@ -350,6 +380,19 @@ describe("BaseTable", () => {
 			const table = createTable();
 
 			expect(() => table.compareQuery.updateOneByPk(1, {})).toThrow("No one update field arrived");
+		});
+
+		it("should build UPDATE with $inc by primary key", () => {
+			const table = createTable();
+			const result = table.compareQuery.updateOneByPk(
+				42,
+				{ tokens: { $inc: 10 } },
+			);
+
+			expect(result.query).toBe(
+				"UPDATE \"users\" SET tokens = tokens + $1, \"updated_at\" = NOW() WHERE \"id\" = $2 RETURNING *;",
+			);
+			expect(result.values).toEqual([10, 42]);
 		});
 	});
 });

@@ -245,7 +245,7 @@ export class BaseDomain<TC extends {
 				paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>[];
 				returningFields?: T;
 			},
-			updateFields: Types.TConditionalRawParamsType<TC["UpdateFields"], TC["TableFields"]>,
+			updateFields: Types.TConditionalUpdateParamsType<TC["UpdateFields"], TC["TableFields"]>,
 		): Types.TCompareQueryResult => this.model.compareQuery.updateByParams({ $and: queryConditions.params, $or: queryConditions.paramsOr, returningFields: queryConditions.returningFields }, updateFields),
 
 		/**
@@ -260,7 +260,7 @@ export class BaseDomain<TC extends {
 		 */
 		updateOneByPk: <T, R extends Extract<keyof TC["TableFields"], string>[] = Extract<keyof TC["TableFields"], string>[]>(
 			primaryKeyValue: T,
-			updateFields: Types.TConditionalRawParamsType<TC["UpdateFields"], TC["TableFields"]>,
+			updateFields: Types.TConditionalUpdateParamsType<TC["UpdateFields"], TC["TableFields"]>,
 			updateOptions?: { returningFields?: R; },
 		): Types.TCompareQueryResult => this.model.compareQuery.updateOneByPk(primaryKeyValue, updateFields, updateOptions),
 	};
@@ -485,7 +485,7 @@ export class BaseDomain<TC extends {
 			paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<TC["SearchFields"], TC["TableFields"]>>[];
 			returningFields?: T;
 		},
-		updateFields: Types.TConditionalRawParamsType<TC["UpdateFields"], TC["TableFields"]>,
+		updateFields: Types.TConditionalUpdateParamsType<TC["UpdateFields"], TC["TableFields"]>,
 	): Promise<TC["TableFields"][]> {
 		return this.model.updateByParams({ $and: queryConditions.params, $or: queryConditions.paramsOr, returningFields: queryConditions.returningFields }, updateFields);
 	}
@@ -502,7 +502,7 @@ export class BaseDomain<TC extends {
 	 */
 	async updateOneByPk<T, R extends Extract<keyof TC["TableFields"], string>[] = Extract<keyof TC["TableFields"], string>[]>(
 		primaryKeyValue: T,
-		updateFields: Types.TConditionalRawParamsType<TC["UpdateFields"], TC["TableFields"]>,
+		updateFields: Types.TConditionalUpdateParamsType<TC["UpdateFields"], TC["TableFields"]>,
 		updateOptions?: { returningFields?: R; },
 	): Promise<TC["TableFields"] | undefined> {
 		const one = await this.model.updateOneByPk<TC["TableFields"], T>(primaryKeyValue, updateFields, updateOptions);

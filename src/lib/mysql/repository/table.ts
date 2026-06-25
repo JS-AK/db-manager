@@ -310,7 +310,7 @@ export class Table<TG extends TableGeneric = TableGeneric> {
 				params: Types.TSearchParams<Types.TConditionalDomainFieldsType<TG["SearchFields"], TG["CoreFields"]>>;
 				paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<TG["SearchFields"], TG["CoreFields"]>>[];
 			},
-			updateFields: Types.TConditionalRawParamsType<TG["UpdateFields"], TG["CoreFields"]>,
+			updateFields: Types.TConditionalUpdateParamsType<TG["UpdateFields"], TG["CoreFields"]>,
 		): Types.TCompareQueryResult => this.model.compareQuery.updateByParams({ $and: queryConditions.params, $or: queryConditions.paramsOr }, updateFields),
 
 		/**
@@ -323,7 +323,7 @@ export class Table<TG extends TableGeneric = TableGeneric> {
 		 */
 		updateOneByPk: <T>(
 			primaryKeyValue: T,
-			updateFields: Types.TConditionalRawParamsType<TG["UpdateFields"], TG["CoreFields"]>,
+			updateFields: Types.TConditionalUpdateParamsType<TG["UpdateFields"], TG["CoreFields"]>,
 		): Types.TCompareQueryResult => this.model.compareQuery.updateOneByPk(primaryKeyValue, updateFields),
 	};
 	/**
@@ -646,7 +646,7 @@ export class Table<TG extends TableGeneric = TableGeneric> {
 			params: Types.TSearchParams<Types.TConditionalDomainFieldsType<TG["SearchFields"], TG["CoreFields"]>>;
 			paramsOr?: Types.TSearchParams<Types.TConditionalDomainFieldsType<TG["SearchFields"], TG["CoreFields"]>>[];
 		},
-		updateFields: Types.TConditionalRawParamsType<TG["UpdateFields"], TG["CoreFields"]>,
+		updateFields: Types.TConditionalUpdateParamsType<TG["UpdateFields"], TG["CoreFields"]>,
 	): Promise<void> {
 		await this.model.updateByParams({ $and: queryConditions.params, $or: queryConditions.paramsOr }, updateFields);
 
@@ -663,7 +663,7 @@ export class Table<TG extends TableGeneric = TableGeneric> {
 	 */
 	async updateOneByPk<T>(
 		primaryKeyValue: T,
-		updateFields: Types.TConditionalRawParamsType<TG["UpdateFields"], TG["CoreFields"]>,
+		updateFields: Types.TConditionalUpdateParamsType<TG["UpdateFields"], TG["CoreFields"]>,
 	): Promise<void> {
 		await this.model.updateOneByPk<T>(primaryKeyValue, updateFields);
 

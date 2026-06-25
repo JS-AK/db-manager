@@ -297,7 +297,7 @@ export class QueryHandler {
 					return acc;
 				}, {});
 
-				v.push(...Object.values(preparedParams));
+				v.push(...Object.values(preparedParams).map(Helpers.normalizeMysqlBindValue));
 
 				if (options.updateColumn) {
 					keys.push([options.updateColumn.title, generateTimestampQuery(options.updateColumn.type)]);
@@ -317,7 +317,7 @@ export class QueryHandler {
 			const params = SharedHelpers.clearUndefinedFields(options.params);
 
 			Object.keys(params).forEach((e) => { headers.add(e); k.push([e, undefined]); });
-			v.push(...Object.values(params));
+			v.push(...Object.values(params).map(Helpers.normalizeMysqlBindValue));
 
 			if (!headers.size) throw new Error(`Invalid params, all fields are undefined - ${Object.keys(options.params).join(", ")}`);
 
@@ -387,13 +387,11 @@ export class QueryHandler {
 		params: T;
 		updateColumn?: { title: string; type: "unix_timestamp" | "timestamp"; } | null;
 	}): void {
-		const params = SharedHelpers.clearUndefinedFields(options.params);
-		const k = Object.keys(params);
-		const v = Object.values(params);
+		const { clauses, values: updateValues } = Helpers.prepareUpdateFields(options.params, { rawColumns: true });
 
-		if (!k.length) throw new Error(`Invalid params, all fields are undefined - ${Object.keys(options.params).join(", ")}`);
+		if (!clauses.length) throw new Error(`Invalid params, all fields are undefined - ${Object.keys(options.params).join(", ")}`);
 
-		let updateQuery = k.map((e: string) => `${e} = ?`).join(",");
+		let updateQuery = Helpers.buildUpdateSetSql(clauses);
 
 		if (options.updateColumn) {
 			updateQuery += `, ${options.updateColumn.title} = ${generateTimestampQuery(options.updateColumn.type)}`;
@@ -403,7 +401,7 @@ export class QueryHandler {
 
 		if (options.onConflict) this.#mainQuery += ` ${options.onConflict}`;
 
-		this.#values.push(...v);
+		this.#values.push(...updateValues);
 	}
 
 	/**

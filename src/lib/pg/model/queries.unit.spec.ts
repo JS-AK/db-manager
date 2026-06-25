@@ -218,7 +218,10 @@ describe("queries.updateByParams", () => {
 	it("should build UPDATE with parameterized SET clause", () => {
 		const query = queries.updateByParams(
 			"users",
-			["name", "age"],
+			[
+				{ column: "name", kind: "$set" },
+				{ column: "age", kind: "$set" },
+			],
 			" WHERE (id = $1)",
 			undefined,
 			2,
@@ -227,10 +230,42 @@ describe("queries.updateByParams", () => {
 		expect(query).toBe("UPDATE users SET name = $2,age = $3 WHERE (id = $1) RETURNING *;");
 	});
 
+	it("should build UPDATE with $inc clause", () => {
+		const query = queries.updateByParams(
+			"users",
+			[{ column: "tokens", kind: "$inc" }],
+			" WHERE (\"id\" = $1 AND \"tokens\" >= $2)",
+			undefined,
+			3,
+		);
+
+		expect(query).toBe(
+			"UPDATE users SET tokens = tokens + $3 WHERE (\"id\" = $1 AND \"tokens\" >= $2) RETURNING *;",
+		);
+	});
+
+	it("should build UPDATE with other operator clauses", () => {
+		const query = queries.updateByParams(
+			"users",
+			[
+				{ column: "score", kind: "$mul" },
+				{ column: "rating", kind: "$max" },
+				{ column: "bio", kind: "$concat" },
+			],
+			" WHERE (id = $1)",
+			undefined,
+			2,
+		);
+
+		expect(query).toBe(
+			"UPDATE users SET score = score * $2,rating = GREATEST(rating, $3),bio = bio || $4 WHERE (id = $1) RETURNING *;",
+		);
+	});
+
 	it("should append timestamp updateField", () => {
 		const query = queries.updateByParams(
 			"users",
-			["name"],
+			[{ column: "name", kind: "$set" }],
 			" WHERE (id = $1)",
 			{ title: "updated_at", type: "timestamp" },
 			2,
@@ -245,7 +280,7 @@ describe("queries.updateByParams", () => {
 	it("should append unix_timestamp updateField", () => {
 		const query = queries.updateByParams(
 			"users",
-			["name"],
+			[{ column: "name", kind: "$set" }],
 			" WHERE (id = $1)",
 			{ title: "updated_at", type: "unix_timestamp" },
 			2,
@@ -259,7 +294,7 @@ describe("queries.updateByParams", () => {
 	it("should throw for invalid updateField type", () => {
 		expect(() => queries.updateByParams(
 			"users",
-			["name"],
+			[{ column: "name", kind: "$set" }],
 			" WHERE (id = $1)",
 			{ title: "updated_at", type: "invalid" as "timestamp" },
 			2,
@@ -269,15 +304,21 @@ describe("queries.updateByParams", () => {
 
 describe("queries.updateByPk", () => {
 	it("should build UPDATE by single primary key", () => {
-		const query = queries.updateByPk("users", ["name"], "id", undefined, ["id", "name"]);
+		const query = queries.updateByPk("users", [{ column: "name", kind: "$set" }], "id", undefined, ["id", "name"]);
 
 		expect(query).toBe("UPDATE users SET name = $1 WHERE id = $2 RETURNING id,name;");
+	});
+
+	it("should build UPDATE with $inc by primary key", () => {
+		const query = queries.updateByPk("users", [{ column: "tokens", kind: "$inc" }], "id");
+
+		expect(query).toBe("UPDATE users SET tokens = tokens + $1 WHERE id = $2 RETURNING *;");
 	});
 
 	it("should build UPDATE by composite primary key", () => {
 		const query = queries.updateByPk(
 			"users",
-			["name"],
+			[{ column: "name", kind: "$set" }],
 			["tenant_id", "user_id"],
 			{ title: "updated_at", type: "timestamp" },
 		);
@@ -290,7 +331,7 @@ describe("queries.updateByPk", () => {
 	it("should throw for invalid updateField type", () => {
 		expect(() => queries.updateByPk(
 			"users",
-			["name"],
+			[{ column: "name", kind: "$set" }],
 			"id",
 			{ title: "updated_at", type: "invalid" as "timestamp" },
 		)).toThrow("Invalid type: invalid");

@@ -16,7 +16,7 @@ const mockClient = {} as mysql.PoolConnection;
 const usersSchema = {
 	createField: null,
 	primaryKey: "id",
-	tableFields: ["id", "name", "age", "published"],
+	tableFields: ["id", "name", "age", "published", "rating", "score"],
 	tableName: "users",
 	updateField: { title: "updated_at", type: "timestamp" as const },
 } satisfies Types.TTable;
@@ -47,7 +47,7 @@ describe("BaseTable", () => {
 
 			expect(table.tableName).toBe("users");
 			expect(table.primaryKey).toBe("id");
-			expect(table.tableFields).toEqual(["id", "name", "age", "published"]);
+			expect(table.tableFields).toEqual(["id", "name", "age", "published", "rating", "score"]);
 			expect(table.updateField).toEqual({ title: "updated_at", type: "timestamp" });
 		});
 	});
@@ -262,6 +262,45 @@ describe("BaseTable", () => {
 			);
 			expect(result.values).toEqual([31, "John", 1]);
 		});
+
+		it("should throw when search params are empty", () => {
+			const table = createTable();
+
+			expect(() => table.compareQuery.updateByParams(
+				{ $and: {} },
+				{ name: "John" },
+			)).toThrow("No one update field arrived");
+		});
+
+		it("should build UPDATE with $inc", () => {
+			const table = createTable();
+			const result = table.compareQuery.updateByParams(
+				{ $and: { id: 1, tokens: { $gte: 10 } } },
+				{ tokens: { $inc: -5 } },
+			);
+
+			expect(result.query).toBe(
+				"UPDATE `users` SET tokens = tokens + ?, `updated_at` = UTC_TIMESTAMP() WHERE ((`id` = ?) AND (tokens >= ?));",
+			);
+			expect(result.values).toEqual([-5, 1, 10]);
+		});
+
+		it("should build UPDATE with $mul, $max and $prepend", () => {
+			const table = createTable();
+			const result = table.compareQuery.updateByParams(
+				{ $and: { id: 1 } },
+				{
+					name: { $prepend: "Dr. " },
+					rating: { $max: 5 },
+					score: { $mul: 1.5 },
+				},
+			);
+
+			expect(result.query).toBe(
+				"UPDATE `users` SET `name` = CONCAT(?, `name`),`rating` = GREATEST(`rating`, ?),`score` = `score` * ?, `updated_at` = UTC_TIMESTAMP() WHERE (`id` = ?);",
+			);
+			expect(result.values).toEqual(["Dr. ", 5, 1.5, 1]);
+		});
 	});
 
 	describe("compareQuery.updateOneByPk", () => {
@@ -273,6 +312,25 @@ describe("BaseTable", () => {
 				"UPDATE `users` SET `name` = ?, `updated_at` = UTC_TIMESTAMP() WHERE `id` = ?;",
 			);
 			expect(result.values).toEqual(["Jane", 42]);
+		});
+
+		it("should throw when update fields are empty", () => {
+			const table = createTable();
+
+			expect(() => table.compareQuery.updateOneByPk(1, {})).toThrow("No one update field arrived");
+		});
+
+		it("should build UPDATE with $inc by primary key", () => {
+			const table = createTable();
+			const result = table.compareQuery.updateOneByPk(
+				42,
+				{ tokens: { $inc: 10 } },
+			);
+
+			expect(result.query).toBe(
+				"UPDATE `users` SET tokens = tokens + ?, `updated_at` = UTC_TIMESTAMP() WHERE `id` = ?;",
+			);
+			expect(result.values).toEqual([10, 42]);
 		});
 	});
 });

@@ -1,5 +1,9 @@
 import * as SharedTypes from "../../../shared-types/index.js";
 
+import { buildUpdateSetSql } from "../helpers/index.js";
+
+import * as Types from "./types.js";
+
 export const generateTimestampQuery = (type: "timestamp" | "unix_timestamp") => {
 	switch (type) {
 		case "timestamp":
@@ -304,14 +308,13 @@ export default {
 	 */
 	updateByParams(
 		tableName: string,
-		fields: string[],
+		clauses: Types.TUpdateClause[],
 		searchFields: string,
 		updateField?: { title: string; type: "unix_timestamp" | "timestamp"; } | null,
 		startOrderNumber?: number,
 		returning?: string[],
 	): string {
-		let idx = startOrderNumber || 1;
-		let updateFields = fields.map((e: string) => `${e} = $${idx++}`).join(",");
+		let updateFields = buildUpdateSetSql(clauses, startOrderNumber || 1);
 
 		if (updateField) {
 			switch (updateField.type) {
@@ -347,13 +350,13 @@ export default {
 	 */
 	updateByPk(
 		tableName: string,
-		fields: string[],
+		clauses: Types.TUpdateClause[],
 		primaryKeyField: SharedTypes.TPrimaryKeyField,
 		updateField?: { title: string; type: "unix_timestamp" | "timestamp"; } | null,
 		returning?: string[],
 	): string {
-		let idx = 1;
-		let updateFields = fields.map((e: string) => `${e} = $${idx++}`).join(",");
+		let updateFields = buildUpdateSetSql(clauses, 1);
+		let idx = clauses.length + 1;
 
 		if (updateField) {
 			switch (updateField.type) {
