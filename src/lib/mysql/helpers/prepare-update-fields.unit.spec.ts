@@ -39,4 +39,16 @@ describe("prepareUpdateFields", () => {
 		]);
 		expect(result.values).toEqual([" updated", 5, 1.1, -3]);
 	});
+
+	it("should use raw column names when rawColumns is true", () => {
+		const result = prepareUpdateFields(
+			{ tokens: { $inc: -5 } },
+			{ rawColumns: true },
+		);
+
+		expect(result.clauses).toEqual([
+			{ column: "tokens", kind: "$inc" },
+		]);
+		expect(result.values).toEqual([-5]);
+	});
 });

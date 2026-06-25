@@ -435,27 +435,11 @@ export class QueryHandler {
 		params: T;
 		updateColumn?: { title: string; type: "unix_timestamp" | "timestamp"; } | null;
 	}): void {
-		const params = SharedHelpers.clearUndefinedFields(options.params);
-		const entries = Object.entries(params);
+		const { clauses, values: updateValues } = Helpers.prepareUpdateFields(options.params, { rawColumns: true });
 
-		if (!entries.length) throw new Error(`Invalid params, all fields are undefined - ${Object.keys(options.params).join(", ")}`);
+		if (!clauses.length) throw new Error(`Invalid params, all fields are undefined - ${Object.keys(options.params).join(", ")}`);
 
-		const valuesOrder = this.#valuesOrder;
-		const updateValues: unknown[] = [];
-		let updateQuery = entries.map(([key, value], idx) => {
-			const placeholder = `$${idx + 1 + valuesOrder}`;
-			const operator = Helpers.parseUpdateOperatorValue(value);
-
-			if (operator) {
-				updateValues.push(operator.operand);
-
-				return Helpers.buildUpdateSetExpression(key, operator.kind, placeholder);
-			}
-
-			updateValues.push(value);
-
-			return Helpers.buildUpdateSetExpression(key, "$set", placeholder);
-		}).join(",");
+		let updateQuery = Helpers.buildUpdateSetSql(clauses, this.#valuesOrder + 1);
 
 		if (options.updateColumn) {
 			updateQuery += `, ${options.updateColumn.title} = ${generateTimestampQuery(options.updateColumn.type)}`;
