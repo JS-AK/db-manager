@@ -134,7 +134,7 @@ export class TransactionManager {
 						}),
 					]) as R;
 
-					timeout && clearTimeout(timeout);
+					if (timeout) clearTimeout(timeout);
 
 					await manager.#commitTransaction();
 
@@ -182,7 +182,7 @@ export class TransactionManager {
 						}),
 					]) as R;
 
-					timeout && clearTimeout(timeout);
+					if (timeout) clearTimeout(timeout);
 
 					await manager.#commitTransaction();
 
