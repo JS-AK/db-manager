@@ -20,7 +20,7 @@ export type SNDBArray = SNDArray | ClearBoolean[];
 
 export type StreamOptions = {
 	highWaterMark?: number;
-	objectMode?: boolean;
+	objectMode?: true;
 };
 
 export type TDBCreds = mysql.PoolOptions & { database: string; host: string; password: string; port: number; user: string; };
