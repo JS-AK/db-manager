@@ -1,3 +1,10 @@
+## [3.50.1](https://github.com/JS-AK/db-manager/compare/v3.50.0...v3.50.1) (2026-07-23)
+
+
+### Bug Fixes
+
+* bump dependencies to resolve security vulnerabilities ([377a7ae](https://github.com/JS-AK/db-manager/commit/377a7aebbf41633b57f2a24c7d114a624e38893d))
+
 # [3.50.0](https://github.com/JS-AK/db-manager/compare/v3.49.0...v3.50.0) (2026-06-25)
 
 
