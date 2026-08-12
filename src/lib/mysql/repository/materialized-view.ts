@@ -1,4 +1,5 @@
 import * as ModelTypes from "../model/types.js";
+import * as SharedHelpers from "../../../shared-helpers/index.js";
 import * as SharedTypes from "../../../shared-types/index.js";
 import * as Types from "../domain/types.js";
 import {
@@ -51,9 +52,12 @@ export class MaterializedView<MVG extends MaterializedViewGeneric = Materialized
 		options?: ModelTypes.TMVOptionsWithoutClient;
 		schema: ModelTypes.TMaterializedView<SharedTypes.TStringKeys<MVG["CoreFields"]>[]>;
 	}) {
-		this.#initialArgs = structuredClone(config);
+		this.#initialArgs = SharedHelpers.cloneRepositoryInitialArgs(config);
 
-		this.#model = new Model(config.schema, config.dbCreds, config.options);
+		this.#model = new Model(config.schema, config.dbCreds, {
+			...config.options,
+			client: config.client,
+		});
 
 		this.#name = this.#model.name;
 		this.#coreFields = this.#model.coreFields;
