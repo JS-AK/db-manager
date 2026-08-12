@@ -1,3 +1,10 @@
+## [3.50.2](https://github.com/JS-AK/db-manager/compare/v3.50.1...v3.50.2) (2026-08-12)
+
+
+### Bug Fixes
+
+* avoid cloning client/logger in repository setupClient ([72d361d](https://github.com/JS-AK/db-manager/commit/72d361d32d6b44495917faf7b4efb80a04896a88))
+
 ## [3.50.1](https://github.com/JS-AK/db-manager/compare/v3.50.0...v3.50.1) (2026-07-23)
 
 
